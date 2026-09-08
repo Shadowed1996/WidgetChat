@@ -1,50 +1,3 @@
-/* =============================================================================
-   pollaio.css — «il pollaio» · l'overlay
-
-   POSSIEDE: tutte le classi che iniziano per .pollaio.
-   NON POSSIEDE: le variabili (css/tokens.css) e il configuratore (css/regia.css).
-
-   Non c'è un solo esadecimale qui dentro, e non c'è un solo !important: le
-   tinte arrivano da tokens.css e quelle intermedie si ricavano con color-mix()
-   (§1.5 e §1.6 del contratto). Tutte le misure scendono da --corpo, che
-   js/pollaio.js riscrive con la percentuale scelta in «scala»: cambiare quel
-   numero riscala il widget intero.
-
-   INDICE
-      1. Fondamenta per OBS — la parte che sbagliano tutti
-      2. La colonna e il verso
-      3. I tre temi
-      4. La riga
-      5. La testa: orario, badge, nome
-      6. Il corpo: testo, emote, menzioni, link, bits
-      7. Il rilievo — «highlight su cose importanti»
-      8. La risposta a un messaggio
-      9. Le azioni /me e i messaggi cancellati
-     10. Le schede evento
-     11. Le righe di moderazione
-     12. La fascia dell'Hype Train
-     13. La spia di stato
-     14. Gli effetti d'ingresso — otto, si scelgono nella regia
-     15. L'uscita in dissolvenza
-     16. La mascotte
-     17. Movimento ridotto — spegne tutto
-   ============================================================================= */
-
-
-/* ---- 1. Fondamenta per OBS ------------------------------------------------
-   Il fondo della pagina è TRASPARENTE e deve restarlo: in OBS un fondo opaco
-   coprirebbe il gameplay. Lo sfondo lo mettono i singoli messaggi tramite il
-   tema, mai il documento.
-
-   overflow: hidden e non auto: una barra di scorrimento in un overlay è un
-   difetto visibile, e comunque non la userebbe nessuno — i messaggi vecchi li
-   toglie js/resa.js quando supera il tetto.
-
-   cursor: none perché in OBS il puntatore non c'è, ma se qualcuno apre la
-   pagina in un browser e ci passa sopra col mouse non deve vedere una freccia
-   piantata in mezzo all'overlay durante la registrazione.
-   -------------------------------------------------------------------------- */
-
 html,
 body {
   margin: 0;
@@ -54,35 +7,12 @@ body {
   overflow: hidden;
 }
 
-/* box-sizing su TUTTO quello che sta nel widget, e non solo sulla radice.
-   Senza, un elemento con bordo o padding somma quelle misure alla larghezza
-   invece di ricavarle da dentro, e sfonda il contenitore di qualche pixel:
-   in una finestra da 400px la fascia dell'Hype Train finiva tagliata a destra
-   proprio sul livello e sul conto alla rovescia, cioè le due cose per cui
-   quella fascia esiste. È il reset che di solito sta in cima a ogni progetto;
-   qui è ristretto a .pollaio perché il foglio non deve toccare altro. */
 .pollaio,
 .pollaio *,
 .pollaio *::before,
 .pollaio *::after {
   box-sizing: border-box;
 }
-
-/* --- Il fondo della finestra -----------------------------------------------
-   Trasparente è giusto per la sorgente browser di OBS, ma NON per una finestra
-   vera: lì «trasparente» vuol dire il bianco del browser, e su bianco il testo
-   chiaro del pollaio sparisce. Chi apre Pollaio.exe si troverebbe davanti una
-   finestra bianca e vuota — cosa che infatti succedeva.
-
-   Quindi il fondo si sceglie:
-     trasparente  per la sorgente browser di OBS (predefinito)
-     scuro        per la finestra di Pollaio.exe e per la cattura finestra
-     verde        per togliere il fondo in OBS col chroma key
-     magenta      idem, quando in scena c'è del verde (un prato, un'interfaccia)
-
-   Le due tinte da chroma key sono volutamente SATURE E PIENE, non prese dalla
-   palette: devono essere un colore che nel gameplay non esiste, altrimenti il
-   chroma key mangia anche pezzi di gioco. Sono dichiarate in tokens.css. */
 
 body[data-fondo="scuro"]   { background-color: var(--fondo); }
 body[data-fondo="verde"]   { background-color: var(--chroma-verde); }
@@ -98,23 +28,10 @@ body {
   -webkit-user-select: none;
 }
 
-/* IL PUNTATORE TORNA DENTRO LA FINESTRA DEL LAUNCHER.
-
-   `cursor: none` qui sopra è giusto per l'overlay: in OBS il puntatore non c'è,
-   e chi apre la pagina in un browser mentre registra non deve ritrovarsi una
-   freccia piantata in mezzo alla chat.
-
-   Ma dentro la finestra di Pollaio.exe quella regola è un difetto: lì ci si
-   clicca dentro davvero — il menu del tasto destro sta lì, ed è l'unico modo di
-   chiudere e spostare la finestra. Un menu che non si vede puntare non lo si
-   usa. L'attributo lo mette js/menu.js, che è l'unico a sapere dove sta
-   girando la pagina. */
 html[data-finestra] body,
 html[data-finestra] .pollaio,
 html[data-finestra] .pollaio * {
-  /* `grab` e non `default`: nella finestra del launcher tutta la superficie
-     dell'overlay è la maniglia per spostarla, e il puntatore è l'unica cosa
-     che lo dice. Senza, l'unico modo di scoprirlo sarebbe provarci per caso. */
+
   cursor: grab;
 }
 
@@ -124,8 +41,6 @@ html[data-finestra] .pollaio *:active {
   cursor: grabbing;
 }
 
-/* Se la pagina viene aperta in un browser vero, il focus deve vedersi lo
-   stesso: costa una regola e non toglie niente all'overlay. */
 :focus-visible {
   outline: 2px solid var(--ciano);
   outline-offset: 3px;
@@ -136,18 +51,6 @@ img {
   max-inline-size: 100%;
   border: 0;
 }
-
-
-/* ---- 2. La colonna e il verso ---------------------------------------------
-   justify-content: flex-end è il trucco che fa stare i messaggi ATTACCATI IN
-   BASSO quando sono pochi. Senza, con tre messaggi in chat resterebbero
-   appesi in cima e sotto ci sarebbe il vuoto, che in un overlay si nota
-   subito perché non c'è un riquadro a spiegare dove finisce la chat.
-
-   La larghezza vera la decide la finestra di OBS. --larghezza è solo un tetto
-   per chi apre la pagina in un browser a schermo intero, dove altrimenti una
-   riga di chat sarebbe lunga due metri.
-   -------------------------------------------------------------------------- */
 
 .pollaio {
   position: relative;
@@ -174,97 +77,31 @@ img {
   display: flex;
   flex-direction: column;
 
-  /* Il distacco fra un messaggio e l'altro passa da qui, e non solo dal
-     padding interno delle righe come faceva prima.
-
-     Con `gap: 0` l'unica aria era il padding, che però appartiene alla riga:
-     nel tema «insegna», dove ogni messaggio è una scheda piena, le schede si
-     toccavano proprio sul bordo e la pila sembrava un blocco unico. In una
-     chat che scorre è il difetto peggiore, perché l'occhio aggancia una riga
-     dal suo stacco, non dal suo contenuto.
-
-     Il moltiplicatore è lo stesso --aria del §4: così la manopola «spazio»
-     muove padding e distacco INSIEME, invece di lasciarne indietro uno. */
   gap: calc(var(--passo) * 0.75 * var(--aria));
 
-  /* QUESTA RIGA È IL CUORE DELL'ELENCO, e mancava.
-
-     Senza, `justify-content` resta `flex-start`: quando i messaggi superano
-     l'altezza disponibile, l'eccedenza esce IN BASSO e overflow la taglia.
-     Cioè restano visibili i messaggi VECCHI e spariscono quelli nuovi —
-     l'esatto contrario di una chat, e con soli dieci messaggi in pagina se ne
-     perdevano già tre, compreso l'ultimo arrivato.
-
-     Con flex-end la pila è ancorata in fondo: i nuovi entrano dal basso e i
-     vecchi escono dall'alto, che è come si legge una chat. */
   justify-content: flex-end;
 
   margin: 0;
   padding: 0;
   list-style: none;
-  /* min-block-size: 0 su un figlio flex che scorre: senza, il contenuto non
-     si lascia comprimere e la colonna sfonda in basso invece di tagliare i
-     messaggi vecchi. È la riga che risolve il 90% dei layout flex storti. */
+
   min-block-size: 0;
   overflow: hidden;
 }
 
-/* Coi nuovi in alto si ancora dall'altra parte: js/resa.js li inserisce in
-   cima, quindi l'eccedenza deve uscire dal basso. */
 .pollaio[data-verso="giu"] .pollaio__elenco {
   justify-content: flex-start;
 }
 
-
-/* ---- 3. I tre temi --------------------------------------------------------
-   Stesso markup, cambia solo [data-tema] sulla radice.
-
-   notte   — vetro scuro. Il predefinito, sta bene su qualunque gameplay.
-   nudo    — nessun fondo, solo testo con un'ombra netta. Per chi non vuole il
-             riquadro sopra il gioco. L'ombra NON è decorativa: senza, il
-             testo chiaro sparisce sopra a un gioco chiaro.
-   insegna — ogni messaggio è una scheda. Più invadente, per le chat lente.
-   -------------------------------------------------------------------------- */
-
-/* --- notte --- */
-/* IL VETRO STA SU OGNI MESSAGGIO, NON DIETRO LA COLONNA.
-
-   Prima era una lastra sola su .pollaio__elenco, e le righe si dividevano con
-   un filo da 1px. Sulla carta era la grammatica del canale; dal vivo era il
-   difetto peggiore dell'overlay. Il motivo è che l'aria fra due messaggi
-   mostrava ANCORA VETRO: aumentarla non li separava, li allontanava soltanto
-   dentro la stessa lastra, e la chat restava un blocco unico in cui l'occhio
-   non riusciva ad agganciare la riga giusta mentre scorreva.
-
-   Con il pannello su ogni riga, lo spazio fra un messaggio e l'altro è un
-   buco vero: sotto si vede il gioco. Da lì la manopola «spazio» comincia a
-   voler dire qualcosa, perché regola quanto gioco passa in mezzo.
-
-   IL COSTO, dichiarato perché è reale: dove prima c'era una sola superficie
-   sfocata adesso ce n'è una per messaggio, fino a `max`. In OBS si compone a
-   ogni fotogramma. Se il computer comincia a faticare la manopola giusta è
-   `max` (meno messaggi appesi), non il tema — ed è già il posto dove il
-   LEGGIMI manda chi perde fotogrammi. */
 .pollaio[data-tema="notte"] .pollaio__riga {
   border: 1px solid var(--linea);
 
-  /* --raggio-s e non --raggio: quello è il raggio della colonna, e su un
-     riquadro alto quanto una riga di testo mangerebbe gli angoli delle
-     lettere. Il token dice proprio «righe, badge, pill piccole». */
   border-radius: var(--raggio-s);
   background-color: var(--pannello);
 
-  /* NON --ombra: quella è l'ombra della colonna, 44px di sfocatura, giusta
-     per un oggetto solo. Moltiplicata per quaranta righe si somma in una
-     fanghiglia scura fra un messaggio e l'altro, e costa a ogni fotogramma.
-     Qui serve solo un filo di stacco dal gioco, quindi un'ombra corta,
-     ricavata col color-mix da --fondo: nessun colore inventato (§1.5). */
   box-shadow: 0 2px 6px color-mix(in srgb, var(--fondo) 55%, transparent);
 }
 
-/* Il vetro smerigliato va dentro @supports, col fondo opaco come ripiego: è
-   il modo canonico di questo progetto. Se il browser non sa sfocare, resta un
-   pannello scuro pieno, che è brutto ma leggibile. */
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .pollaio[data-tema="notte"] .pollaio__riga {
     -webkit-backdrop-filter: blur(var(--sfocatura)) saturate(130%);
@@ -272,23 +109,6 @@ img {
   }
 }
 
-/* --- nudo --- */
-
-/* L'ombra del tema, esposta come variabile. Serve agli effetti d'ingresso:
-   `glitch` e `matrix` scrivono text-shadow nei loro fotogrammi, e un
-   `text-shadow: none` in coda all'animazione NON lascia tornare la regola del
-   tema — un valore animato vince sulla dichiarazione normale per tutta la
-   durata. Il risultato era che nel tema «nudo» il messaggio appena arrivato
-   restava 400ms senza alcuno stacco dal fondo: su un gameplay chiaro,
-   invisibile. E capitava anche a movimento ridotto, cioè proprio a chi la
-   leggibilità serve di più.
-
-   Con la variabile, l'ultimo fotogramma può rimettere l'ombra GIUSTA del tema
-   in cui si trova, invece di azzerarla.
-
-   Il valore neutro è un'ombra trasparente e non `none`: così si può sempre
-   comporre in un elenco, `var(--ombra-corrente), 0 0 6px …`, che con `none`
-   sarebbe una dichiarazione non valida. */
 .pollaio { --ombra-corrente: 0 0 0 rgb(0 0 0 / 0); }
 .pollaio[data-tema="nudo"] { --ombra-corrente: var(--ombra-testo); }
 
@@ -296,15 +116,12 @@ img {
   text-shadow: var(--ombra-testo);
 }
 
-/* Anche le emote hanno bisogno dello stacco: sopra a un cielo chiaro
-   un'emote chiara sparisce come il testo. */
 .pollaio[data-tema="nudo"] .pollaio__emote,
 .pollaio[data-tema="nudo"] .pollaio__distintivo,
 .pollaio[data-tema="nudo"] .pollaio__cheer {
   filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.9)) drop-shadow(0 0 6px rgb(0 0 0 / 0.7));
 }
 
-/* --- insegna --- */
 .pollaio[data-tema="insegna"] .pollaio__elenco {
   gap: calc(var(--passo) * 0.55 * var(--aria));
 }
@@ -329,31 +146,6 @@ img {
   }
 }
 
-
-/* ---- 4. La riga ----------------------------------------------------------- */
-
-/* --- L'aria fra i messaggi -------------------------------------------------
-   Un moltiplicatore solo, e tutte le spaziature verticali ci passano dentro:
-   così «più aria» è una manopola e non venti numeri da ritoccare a mano.
-
-   Il predefinito è più generoso di quanto verrebbe da fare guardando una chat
-   ferma: in una chat che scorre le righe si inseguono, e quello che su uno
-   screenshot sembra spazio sprecato dal vivo è l'unica cosa che permette di
-   agganciare la riga giusta mentre passa. */
-
-/* --aria e --tempo li scrive js/pollaio.js sulla radice, leggendo le manopole
-   «spazio» e «velocità» dalla querystring. Erano tre scalini su [data-spazio]
-   e sono diventati due numeri continui: con tre gradini il punto giusto
-   cadeva sempre in mezzo a due, e un overlay si regola guardandolo.
-
-   Quelli qui sotto sono i valori di ripiego, e servono in due casi veri:
-   l'istante prima che il JS parta, e una pagina aperta col JS a pezzi. In
-   entrambi l'overlay deve avere già l'aspetto giusto, non uno da aggiustare.
-
-   1.3 perché il predefinito della manopola è 130%. Il vecchio scalino
-   «normale» valeva 1 e, con la sola spaziatura interna delle righe, lasciava
-   tredici pixel scarsi fra un messaggio e l'altro: su una chat ferma sembrano
-   puliti, su una che corre fanno una colonna di testo indistinta. */
 .pollaio {
   --aria: 1.3;
   --tempo: 1;
@@ -363,44 +155,13 @@ img {
   position: relative;
   padding: calc(var(--passo) * 0.8 * var(--aria)) var(--passo);
 
-  /* La riga ritaglia quello che le esce fuori.
-
-     Non è pignoleria: i segni combinanti si impilano SOPRA la lettera e non
-     hanno limite d'altezza. js/resa.js ne lascia passare al massimo due per
-     lettera, ma anche due su ogni carattere di un messaggio lungo sbordano
-     sopra e sotto. Senza questo ritaglio l'inchiostro si spalma sui messaggi
-     vicini e li copre — ed è uno scherzo che chiunque può fare dalla chat.
-
-     `clip` e non `hidden`: hidden creerebbe un contesto di formattazione e un
-     contenitore scorrevole, cambiando il flusso. Il margine di due pixel
-     lascia respirare gli aloni degli effetti, che sono voluti. */
   overflow: clip;
   overflow-clip-margin: 2px;
-  /* anywhere e non break-word: un nick di quaranta caratteri senza spazi deve
-     andare a capo comunque, altrimenti allarga la colonna e in OBS il testo
-     esce dall'inquadratura. */
+
   overflow-wrap: anywhere;
   min-inline-size: 0;
 }
 
-/* --- La targhetta della piattaforma ----------------------------------------
-   Da dove scrive questa persona. Si accende solo quando le chat collegate
-   sono più d'una: «Twitch» sopra ogni riga in una chat di solo Twitch non
-   aggiunge niente e insegna all'occhio a ignorare proprio la cosa che dovrà
-   saltare fuori il giorno che serve. La decisione sta in js/resa.js.
-
-   LA FORMA. Rettangolo col lato sinistro tagliato in diagonale: `/` a
-   sinistra, orizzontale sopra e sotto, verticale a destra. Il taglio non è un
-   vezzo: è quello che la fa leggere come un'etichetta ATTACCATA al messaggio
-   invece che come una prima riga del messaggio.
-
-   LA POSIZIONE. In cima al riquadro e a filo dei suoi bordi. I margini
-   negativi annullano il padding della riga — che dipende da --aria, quindi si
-   ripete qui la stessa formula, o la targhetta si staccherebbe dall'angolo
-   ogni volta che si tocca la manopola dello spazio. Il ritaglio della riga
-   (overflow: clip) le arrotonda l'angolo insieme al riquadro: le due forme
-   combaciano senza dover ripetere il raggio qui dentro.
-   -------------------------------------------------------------------------- */
 .pollaio__fonte {
   display: block;
   inline-size: fit-content;
@@ -409,12 +170,8 @@ img {
   margin-inline-start: calc(var(--passo) * -1);
   margin-block-end: 0.4em;
 
-  /* Più padding a sinistra che a destra: il taglio diagonale mangia spazio
-     solo da quel lato, e senza il compenso la prima lettera ci finisce sopra. */
   padding: 0.16em 0.7em 0.16em 1.05em;
 
-  /* I quattro punti. Solo il primo è spostato verso destra, ed è quello che
-     disegna la diagonale del lato sinistro. */
   clip-path: polygon(0.62em 0, 100% 0, 100% 100%, 0 100%);
 
   background-color: var(--tinta-fonte);
@@ -427,10 +184,6 @@ img {
   text-transform: uppercase;
 }
 
-/* L'inchiostro cambia col fondo, non è sempre lo stesso: il verde di Kick e
-   il ciano di TikTok sono chiari e vogliono testo scuro, il viola di Twitch e
-   il rosso di YouTube sono cupi e vogliono testo chiaro. Scriverli tutti e
-   quattro in bianco sarebbe stato più corto e illeggibile su due. */
 .pollaio__fonte[data-fonte="twitch"] {
   --tinta-fonte: var(--piattaforma-twitch);
   --inchiostro-fonte: var(--testo);
@@ -462,21 +215,12 @@ img {
   color: var(--testo);
 }
 
-/* Il nome e il corpo stanno sulla stessa riga di testo e vanno a capo insieme,
-   come nella chat di Twitch. Per questo testa e corpo sono `display: inline`
-   invece di due blocchi: due blocchi sprecherebbero una riga per ogni
-   messaggio, e su una colonna alta 600px sono sei messaggi in meno. */
-
-
-/* ---- 5. La testa: orario, badge, nome ------------------------------------- */
-
 .pollaio__orario {
   margin-inline-end: calc(var(--passo) * 0.5);
   color: var(--testo-tenue);
   font-family: var(--font-mono);
   font-size: 0.75em;
-  /* Le cifre a larghezza fissa si incolonnano: senza, l'ora balla da una riga
-     all'altra e l'occhio la insegue. */
+
   font-variant-numeric: tabular-nums;
 }
 
@@ -490,22 +234,17 @@ img {
   block-size: 1.15em;
   margin-inline-end: 0.18em;
   vertical-align: -0.18em;
-  /* I badge sono minuscoli e già ottimizzati: l'interpolazione morbida del
-     browser li impasta. */
+
   image-rendering: -webkit-optimize-contrast;
 }
 
 .pollaio__nome {
   color: var(--tinta, var(--testo));
   font-weight: 700;
-  /* Il colore del nick arriva da fuori e può essere qualunque cosa: un filo
-     di ombra lo stacca dal fondo anche quando è tenue. */
+
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.55);
 }
 
-/* I due punti dopo il nome sono disegnati, non scritti: così js/resa.js non
-   deve inserire un nodo di testo in più, e nelle azioni /me — dove Twitch non
-   li mette — basta non disegnarli. */
 .pollaio__nome::after {
   content: ":";
   margin-inline-end: 0.35em;
@@ -513,18 +252,6 @@ img {
   font-weight: 400;
 }
 
-
-/* ---- 6. Il corpo ---------------------------------------------------------- */
-
-/* NIENTE margine verticale negativo, ed è una correzione misurata.
-
-   Con `margin-block: -0.35em` l'emote (1.6em = 25,6px) non riusciva ad
-   allargare la riga di testo (1.5em = 24px), ma restava alta 25,6: in un
-   messaggio di sole emote su più righe, ogni riga si sovrapponeva alla
-   successiva di 1,6px e le emote si saldavano in una macchia unica. Ed è il
-   messaggio più frequente che esista in una chat Twitch.
-
-   Senza il margine la riga si allarga quel tanto che basta a contenerle. */
 .pollaio__emote {
   block-size: 1.6em;
   inline-size: auto;
@@ -532,9 +259,6 @@ img {
   vertical-align: middle;
 }
 
-/* Le emote a larghezza zero di 7TV si disegnano SOPRA quella che le precede.
-   La pila è un contenitore in posizione relativa; la seconda immagine ci si
-   centra dentro in assoluto. */
 .pollaio__pila {
   position: relative;
   display: inline-block;
@@ -585,21 +309,6 @@ img {
   font-variant-numeric: tabular-nums;
 }
 
-
-/* ---- 7. Il rilievo --------------------------------------------------------
-   Deve saltare all'occhio senza urlare. Tre livelli, e la tinta la porta una
-   variabile sola: così il disegno si scrive una volta e i tre livelli
-   cambiano solo --rilievo.
-
-   1  primo messaggio, bentornato, risposta ....... viola chiaro
-   2  ti hanno nominato, parola chiave, bits ...... ciano
-   3  messaggio in evidenza, annuncio, bits alti ... magenta
-
-   Il livello 3 ha anche un lampo, ma UNA VOLTA SOLA all'ingresso: una riga
-   che pulsa per sempre smette di essere un richiamo e diventa rumore, e dopo
-   dieci minuti non la guarda più nessuno.
-   -------------------------------------------------------------------------- */
-
 .pollaio__riga[data-rilievo="1"] { --rilievo: var(--viola-chiaro); }
 .pollaio__riga[data-rilievo="2"] { --rilievo: var(--ciano); }
 .pollaio__riga[data-rilievo="3"] { --rilievo: var(--magenta); }
@@ -625,8 +334,6 @@ img {
   box-shadow: inset 0 0 26px -6px color-mix(in srgb, var(--rilievo) 40%, transparent);
 }
 
-/* Nel tema «insegna» la riga ha già un bordo sinistro spesso: lì il rilievo
-   lo colora invece di aggiungerne un secondo. */
 .pollaio[data-tema="insegna"] .pollaio__riga[data-rilievo="1"],
 .pollaio[data-tema="insegna"] .pollaio__riga[data-rilievo="2"],
 .pollaio[data-tema="insegna"] .pollaio__riga[data-rilievo="3"] {
@@ -634,13 +341,6 @@ img {
   padding-inline-start: var(--passo);
 }
 
-/* L'etichetta: la pill in monospazio maiuscolo spaziato, che è la cifra
-   visiva del canale. */
-/* display:block con inline-size:fit-content, e NON inline-block: l'etichetta
-   deve stare su una riga tutta sua e stringersi al testo. Con inline-block il
-   nome che segue le si sdraierebbe accanto, perché testa e corpo sono inline
-   apposta (§4) — ed è esattamente il tipo di dettaglio che non si nota finché
-   non arriva il primo messaggio evidenziato in diretta. */
 .pollaio__etichetta {
   display: block;
   inline-size: fit-content;
@@ -662,17 +362,6 @@ img {
   white-space: nowrap;
 }
 
-
-/* --- Chi ha un ruolo -------------------------------------------------------
-   Il badge dice già chi è; questo aggiunge un fondo appena tinto, così in una
-   chat veloce si aggancia la riga di un moderatore senza dover leggere il
-   badge. È DELIBERATAMENTE tenue — 5-6% — perché il §10 è chiaro: un ruolo non
-   è un rilievo, e un moderatore che scrive «ok» non è una cosa importante.
-
-   Solo su [data-rilievo="0"]: quando la riga ha un rilievo vero, quello vince
-   e questo si toglie di mezzo, altrimenti i due fondi si sommerebbero in una
-   tinta che non è né l'una né l'altra. */
-
 .pollaio__riga.is-capo[data-rilievo="0"] {
   background-color: color-mix(in srgb, var(--live) 7%, transparent);
 }
@@ -685,9 +374,6 @@ img {
   background-color: color-mix(in srgb, var(--magenta) 6%, transparent);
 }
 
-
-/* ---- 8. La risposta a un messaggio ---------------------------------------- */
-
 .pollaio__risposta {
   display: block;
   margin: 0 0 calc(var(--passo) * 0.3);
@@ -696,8 +382,7 @@ img {
   color: var(--testo-tenue);
   font-size: 0.82em;
   line-height: 1.3;
-  /* La citazione è un richiamo, non il messaggio: se è lunga si taglia,
-     altrimenti mangia lo spazio di quello vero. */
+
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -713,11 +398,6 @@ img {
   margin-inline-end: 0.3em;
 }
 
-
-/* ---- 9. Azioni /me e messaggi cancellati ---------------------------------- */
-
-/* Nel /me Twitch colora tutto il messaggio col colore del nome e toglie i due
-   punti. Si fa uguale: chi guarda riconosce la convenzione senza spiegazioni. */
 .pollaio__riga.is-azione .pollaio__corpo {
   color: var(--tinta, var(--testo));
   font-style: italic;
@@ -738,19 +418,10 @@ img {
   text-decoration-thickness: 1px;
 }
 
-/* Un'emote dentro un messaggio cancellato non si barra — la barra ci passa
-   sopra e basta — quindi si spegne di suo. */
 .pollaio__riga.is-cancellato .pollaio__emote,
 .pollaio__riga.is-cancellato .pollaio__cheer {
   filter: grayscale(1);
 }
-
-
-/* ---- 10. Le schede evento -------------------------------------------------
-   Quando arriva un abbonato si deve VEDERE: è il momento visivo del widget.
-   La tinta la porta [data-tinta] in una variabile, così il disegno si scrive
-   una volta sola invece di ripetere lo stesso blocco sei volte.
-   -------------------------------------------------------------------------- */
 
 .pollaio__evento[data-tinta="viola"]   { --tinta-evento: var(--viola-chiaro); }
 .pollaio__evento[data-tinta="ciano"]   { --tinta-evento: var(--ciano); }
@@ -778,15 +449,6 @@ img {
   text-align: center;
 }
 
-/* Nel tema notte la scheda non deve prendersi anche la linea divisoria: ha già
-   un bordo tutto suo.
-
-   Qui c'era anche il selettore della riga SUCCESSIVA alla scheda, ed era un
-   difetto: lì `--tinta-evento` non esiste (è dichiarata su .pollaio__evento), e
-   un color-mix() con una variabile mancante non è valido al momento del
-   calcolo. Il colore del bordo — che non si eredita — ricadeva sul suo valore
-   iniziale, cioè `currentColor`: un filo BIANCO PIENO, otto volte più marcato
-   della linea normale, sotto ogni abbonamento, raid e annuncio. */
 .pollaio[data-tema="notte"] .pollaio__evento {
   border-block-start-color: color-mix(in srgb, var(--tinta-evento) 50%, transparent);
 }
@@ -829,8 +491,6 @@ img {
   text-transform: uppercase;
 }
 
-/* Il messaggio allegato a un riabbonamento: è quello che lo streamer legge ad
-   alta voce, quindi si stacca dal resto della scheda. */
 .pollaio__evento .pollaio__corpo {
   display: block;
   margin-block-start: calc(var(--passo) * 0.6);
@@ -839,12 +499,6 @@ img {
   color: var(--testo);
   font-size: 0.92em;
 }
-
-
-/* ---- 11. Le righe di moderazione ------------------------------------------
-   Un ban non è una notizia da festeggiare: si dice, in piccolo, in grigio, e
-   non si prende più spazio di così.
-   -------------------------------------------------------------------------- */
 
 .pollaio__moderazione {
   text-align: center;
@@ -858,20 +512,6 @@ img {
   letter-spacing: var(--spazio-etichetta);
   text-transform: uppercase;
 }
-
-
-/* ---- 12. La fascia dell'Hype Train ----------------------------------------
-   Sta in cima e RESTA: è uno stato che dura minuti, non un messaggio che
-   passa. Tre fasi, e la tinta cambia con la fase perché «sta per partire» e
-   «è partito» sono due notizie diverse e devono sembrarlo.
-
-     arrivo → ambra, con la barra che respira: qualcosa si sta muovendo
-     corsa  → viola del canale, barra piena e conto alla rovescia
-     finito → verde, il riepilogo, e poi sparisce da sola
-
-   Il Golden Kappa Train ha un trattamento suo: è raro, e quando capita si
-   deve vedere che è capitato qualcosa di raro.
-   -------------------------------------------------------------------------- */
 
 .pollaio__treno {
   --treno: var(--viola);
@@ -941,10 +581,6 @@ img {
   overflow: hidden;
 }
 
-/* La larghezza la scrive js/resa.js come --percento: è l'unico conto che il
-   CSS non può fare da solo, e farlo fare al JS evita di ripetere la stessa
-   divisione in due posti. La transizione fa scivolare la barra invece di
-   farla saltare a ogni lettura. */
 .pollaio__treno-riempimento {
   display: block;
   inline-size: var(--percento, 0%);
@@ -984,8 +620,6 @@ img {
   color: var(--treno);
 }
 
-/* In arrivo la barra respira: è l'unico modo per far capire, senza scriverlo,
-   che quella non è una barra ferma ma una cosa che sta succedendo adesso. */
 .pollaio__treno[data-fase="arrivo"] .pollaio__treno-riempimento {
   animation: treno-respira 1.6s ease-in-out infinite;
 }
@@ -995,8 +629,6 @@ img {
   50%      { opacity: 0.5; }
 }
 
-/* Il Golden Kappa è raro: si annuncia con un bagliore che scorre lungo tutta
-   la fascia, e si ferma lì. */
 .pollaio__treno[data-golden] {
   animation: treno-oro 2.4s ease-in-out infinite;
 }
@@ -1005,13 +637,6 @@ img {
   0%, 100% { box-shadow: 0 0 24px -8px color-mix(in srgb, var(--treno) 65%, transparent); }
   50%      { box-shadow: 0 0 34px -4px color-mix(in srgb, var(--treno) 95%, transparent); }
 }
-
-
-/* ---- 13. La spia di stato -------------------------------------------------
-   Piccola, in alto, e soprattutto TEMPORANEA: appena collegata sparisce da
-   sola (glielo dice js/pollaio.js dopo tre secondi). Una spia verde fissa in
-   un angolo per otto ore di diretta è rumore, non informazione.
-   -------------------------------------------------------------------------- */
 
 .pollaio__spia {
   --spia: var(--testo-tenue);
@@ -1040,13 +665,6 @@ img {
 .pollaio__spia[data-stato="resa"]    { --spia: var(--live); }
 .pollaio__spia[data-stato="prova"]   { --spia: var(--magenta); }
 
-/* Spenta esce dal disegno del tutto: senza `visibility` resterebbe un livello
-   trasparente che continua a occupare la sua riga nella colonna. */
-/* display:none e non visibility:hidden. Con visibility il riquadro resta al
-   suo posto: misurato, la spia spenta continuava a rubare 27,7px alla colonna
-   dei messaggi — circa un messaggio in meno, per sempre, su un overlay alto
-   600px. Si perde la dissolvenza in uscita, che comunque non si vedeva:
-    non era nella transizione e scattava subito. */
 .pollaio__spia[data-stato="spenta"] {
   display: none;
 }
@@ -1071,45 +689,6 @@ img {
   50%      { opacity: 0.3; }
 }
 
-
-/* ---- 14. Gli effetti d'ingresso -------------------------------------------
-   Otto, si scelgono con [data-effetto] sulla radice e si confrontano dal vivo
-   nella regia. Si applicano SOLO alla riga con .is-nuovo, che js/resa.js
-   toglie quando la sua finestra scade: nessuna animazione può superarla, o
-   verrebbe troncata a metà proprio sulle macchine più lente, cioè quelle dove
-   si nota di più.
-
-   La finestra NON è più una sola per tutti. Il predefinito resta 400ms e vale
-   per sette effetti su otto; il glitch ha il suo, 900ms, perché è l'unico che
-   deve farsi guardare invece di accompagnare l'ingresso (§ «glitch» più
-   sotto). Le finestre stanno in DURATE_ENTRATA in js/resa.js: allungare una
-   @keyframes qui senza allungare la sua finestra là è il modo più rapido di
-   ottenere un'animazione tagliata a metà.
-
-     scivola  sobrio, sale di pochi pixel — il predefinito, non stanca
-     bagliore una luce attraversa la riga, come il riflesso su un'insegna
-     sfoca    entra sfocata e va a fuoco — il più morbido sopra al gameplay
-     glitch   guasto video: strappi, aberrazione cromatica e righe di
-              scansione. Il più aggressivo, e l'unico lungo (800ms)
-     insegna  si accende a sfarfallii, come un neon che attacca
-     scatto   entra di lato con una molla
-     matrix   i caratteri si ricompongono, verde terminale + scansione
-     niente   nessuna animazione, per chi registra e non vuole movimento
-   -------------------------------------------------------------------------- */
-
-/* --- Le durate, tutte in un posto solo ---
-   Ogni effetto ha la sua misura, perché raccontano cose diverse: 180ms per un
-   movimento di servizio e 800 per un guasto video non sono lo stesso numero
-   sbagliato due volte.
-
-   Tutte però passano dentro --tempo, che è la manopola «velocità» scritta
-   sulla radice da js/pollaio.js. Al 200% di velocità --tempo vale 0.5 e ogni
-   riga qui sotto si dimezza da sola, senza che nessuna delle regole più in
-   basso sappia che esiste una manopola.
-
-   Averle raccolte qui è la ragione per cui la manopola è potuta esistere:
-   sparse dentro le regole erano dieci numeri da ritrovare e da tenere
-   allineati a mano, ed è esattamente il genere di cosa che si scolla. */
 .pollaio {
   --t-scivola:   calc(180ms * var(--tempo));
   --t-bagliore:  calc(380ms * var(--tempo));
@@ -1121,7 +700,6 @@ img {
   --t-scatto:    calc(300ms * var(--tempo));
 }
 
-/* --- scivola (predefinito) --- */
 .pollaio .pollaio__riga.is-nuovo,
 .pollaio[data-effetto="scivola"] .pollaio__riga.is-nuovo {
   animation: entra-scivola var(--t-scivola) var(--curva) both;
@@ -1132,11 +710,6 @@ img {
   to   { opacity: 1; translate: 0 0; }
 }
 
-/* --- bagliore ---
-   La passata di luce sta su un ::after sopra la riga, non sul fondo: così non
-   sposta niente e non interferisce col gradiente del rilievo. mix-blend-mode:
-   screen la fa schiarire invece di coprire. Sta dentro i 380ms come tutte le
-   altre: tagliata a metà si vedrebbe la luce sparire in mezzo alla riga. */
 .pollaio[data-effetto="bagliore"] .pollaio__riga.is-nuovo {
   animation: entra-scivola var(--t-scivola) var(--curva) both;
 }
@@ -1164,7 +737,6 @@ img {
   to   { background-position: -40% 0; opacity: 0; }
 }
 
-/* --- sfoca --- */
 .pollaio[data-effetto="sfoca"] .pollaio__riga.is-nuovo {
   animation: entra-sfoca var(--t-sfoca) var(--curva) both;
 }
@@ -1174,39 +746,12 @@ img {
   to   { opacity: 1; filter: blur(0);   scale: 1; }
 }
 
-/* --- glitch ---
-   Disturbo video vero: la riga si strappa in orizzontale, i canali di colore
-   si separano e la tinta va fuori giri. steps(1, end) e non una curva morbida:
-   un glitch che sfuma non è un glitch, è una dissolvenza.
-
-   OTTOCENTO millisecondi, non trecento, ed è l'unica animazione del foglio che
-   sfora i 380ms dichiarati nel cappello del §14. La deroga ha una ragione
-   precisa: è l'unico effetto che deve FARSI GUARDARE invece di accompagnare.
-   Dentro i 300ms i fotogrammi qui sotto duravano una quarantina di
-   millisecondi l'uno, e il disturbo si riduceva a uno sfarfallio senza forma —
-   si intuiva che era successo qualcosa, non si vedeva cosa.
-
-   Perché la riga regga tanto, js/resa.js tiene .is-nuovo addosso 900ms quando
-   l'effetto è questo (DURATE_ENTRATA in resa.js). I due numeri sono due metà
-   della stessa cosa: chi tocca l'uno tocca l'altro, o l'animazione viene
-   troncata a metà strappo.
-
-   Il ritmo è volutamente IRREGOLARE, con due fotogrammi quasi fermi in mezzo
-   alla raffica. Un disturbo a cadenza regolare si legge come un'animazione;
-   quello vero arriva a strappi, si calma, e riparte — ed è proprio la pausa a
-   far sembrare guasto quello che viene dopo. Per lo stesso motivo gli
-   spostamenti non scalano in modo ordinato verso lo zero: rimbalzano.
-
-   L'aberrazione si fa con text-shadow, quindi l'ultimo fotogramma la rimette
-   all'ombra del tema e NON la lascia a metà: nel tema «nudo» il text-shadow è
-   --ombra-testo, cioè l'unica cosa che rende leggibile il testo sopra al
-   gameplay. Azzerandola, la regola del tema torna a valere. */
 .pollaio[data-effetto="glitch"] .pollaio__riga.is-nuovo {
   animation: entra-glitch var(--t-glitch) steps(1, end) both;
 }
 
 @keyframes entra-glitch {
-  /* L'irruzione: la riga arriva già rotta, tagliata in due terzi. */
+
   0%   { opacity: 0; translate: -12px 0; filter: hue-rotate(90deg) saturate(4);
          text-shadow: -6px 0 var(--magenta), 6px 0 var(--ciano);
          clip-path: inset(0 0 62% 0); }
@@ -1223,7 +768,6 @@ img {
          text-shadow: -4px 0 var(--magenta), 4px 0 var(--ciano);
          clip-path: inset(0 0 0 0); }
 
-  /* Primo respiro: quasi a posto. Serve a far credere che sia finita. */
   30%  { opacity: 1; translate:  1px 0; filter: none;
          text-shadow: -1px 0 var(--magenta), 1px 0 var(--ciano);
          clip-path: inset(0 0 0 0); }
@@ -1231,8 +775,6 @@ img {
          text-shadow: -1px 0 var(--magenta), 1px 0 var(--ciano);
          clip-path: inset(0 0 0 0); }
 
-  /* La ricaduta, ed è la parte che si guarda: arriva quando l'occhio si era
-     già rilassato, e per questo si nota il doppio della prima. */
   43%  { opacity: 1; translate: 11px 0; filter: hue-rotate(-150deg) saturate(5);
          text-shadow:  7px 0 var(--magenta), -7px 0 var(--ciano);
          clip-path: inset(0 0 74% 0); }
@@ -1249,8 +791,6 @@ img {
          text-shadow:  4px 0 var(--magenta), -4px 0 var(--ciano);
          clip-path: inset(0 0 0 0); }
 
-  /* L'assestamento: gli scarti si accorciano ma continuano a rimbalzare di
-     lato, così l'ultimo pezzo non sembra una dissolvenza. */
   72%  { opacity: 1; translate: -3px 0; filter: none;
          text-shadow: -3px 0 var(--magenta), 3px 0 var(--ciano);
          clip-path: inset(0 0 0 0); }
@@ -1260,22 +800,11 @@ img {
   88%  { opacity: 1; translate: -1px 0; filter: none;
          text-shadow: -1px 0 var(--magenta), 1px 0 var(--ciano);
          clip-path: inset(0 0 0 0); }
-  /* Non `none`: l'ombra del tema, altrimenti in «nudo» il testo resta senza
-     stacco per tutti i 900ms in cui .is-nuovo tiene viva l'animazione. */
+
   100% { opacity: 1; translate:  0 0;   filter: none;
          text-shadow: var(--ombra-corrente); clip-path: inset(0 0 0 0); }
 }
 
-/* Le righe di scansione e la banda di strappo.
-   Stanno su un ::after sopra al testo, come per «bagliore», così non spostano
-   niente e non interferiscono col gradiente del rilievo. mix-blend-mode:
-   screen schiarisce invece di coprire — su un overlay trasparente è l'unico
-   modo di aggiungere luce senza aggiungere un fondo, che coprirebbe il gioco.
-
-   Sono la metà del disturbo che NON si può fare col testo: la riga di
-   scansione appartiene allo schermo, non al messaggio, ed è quella che fa
-   leggere l'insieme come un guasto video invece che come un carattere che
-   trema. */
 .pollaio[data-effetto="glitch"] .pollaio__riga.is-nuovo::after {
   content: "";
   position: absolute;
@@ -1298,9 +827,6 @@ img {
   animation: entra-glitch-scansione var(--t-glitch) steps(1, end) both;
 }
 
-/* La banda scende a scatti e non di continuo, e non arriva mai in fondo in
-   modo ordinato: sparisce dove capita. Una banda che scorre liscia da cima a
-   fondo è un effetto da presentazione, non un guasto. */
 @keyframes entra-glitch-scansione {
   0%   { opacity: 0.95; translate: 0 -55%; }
   10%  { opacity: 0.7;  translate: 0  30%; }
@@ -1314,16 +840,6 @@ img {
   100% { opacity: 0;    translate: 0   0; }
 }
 
-/* --- matrix ---
-   I caratteri arrivano scombinati e si ricompongono da sinistra a destra: quel
-   pezzo lo fa js/resa.js, perché riscrivere il testo fotogramma per fotogramma
-   in CSS non si può. Qui c'è il vestito: verde da terminale, monospazio finché
-   dura (i glifi a larghezza fissa non fanno ballare la riga mentre cambiano) e
-   una riga di scansione che scende.
-
-   Il monospazio si toglie insieme a .is-nuovo, e a quel punto il testo è già
-   tornato quello vero: il cambio di carattere non si nota perché avviene
-   nell'unico istante in cui il contenuto è comunque cambiato. */
 .pollaio[data-effetto="matrix"] .pollaio__riga.is-nuovo {
   animation: entra-matrix var(--t-matrix) var(--curva) both;
 }
@@ -1333,9 +849,6 @@ img {
   to   { opacity: 1; translate: 0 0; }
 }
 
-/* L'alone verde si SOMMA all'ombra del tema, non la sostituisce: un alone
-   chiaro attorno a testo chiaro non stacca da niente, e sopra a un gameplay
-   luminoso il messaggio sparirebbe. Il contorno scuro resta sotto. */
 .pollaio[data-effetto="matrix"] .pollaio__riga.is-nuovo .pollaio__corpo {
   font-family: var(--font-mono);
   color: var(--ok);
@@ -1345,8 +858,6 @@ img {
     0 0 18px color-mix(in srgb, var(--ok) 45%, transparent);
 }
 
-/* La riga di scansione: una banda verde che attraversa il messaggio dall'alto
-   in basso una volta sola. screen la fa schiarire invece di coprire. */
 .pollaio[data-effetto="matrix"] .pollaio__riga.is-nuovo::after {
   content: "";
   position: absolute;
@@ -1371,7 +882,6 @@ img {
   to   { background-position: 0 160%; opacity: 0; }
 }
 
-/* --- insegna --- */
 .pollaio[data-effetto="insegna"] .pollaio__riga.is-nuovo {
   animation: entra-insegna var(--t-insegna) var(--curva) both;
 }
@@ -1385,7 +895,6 @@ img {
   100% { opacity: 1;   box-shadow: none; }
 }
 
-/* --- scatto --- */
 .pollaio[data-effetto="scatto"] .pollaio__riga.is-nuovo {
   animation: entra-scatto var(--t-scatto) cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
@@ -1395,7 +904,6 @@ img {
   to   { opacity: 1; translate: 0 0; }
 }
 
-/* Coi nuovi in alto, lo scatto arriva dall'altra parte. */
 .pollaio[data-effetto="scatto"][data-verso="giu"] .pollaio__riga.is-nuovo {
   animation-name: entra-scatto-giu;
 }
@@ -1405,14 +913,10 @@ img {
   to   { opacity: 1; translate: 0 0; }
 }
 
-/* --- niente --- */
 .pollaio[data-effetto="niente"] .pollaio__riga.is-nuovo {
   animation: none;
 }
 
-/* Il lampo del rilievo 3 sta sul BORDO, mentre gli effetti qui sopra lavorano
-   sulla riga: così i due non si sommano in un pasticcio e si possono guardare
-   insieme senza che uno mangi l'altro. */
 .pollaio__riga[data-rilievo="3"].is-nuovo {
   border-inline-start-color: var(--rilievo);
 }
@@ -1420,13 +924,6 @@ img {
 .pollaio[data-effetto="niente"] .pollaio__riga[data-rilievo="3"].is-nuovo {
   animation: none;
 }
-
-
-/* ---- 15. L'uscita in dissolvenza ------------------------------------------
-   Quando «svanisci» è acceso, js/resa.js mette .is-svanisce e stacca la riga
-   400ms dopo. Si anima anche max-block-size, così le righe sotto risalgono
-   invece di lasciare un buco a metà colonna.
-   -------------------------------------------------------------------------- */
 
 .pollaio__riga.is-svanisce {
   animation: esce var(--durata-lunga) var(--curva) both;
@@ -1439,20 +936,6 @@ img {
   to   { opacity: 0; max-block-size: 0;    translate: 0 -6px;
          padding-block: 0; margin-block: 0; border-block-start-width: 0; }
 }
-
-
-/* ---- 16. La mascotte ------------------------------------------------------
-   NIENTE MASCHERA, ed è una correzione: qui prima c'era la maschera radiale
-   copiata dal sito, messa perché si dava per scontato che img/mascot.png
-   avesse il fondo pieno.
-
-   Il file è stato misurato: è un PNG RGBA in cui il 43,7% dei pixel ha alfa
-   zero e i bordi sono già sfumati. È già ritagliato. Applicargli sopra una
-   maschera non toglieva nessun fondo — erodeva il disegno, attenuando
-   ventimila pixel visibili e sbiadendo i piedi e la punta della cresta.
-
-   Resta solo l'alone viola, che è decorativo e voluto.
-   -------------------------------------------------------------------------- */
 
 .pollaio__pollo {
   flex: none;
@@ -1475,13 +958,6 @@ img {
   50%      { rotate: 2.4deg; }
 }
 
-
-/* ---- 17. Movimento ridotto ------------------------------------------------
-   Si spengono tutte le animazioni di questo foglio A MANO, e si conserva
-   l'aspetto finale invece di far sparire gli elementi: chi ha chiesto meno
-   movimento vuole vedere la chat ferma, non vuole non vederla.
-   -------------------------------------------------------------------------- */
-
 @media (prefers-reduced-motion: reduce) {
 
   .pollaio__riga.is-nuovo,
@@ -1492,10 +968,7 @@ img {
   .pollaio[data-effetto="insegna"] .pollaio__riga.is-nuovo,
   .pollaio[data-effetto="scatto"] .pollaio__riga.is-nuovo,
   .pollaio[data-effetto="matrix"] .pollaio__riga.is-nuovo,
-  /* Questo selettore ha una specificità in più ed è messo apposta: la regola
-     che accende entra-scatto-giu ne ha (0,5,0) contro le (0,4,0) della riga
-     qui sopra, e senza pareggiarla resterebbe lei a decidere il nome
-     dell'animazione anche a movimento ridotto. */
+
   .pollaio[data-effetto="scatto"][data-verso="giu"] .pollaio__riga.is-nuovo {
     animation: none;
     opacity: 1;
@@ -1505,25 +978,16 @@ img {
     box-shadow: none;
   }
 
-  /* La passata di luce non si ferma: si toglie proprio, perché ferma a metà
-     lascerebbe una banda chiara addosso alla riga per sempre. Vale identico
-     per le righe di scansione del glitch, che ferme sarebbero una grata
-     azzurra stampata sopra al messaggio — e a movimento ridotto un overlay
-     deve diventare più leggibile, non meno. */
   .pollaio[data-effetto="bagliore"] .pollaio__riga.is-nuovo::after,
   .pollaio[data-effetto="glitch"] .pollaio__riga.is-nuovo::after,
   .pollaio[data-effetto="matrix"] .pollaio__riga.is-nuovo::after {
     content: none;
   }
 
-  /* Il verde da terminale e il monospazio restano addosso al messaggio finché
-     dura .is-nuovo: senza movimento non si ricompone niente, quindi tanto vale
-     lasciarlo subito nel suo colore vero. */
   .pollaio[data-effetto="matrix"] .pollaio__riga.is-nuovo .pollaio__corpo {
     font-family: var(--font-testo);
     color: var(--testo);
-    /* L'ombra del tema, non `none`: senza movimento il messaggio deve essere
-       PIÙ leggibile, non meno. Con `none` nel tema «nudo» spariva. */
+
     text-shadow: var(--ombra-corrente);
   }
 

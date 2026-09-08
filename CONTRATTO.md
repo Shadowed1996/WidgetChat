@@ -58,11 +58,29 @@ Non si importa un file, non si dipende da niente che stia là fuori.
 - **Costanti in MAIUSCOLO** in cima al file: `CANALE`, `MAX_MESSAGGI`, `FINESTRA`.
 - **Accesso a `localStorage` sempre dentro `try/catch`**, anche in lettura.
   Chiavi con prefisso `sb-pollaio-`.
-- **Commenti in italiano, densi, che spiegano il *perché***, e quando serve
-  l'alternativa scartata. Ogni file si apre con un cappello che dichiara: cosa
-  possiede, cosa **non** possiede, e l'indice numerato dei paragrafi. Le sezioni
-  si separano con `/* ---- N. Titolo ---- */`. Non è un vezzo: è la firma della
-  mano che ha scritto il sito, e il widget deve sembrare della stessa mano.
+- **Il codice pubblicato non porta commenti.** È una decisione presa a progetto
+  già scritto: i sorgenti erano commentati fittamente — cappello per ogni file,
+  il perché di ogni scelta accanto alla riga che la mette in pratica,
+  l'alternativa scartata quando serviva — e sono stati spogliati prima di
+  pubblicarli.
+
+  **Quelle spiegazioni non sono perdute: stanno nella storia di git**, nel primo
+  commit. Chi deve capire perché una riga è come è, la cerca lì:
+
+  ```
+  git log -p --reverse -- app/js/kick.js
+  ```
+
+  Vale la pena sapere cosa c'era scritto, perché sono difetti già pagati una
+  volta: che il campo `data` di Kick è una stringa JSON e va aperto due volte,
+  che l'app key che circola nei repository è morta, che `ripulisciTesto` mette
+  in minuscolo e distruggerebbe un id YouTube, che DWM non arrotonda le
+  finestre senza cornice, che `Spaziato` è alla terza versione perché le prime
+  due sbagliavano in due modi diversi.
+
+  Chi aggiunge codice nuovo lo scriva pure commentato mentre lavora: è il modo
+  di non ripetere gli stessi errori. I commenti si tolgono alla fine, non
+  all'inizio.
 - **Proprietà logiche nel CSS**: `inline-size`, `block-size`,
   `inset-inline-start`, `padding-block`, `border-block-end`. Mai `width`/`left`/
   `top` se esiste il corrispettivo logico.

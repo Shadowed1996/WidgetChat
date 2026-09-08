@@ -5,74 +5,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>il pollaio — chat di slayer_beard</title>
 
-<!-- =============================================================================
-     pollaio.html — L'OVERLAY. È QUESTA la sorgente browser di OBS.
-
-     COME SI METTE IN OBS
-       Sorgente → + → Browser → «File locale» → scegli questo file →
-       Larghezza 400, Altezza 600 → spunta «Aggiorna il browser quando la
-       scena diventa attiva».
-
-     Oppure fai doppio clic su Pollaio.exe, che lo apre già nella sua finestra
-     e la si cattura con «Cattura finestra».
-
-     COME SI CONFIGURA
-       Non si modifica questo file: si aprono le impostazioni nella querystring.
-       Apri regia.html per costruirle senza scriverle a mano, con l'anteprima.
-       Esempio:  pollaio.html?tema=nudo&scala=120&svanisci=60
-
-     PERCHÉ NON C'È UN FONDO
-       In OBS un fondo opaco coprirebbe il gameplay. Il fondo lo mettono i
-       singoli messaggi, tramite il tema, e mai il documento. Se apri questa
-       pagina in un browser normale vedrai il bianco della finestra dietro: è
-       giusto così, non è un difetto.
-
-     PROVA SENZA DIRETTA
-       pollaio.html?prova=1 genera traffico finto — messaggi, abbonamenti,
-       raid, bits — così puoi inquadrare l'overlay in OBS anche a canale
-       spento, che è sempre il momento in cui si sistemano queste cose.
-     ============================================================================= -->
-
 <link rel="icon" href="img/favicon.png">
 
-<!-- I caratteri del canale: Space Grotesk titola, Manrope racconta, JetBrains
-     Mono etichetta. Se Google non risponde — e in OBS capita, la sorgente
-     parte prima della rete — i ripieghi di sistema in tokens.css hanno
-     metriche vicine e il disegno non salta. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/pollaio.css">
-<!-- Il menu del tasto destro, che serve anche alla regia e quindi ha un foglio
-     suo invece di stare qui dentro. In una Sorgente Browser non compare mai. -->
+
 <link rel="stylesheet" href="css/menu.css">
 </head>
 <body>
 
-<!-- La radice. data-tema e data-verso li riscrive js/pollaio.js leggendo la
-     querystring; restano scritti qui coi valori predefiniti così la pagina ha
-     un aspetto giusto anche nell'istante prima che il JS parta. -->
 <div class="pollaio" data-tema="notte" data-verso="su">
 
-  <!-- La spia di stato. Si spegne da sola tre secondi dopo il collegamento:
-       una spia verde fissa in un angolo per otto ore di diretta è rumore.
-       Niente aria-live: è un overlay, non lo legge nessun lettore di schermo,
-       e annunciarlo sarebbe uno sproloquio continuo (§12 del contratto). -->
   <div class="pollaio__spia" data-stato="collego">
     <span class="pollaio__spia-punto"></span>
     <span class="pollaio__spia-testo">Apro il pollaio…</span>
   </div>
 
-  <!-- La fascia dell'Hype Train. Sta FUORI dall'elenco dei messaggi, e non è
-       un caso: è uno stato che dura minuti, non un messaggio che passa. Se
-       stesse in mezzo alle righe scorrerebbe via proprio mentre la si guarda
-       per sapere quanto manca.
-
-       L'hype train non passa dalla chat: lo va a chiedere js/treno.js a una
-       sorgente sua. Se quella tace, questa fascia resta nascosta e non
-       succede altro. -->
   <div class="pollaio__treno" data-fase="niente" hidden>
     <p class="pollaio__treno-testa">
       <span class="pollaio__treno-titolo">Hype Train</span>
@@ -87,29 +39,14 @@
     </p>
   </div>
 
-  <!-- Vuoto per contratto: lo riempie js/resa.js, che è l'unico file
-       autorizzato a toccare il DOM. -->
   <ol class="pollaio__elenco"></ol>
 
-  <!-- La mascotte, spenta finché non la si accende con ?pollo=1.
-
-       L'indirizzo sta su data-src e non su src: un <img> dentro un elemento
-       hidden viene scaricato lo stesso, e sarebbero 135 kB presi ogni volta
-       che la scena si riattiva, per un'immagine che quasi nessuno accende.
-       Lo sposta js/pollaio.js quando serve davvero.
-
-       Il PNG NON ha il fondo trasparente: è css/pollaio.css a ritagliarlo con
-       una maschera radiale. Senza quella, in OBS si vedrebbe un rettangolo
-       bianco sopra al gameplay. -->
   <div class="pollaio__pollo" hidden>
     <img class="pollaio__pollo-img" data-src="img/mascot.png" alt="" aria-hidden="true">
   </div>
 
 </div>
 
-<!-- L'ordine è un contratto (§4): chi espone un globale viene prima di chi lo
-     consuma. Niente type="module": i moduli ES sono bloccati sotto file://,
-     e questa pagina deve funzionare aperta direttamente da disco. -->
 <script src="js/impostazioni.js"></script>
 <script src="js/irc.js"></script>
 <script src="js/kick.js"></script>

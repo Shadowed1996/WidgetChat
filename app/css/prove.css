@@ -1,21 +1,3 @@
-/* =============================================================================
-   prove.css — «il pollaio» · il banco di prova
-
-   POSSIEDE: il blocco .prove, cioè l'aspetto della pagina che elenca l'esito
-   dei casi. Nient'altro: non tocca .pollaio e non tocca .regia.
-
-   È IL FOGLIO PIÙ POVERO DEL PROGETTO, ED È VOLUTO. Questa pagina si guarda
-   per tre secondi, per sapere se è verde o rossa, e poi si chiude. Ogni
-   minuto speso a farla bella è un minuto tolto a quello che deve provare.
-   Quindi: nessuna animazione, nessuna ombra, nessun gradiente. Solo la
-   palette del canale, perché anche una pagina di servizio deve sembrare
-   della stessa mano (CONTRATTO §1.5: nessun esadecimale fuori da tokens.css).
-
-   Per la stessa ragione qui non c'è il paragrafo finale sul movimento
-   ridotto che hanno gli altri due fogli: non c'è nessuna @keyframes da
-   spegnere. Non è una dimenticanza.
-   ============================================================================= */
-
 *,
 *::before,
 *::after {
@@ -30,9 +12,6 @@
   font-family: var(--font-testo);
   line-height: 1.55;
 }
-
-
-/* ---- La testata ----------------------------------------------------------- */
 
 .prove__testa {
   max-inline-size: 70ch;
@@ -59,9 +38,6 @@
   color: var(--testo-medio);
 }
 
-/* Il sommario è la sola cosa che si guarda davvero: deve dire verde o rosso
-   da tre metri, senza leggerlo. Per questo è l'unico elemento della pagina
-   con un fondo pieno. */
 .prove__sommario {
   margin-block-start: var(--passo-3);
   padding: var(--passo-2);
@@ -83,9 +59,6 @@
   color: var(--allerta);
 }
 
-
-/* ---- L'elenco dei casi ---------------------------------------------------- */
-
 .prove__gruppo {
   margin-block: var(--passo-3) var(--passo);
   color: var(--testo-tenue);
@@ -102,9 +75,6 @@
   max-inline-size: 90ch;
 }
 
-/* Il caso passato è volutamente smorto. Sono la maggioranza, e se avessero
-   tutti un segno di spunta acceso il rosso dei due che contano si perderebbe
-   in mezzo: un elenco in cui tutto grida non dice più niente. */
 .prove__caso {
   display: grid;
   grid-template-columns: 1.5rem 1fr;
@@ -117,9 +87,6 @@
 .prove__caso[data-stato="passato"] { color: var(--testo-tenue); }
 .prove__caso[data-stato="fallito"] { color: var(--allerta); }
 
-/* Rotto è peggio di fallito: il modulo si è spaccato in mano invece di dare
-   una risposta sbagliata. Si distingue col magenta, che in questo progetto è
-   già la tinta delle cose che non si possono ignorare. */
 .prove__caso[data-stato="rotto"] { color: var(--magenta); }
 
 .prove__segno {
@@ -130,9 +97,6 @@
 .prove__titolo-caso,
 .prove__titolo { min-inline-size: 0; }
 
-/* Il dettaglio esiste solo quando qualcosa è andato storto, e allora è la
-   riga più importante della pagina: dice cosa ci si aspettava e cosa è
-   arrivato. Va a capo dove capita, perché ci finisce dentro del JSON. */
 .prove__dettaglio {
   grid-column: 2;
   margin: 2px 0 var(--passo);
@@ -141,9 +105,6 @@
   font-size: var(--t-micro);
   overflow-wrap: anywhere;
 }
-
-
-/* ---- Il piede ------------------------------------------------------------- */
 
 .prove__piede {
   max-inline-size: 70ch;

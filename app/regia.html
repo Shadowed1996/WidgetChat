@@ -1,30 +1,5 @@
 <!doctype html>
-<!-- =====================================================================
-     regia.html — «il pollaio» · il configuratore (CONTRATTO §14)
 
-     POSSIEDE: l'ossatura della pagina di regia — testata, le due
-     colonne, la scena dell'anteprima, la barra dell'indirizzo, la nota
-     su OBS. E gli id, che sono contratto con js/regia.js.
-
-     NON POSSIEDE: i campi. Nella colonna dei comandi qui non c'è nemmeno
-     un <input>: li costruisce js/regia.js leggendo Impostazioni.SCHEMA,
-     uno per ogni voce, raggruppati per `gruppo`. È la sola cosa che
-     garantisce che il giorno che si aggiunge un'impostazione la regia se
-     ne accorga da sola invece di ignorarla in silenzio — e una regia che
-     ignora un'impostazione è peggio di una regia che non c'è, perché
-     produce un indirizzo che sembra completo e non lo è.
-
-     QUESTA PAGINA NON È TRASPARENTE. L'overlay lo è (in OBS un fondo
-     opaco coprirebbe il gameplay), questa no: è un'interfaccia che si
-     guarda in un browser, e ha lo sfondo scuro del canale come il sito.
-     La trasparenza si vede dentro all'anteprima, che sta sopra a uno
-     sfondo a scacchi apposta per farla vedere.
-
-     Deve funzionare da file:// come tutto il resto: nessun type="module",
-     solo percorsi relativi, e i due <script> classici in fondo al body
-     nell'ordine del CONTRATTO §4 — chi espone un globale viene prima di
-     chi lo consuma.
-     ===================================================================== -->
 <html lang="it">
 <head>
 <meta charset="utf-8">
@@ -38,23 +13,13 @@
 <link rel="icon" href="img/favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="img/favicon.png">
 
-<!-- I font sono l'unica cosa che questa pagina scarica dalla rete
-     (CONTRATTO §1.1). Se Google non risponde restano i ripieghi di
-     sistema dichiarati in tokens.css, che hanno metriche vicine: la
-     pagina si legge lo stesso e nessuna misura salta. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&amp;family=Manrope:wght@400;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
 
-<!-- Ordine obbligatorio: tokens.css dichiara i valori, regia.css li
-     consuma. Nessun altro foglio: la regia non carica pollaio.css, che
-     vive dentro all'iframe dell'anteprima e non deve toccare questa
-     pagina. -->
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/regia.css">
-<!-- Lo stesso menu del tasto destro dell'overlay: sta in un foglio suo proprio
-     perché serve a tutte e due le pagine, che per il resto non condividono
-     niente. Aperta in un browser normale questa riga non disegna nulla. -->
+
 <link rel="stylesheet" href="css/menu.css">
 </head>
 
@@ -62,9 +27,6 @@
 
 <a class="regia__salta" href="#comandi">Salta ai comandi</a>
 
-<!-- =====================================================================
-     TESTATA
-     ===================================================================== -->
 <header class="regia__testa">
   <p class="regia__occhiello">Il pollaio · regia</p>
   <h1 class="regia__titolo">Regia del pollaio</h1>
@@ -79,10 +41,6 @@
 
 <main class="regia__corpo">
 
-  <!-- ===================================================================
-       COLONNA SINISTRA — I COMANDI
-       Vuota apposta: la riempie js/regia.js. #gruppi è contratto con lui.
-       =================================================================== -->
   <section class="regia__colonna" id="comandi" aria-labelledby="titolo-comandi">
     <h2 class="regia__sezione-titolo" id="titolo-comandi">I comandi</h2>
     <p class="regia__sezione-testo">
@@ -92,10 +50,7 @@
     </p>
 
     <div class="regia__gruppi" id="gruppi">
-      <!-- Se JavaScript è acceso, questo paragrafo sparisce nel momento in
-           cui il primo gruppo entra in pagina. Se resta, vuol dire che
-           qualcosa non è partito, e lo dice in italiano invece di lasciare
-           una colonna vuota che sembra un difetto di caricamento. -->
+
       <p class="regia__vuoto" id="gruppi-vuoto">
         Sto costruendo i comandi. Se questa riga resta qui, non ci sono
         riuscito: prova a ricaricare la pagina.
@@ -112,19 +67,11 @@
     </noscript>
   </section>
 
-  <!-- ===================================================================
-       COLONNA DESTRA — L'ANTEPRIMA
-       #scena, #telaio, #misura, #altezza sono contratto con js/regia.js.
-       =================================================================== -->
   <section class="regia__colonna regia__colonna--anteprima" aria-labelledby="titolo-anteprima">
 
     <div class="regia__barra">
       <h2 class="regia__sezione-titolo" id="titolo-anteprima">L’anteprima</h2>
 
-      <!-- Il vero problema di un overlay non è come sta su fondo nero: è se
-           il testo si legge sopra a QUALSIASI cosa. Questi quattro fondi
-           servono a scoprirlo adesso, invece che in diretta sopra a una
-           schermata di caricamento bianca. -->
       <fieldset class="regia__fondi">
         <legend class="regia__fondi-titolo">Cosa ci metto sotto</legend>
         <div class="regia__segmenti">
@@ -149,9 +96,6 @@
       è lì che un tema senza ombra sparisce.
     </p>
 
-    <!-- La scena scorre invece di rimpicciolire l'anteprima: un'anteprima
-         ridimensionata mentirebbe sulle misure, e le misure sono metà del
-         motivo per cui questa pagina esiste. -->
     <div class="regia__scena" id="scena" data-fondo="scacchi">
       <iframe class="regia__telaio" id="telaio" title="Anteprima dell’overlay, con traffico finto" src="about:blank"></iframe>
     </div>
@@ -186,9 +130,6 @@
   </section>
 </main>
 
-<!-- =====================================================================
-     IN BASSO — L'INDIRIZZO, LE AZIONI, E COME SI ATTACCA A OBS
-     ===================================================================== -->
 <footer class="regia__piede">
 
   <section class="regia__consegna" aria-labelledby="titolo-indirizzo">
@@ -199,10 +140,6 @@
       basta.
     </p>
 
-    <!-- tabindex="0" perché sia raggiungibile col Tab: quando gli appunti non
-         sono disponibili (file:// non è un contesto sicuro) il ripiego è
-         selezionare questo testo, e per selezionarlo bisogna poterci arrivare
-         anche senza mouse. -->
     <code class="regia__indirizzo" id="indirizzo" tabindex="0">pollaio.html</code>
 
     <div class="regia__azioni">
@@ -214,10 +151,6 @@
         Apri in una finestra
       </button>
 
-      <!-- La conferma è inline e non un confirm() del browser: quello ferma
-           tutta la pagina, arriva senza contesto e in italiano non ci si può
-           nemmeno scrivere dentro. Qui il «Sicuro?» nasce accanto al bottone
-           che l'ha provocato, dove sta già guardando l'occhio. -->
       <span class="regia__ripristina">
         <button class="regia__btn regia__btn--vuoto" type="button" id="ripristina" aria-expanded="false">
           Ripristina
@@ -233,12 +166,6 @@
     <p class="regia__eco" id="eco" role="status"></p>
   </section>
 
-  <!-- ===================================================================
-       LE CONFIGURAZIONI SALVATE
-       #preset-elenco, #preset-vuoto, #preset-salva, #preset-nome-riga,
-       #preset-nome, #preset-conferma, #preset-annulla sono contratto con
-       js/regia.js. L'elenco nasce vuoto: lo riempie lui.
-       =================================================================== -->
   <section class="regia__preset" aria-labelledby="titolo-preset">
     <h2 class="regia__sezione-titolo" id="titolo-preset">Le configurazioni salvate</h2>
     <p class="regia__sezione-testo">
@@ -256,10 +183,7 @@
     </p>
 
     <div class="regia__azioni">
-      <!-- Stessa forma della conferma del Ripristina, e per la stessa
-           ragione: un prompt() del browser ferma la pagina, arriva senza
-           contesto e parla la lingua del sistema. Il campo del nome nasce
-           accanto al bottone che l'ha chiesto. -->
+
       <span class="regia__salva">
         <button class="regia__btn regia__btn--vuoto" type="button" id="preset-salva" aria-expanded="false">
           Salva com’è adesso
@@ -304,11 +228,6 @@
   <p class="regia__firma">Il pollaio — widget chat per OBS · slayer_beard</p>
 </footer>
 
-<!-- Ordine obbligatorio: Impostazioni espone lo SCHEMA, Regia lo consuma.
-     menu.js sta in mezzo perché legge le impostazioni e non serve a Regia:
-     accende il menu del tasto destro quando questa pagina gira dentro la
-     finestra di Regia.exe, che è senza barra del titolo. Aperta in un browser
-     normale non fa niente. -->
 <script src="js/impostazioni.js"></script>
 <script src="js/menu.js"></script>
 <script src="js/regia.js"></script>

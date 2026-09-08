@@ -1,30 +1,3 @@
-/* =============================================================================
-   menu.css — «il pollaio» · il menu del tasto destro
-
-   POSSIEDE: il blocco .menu, cioè il pannellino che compare col tasto destro
-   dentro le finestre senza cornice di Pollaio.exe e Regia.exe.
-
-   PERCHÉ UN FOGLIO SUO, e non due paragrafi copiati.
-   Questo menu serve DUE pagine che non condividono nient'altro: l'overlay usa
-   pollaio.css, la regia usa regia.css, e il contratto (§4) dice che la regia
-   non carica il foglio dell'overlay — quello vive dentro l'iframe
-   dell'anteprima e non deve toccare la pagina intorno. Restavano due strade:
-   ripetere le stesse regole in tutti e due i fogli, oppure dargliene uno.
-   Ripeterle vuol dire ritoccarne una sola il giorno che si cambia il menu, e
-   accorgersene solo dall'altra parte, settimane dopo.
-
-   Per la stessa ragione il blocco si chiama `.menu` e non `.pollaio__menu`:
-   non appartiene all'overlay più di quanto appartenga alla regia.
-
-   È L'UNICO PEZZO DEL PROGETTO CHE NON DEVE ESSERE DISCRETO. Tutto il resto
-   dell'overlay lavora per non farsi notare sopra al gameplay; questo lo si
-   guarda due secondi, ci si clicca dentro e sparisce, e in quei due secondi
-   deve essere leggibilissimo. Da qui il fondo pieno e opaco invece del vetro
-   dei messaggi: sotto può esserci una chat fitta, e un menu semitrasparente
-   sopra del testo è il modo più veloce di cliccare la voce sbagliata — che
-   qui vuol dire chiudere la chat in diretta.
-   ============================================================================= */
-
 .menu {
   position: fixed;
   z-index: var(--z-menu);
@@ -65,8 +38,6 @@
   outline-offset: -2px;
 }
 
-/* Un filo di stacco sopra le voci che cambiano registro: da lì in giù non si
-   comanda più la pagina, si comanda la finestra. */
 .menu__voce.is-staccata {
   margin-block-start: 4px;
   border-block-start: 1px solid var(--linea);
@@ -75,9 +46,6 @@
   padding-block-start: 12px;
 }
 
-/* «Chiudi» è l'unica voce da cui non si torna indietro, e in diretta è
-   l'errore più caro del menu. Si colora già a riposo — non solo al passaggio
-   del mouse — perché la si deve riconoscere PRIMA di arrivarci sopra. */
 .menu__voce.is-pericolosa { color: var(--live); }
 
 .menu__voce.is-pericolosa:hover {

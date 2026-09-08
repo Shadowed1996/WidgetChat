@@ -1,49 +1,5 @@
-/* =============================================================================
-   prove.js — «il pollaio» · il banco di prova
-
-   POSSIEDE: window.Prove — un banco minimo e l'elenco dei casi. Interroga le
-   funzioni PURE dei moduli: testo dentro, valore fuori, nessuno stato di mezzo.
-
-   NON POSSIEDE: niente del widget. Non apre connessioni, non chiama la rete,
-   non disegna una riga di chat. Carica i moduli e fa loro delle domande di cui
-   si conosce già la risposta.
-
-   PERCHÉ ESISTE
-   Questo progetto passa la giornata a leggere input ostile: i tag di un
-   protocollo con l'escaping, i nomi che le persone si scelgono da sole, gli
-   indirizzi battuti a mano dentro un campo di OBS, le risposte di quattro
-   provider che nessuno ci garantisce. Le difese ci sono — l'unescaping in un
-   passaggio solo, il cancello dell'https, il ritaglio dei numeri, la doma
-   dello zalgo — ma finora non c'era modo di sapere se una modifica ne aveva
-   rotta una. E sono difese silenziose: quando cedono non si vede un errore,
-   si vede un messaggio plausibile che dice una cosa diversa da quella scritta.
-
-   COSA NON SI PROVA, E PERCHÉ
-   Non si provano la rete, il DOM e il tempo. Non perché non contino, ma
-   perché proverebbero il finto: un banco che simula fetch verifica il
-   simulatore. Qui si prova la parte deterministica, che è anche quella dove
-   un errore non si nota a occhio.
-
-   COME SI USA
-   Doppio clic su prove.html. Verde: tutto a posto. Rosso: la riga dice cosa
-   ci si aspettava e cosa è arrivato. Gira da file:// come tutto il resto.
-
-   INDICE
-     1. Il banco: casi, confronti, esito
-     2. Impostazioni — tipi, ritagli, sinonimi, andata e ritorno
-     3. Irc — l'analisi del protocollo e l'unescaping dei tag
-     4. Badge — il tag `badges` e i ruoli
-     5. Eventi — da msg-id a evento, e la moderazione
-     6. Emote — dal testo ai pezzi
-     7. Rilievo — i livelli
-     8. Esecuzione e resa in pagina
-   ============================================================================= */
 (function () {
   'use strict';
-
-  /* ------------------------------------------------------------------
-     1. Il banco: casi, confronti, esito
-     ------------------------------------------------------------------ */
 
   const casi = [];
   let gruppoCorrente = '';
@@ -54,10 +10,6 @@
     casi.push({ gruppo: gruppoCorrente, titolo: titolo, fn: fn });
   }
 
-  /* Un fallimento NON è un'eccezione qualunque, ed è importante tenerli
-     distinti: un caso che fallisce dice «il codice fa una cosa diversa da
-     quella che mi aspettavo», un caso che lancia dice «il codice si è
-     rotto in mano». Il secondo è più grave e va letto per primo. */
   function Fallito(messaggio) { this.messaggio = messaggio; }
 
   function mostra(v) {
@@ -78,9 +30,6 @@
     if (!condizione) { throw new Fallito(nota || 'mi aspettavo vero'); }
   }
 
-  /* Confronto piatto, un livello solo: qui si confrontano oggetti di
-     valori semplici, e una ricorsione generale sarebbe codice da
-     mantenere per un caso che non si presenta. */
   function stessiCampi(avuto, atteso, nota) {
     let chiave;
     for (chiave in atteso) {
@@ -91,9 +40,6 @@
     }
   }
 
-  // Un messaggio del §5, tutto ai valori spenti. I casi ci scrivono
-  // sopra soltanto il campo che stanno provando: così quando uno fallisce
-  // si sa che è per quel campo lì e non per il contorno.
   function messaggio(extra) {
     const m = {
       id: '', tipo: 'messaggio', ts: 0, utenteId: '', nick: 'tizio',
@@ -108,11 +54,6 @@
     }
     return m;
   }
-
-
-  /* ------------------------------------------------------------------
-     2. Impostazioni — tipi, ritagli, sinonimi, andata e ritorno
-     ------------------------------------------------------------------ */
 
   gruppo('Impostazioni');
 
@@ -140,9 +81,7 @@
   });
 
   prova('un sinonimo inventato non pesca dal prototipo', function () {
-    // «constructor» su un oggetto normale restituisce una funzione: se il
-    // controllo non fosse hasOwnProperty, qui uscirebbe NaN e la
-    // spaziatura dell'overlay diventerebbe una misura invalida.
+
     uguale(window.Impostazioni.leggi('spazio=constructor').spazio, 130);
   });
 
@@ -162,8 +101,7 @@
   });
 
   prova('una percentuale spaiata non ferma la lettura', function () {
-    // decodeURIComponent('%zz') lancia. Se l'eccezione non fosse presa,
-    // si fermerebbe l'avvio dell'overlay, in diretta, per un carattere.
+
     uguale(window.Impostazioni.leggi('%zz=1&scala=120').scala, 120);
   });
 
@@ -172,14 +110,10 @@
   });
 
   prova('una voce nascosta non finisce mai nell’indirizzo', function () {
-    // `finestra` lo scrive Pollaio.exe per dire alla pagina che gira nella
-    // sua finestra. La regia gira lì dentro, quindi ce l'ha addosso: se
-    // uscisse nell'indirizzo da copiare, ogni Sorgente Browser di OBS si
-    // porterebbe dietro un parametro che dichiara una finestra inesistente.
+
     const v = window.Impostazioni.leggi('finestra=1&tema=nudo');
     uguale(v.finestra, true, 'letto');
-    // Con base vuota l'indirizzo comincia col `?`: è la forma che la regia
-    // salva in localStorage e che ripassa da leggi(), che il `?` lo toglie.
+
     uguale(window.Impostazioni.indirizzo(v, ''), '?tema=nudo', 'scritto');
   });
 
@@ -190,11 +124,6 @@
       tema: 'nudo', scala: 140, spazio: 220, velocita: 60, prova: true
     });
   });
-
-
-  /* ------------------------------------------------------------------
-     3. Irc — l'analisi del protocollo e l'unescaping dei tag
-     ------------------------------------------------------------------ */
 
   gruppo('Irc');
 
@@ -232,9 +161,7 @@
   });
 
   prova('la barra doppia seguita da «s» non diventa uno spazio', function () {
-    // È la trappola che il commento di irc.js dichiara: una catena di
-    // .replace() qui restituirebbe «barra + spazio» invece di «barra + s».
-    // Un display-name può contenerla, e chi ci prova lo fa apposta.
+
     uguale(window.Irc.disescapa('\\\\s'), '\\s');
   });
 
@@ -245,11 +172,6 @@
   prova('i ritorni a capo non entrano in un tag', function () {
     uguale(window.Irc.disescapa('a\\rb\\nc'), 'abc');
   });
-
-
-  /* ------------------------------------------------------------------
-     4. Badge — il tag `badges` e i ruoli
-     ------------------------------------------------------------------ */
 
   gruppo('Badge');
 
@@ -272,27 +194,17 @@
     uguale(r.vip, false, 'vip');
   });
 
-
-  /* ------------------------------------------------------------------
-     5. Eventi — da msg-id a evento, e la moderazione
-     ------------------------------------------------------------------ */
-
   gruppo('Eventi');
 
   prova('un msg-id nuovo di Twitch non fa sparire l’evento', function () {
-    // È una decisione dichiarata nel cappello di eventi.js, punto 3, e
-    // questo caso serve a tenerla ferma: Twitch aggiunge msg-id ogni
-    // pochi mesi, e un widget che tace davanti a una novità invecchia
-    // molto prima del previsto. Meglio una scheda generica che il nulla.
+
     const e = window.Eventi.leggi({ 'msg-id': 'qualcosadinuovo' }, '');
     vero(e, 'non doveva sparire');
     uguale(e.genere, 'altro', 'genere');
   });
 
   prova('i msg-id che viaggiano sui PRIVMSG non sono eventi', function () {
-    // «highlighted-message» è un riscatto di punti canale: roba di
-    // Rilievo, non una scheda. Senza questo, sopra ogni riscatto
-    // comparirebbe una scheda «altro».
+
     uguale(window.Eventi.leggi({ 'msg-id': 'highlighted-message' }, ''), null);
   });
 
@@ -326,11 +238,6 @@
     uguale(a.id, 'abc-123', 'id');
   });
 
-
-  /* ------------------------------------------------------------------
-     6. Emote — dal testo ai pezzi
-     ------------------------------------------------------------------ */
-
   gruppo('Emote');
 
   prova('il testo semplice resta un pezzo di testo', function () {
@@ -341,7 +248,7 @@
   });
 
   prova('un’emote nativa esce col suo indirizzo https', function () {
-    // Il tag `emotes` di Twitch dà gli indici sul testo: 0-4 è «Kappa».
+
     const p = window.Emote.pezzi('Kappa', '25:0-4', 0);
     let trovata = null;
     for (let i = 0; i < p.length; i++) { if (p[i].tipo === 'emote') { trovata = p[i]; } }
@@ -365,7 +272,6 @@
     vero(link, 'deve esserci un pezzo link');
     vero(link.testo.indexOf(',') === -1, 'la virgola non deve starci: ' + mostra(link.testo));
   });
-
 
   gruppo('Emote di Kick');
 
@@ -395,9 +301,7 @@
   });
 
   prova('una sintassi storta resta testo, non diventa un indirizzo', function () {
-    // Quella sintassi la può scrivere chiunque a mano in chat. L'id passa da
-    // una regola che accetta solo cifre, quindi al massimo si ottiene
-    // un'emote che non esiste — mai un indirizzo scelto da chi scriveva.
+
     const p = window.Emote.pezziKick('[emote:abc:finta] e [emote:] e [emote');
     for (let i = 0; i < p.length; i++) {
       uguale(p[i].tipo === 'emote', false, 'il pezzo ' + i + ' non doveva essere un’emote');
@@ -405,14 +309,12 @@
   });
 
   prova('i link dentro un messaggio Kick si accendono come su Twitch', function () {
-    // Passano dalla stessa guardaGrezzo del caso Twitch: due strade diverse
-    // vorrebbero dire scoprire fra un mese che su una delle due non vanno.
+
     const p = window.Emote.pezziKick('guarda twitch.tv/slayer_beard [emote:1:x]');
     let link = null;
     for (let i = 0; i < p.length; i++) { if (p[i].tipo === 'link') { link = p[i]; } }
     vero(link, 'deve esserci un pezzo link');
   });
-
 
   gruppo('YouTube');
 
@@ -427,10 +329,7 @@
   });
 
   prova('le maiuscole dell’id NON si toccano', function () {
-    // È la trappola che ha fatto tenere questa pulizia fuori dallo schema
-    // delle impostazioni: ripulisciTesto mette in minuscolo tutto ciò che ha
-    // un `modello`, e un id abbassato punta a un altro video o a nessuno.
-    // Il guasto sarebbe muto: nessun errore, solo una chat che non arriva.
+
     uguale(window.Youtube.idVideo('AbCdEfGhIjK'), 'AbCdEfGhIjK');
   });
 
@@ -441,16 +340,9 @@
   });
 
   prova('un id lungo dentro una frase non viene pescato a caso', function () {
-    // Senza le ancore nella regola, undici caratteri buoni dentro una
-    // stringa qualunque diventerebbero un id, e l'overlay punterebbe a un
-    // video scelto dal caso.
+
     uguale(window.Youtube.idVideo('questaeunafraselunghissima'), '');
   });
-
-
-  /* ------------------------------------------------------------------
-     7. Rilievo — i livelli
-     ------------------------------------------------------------------ */
 
   gruppo('Rilievo');
 
@@ -477,8 +369,7 @@
   });
 
   prova('un moderatore che scrive «ok» non è una cosa importante', function () {
-    // È scritto nel contratto §10, ed è la regola che tiene in piedi
-    // tutte le altre: se si accende anche questo, non si accende niente.
+
     window.Rilievo.imposta({ canale: 'slayer_beard', parole: '', menzioni: true, primo: true });
     const m = messaggio({ pezzi: [{ tipo: 'testo', testo: 'ok' }] });
     m.ruoli.mod = true;
@@ -492,11 +383,6 @@
     vero(r, 'deve uscire un giudizio');
     uguale(r.livello, 1, 'livello');
   });
-
-
-  /* ------------------------------------------------------------------
-     8. Esecuzione e resa in pagina
-     ------------------------------------------------------------------ */
 
   function esegui() {
     const esiti = [];
@@ -518,7 +404,7 @@
           dettaglio = err.messaggio;
           falliti++;
         } else {
-          // Molto peggio di un fallimento: il modulo si è rotto in mano.
+
           stato = 'rotto';
           dettaglio = (err && err.message) ? err.message : String(err);
           rotti++;
@@ -531,8 +417,6 @@
     return { esiti: esiti, passati: passati, falliti: falliti, rotti: rotti, totale: casi.length };
   }
 
-  // Tutto con createElement e textContent: il §1.4 vieta innerHTML nel
-  // progetto, e non c'è ragione perché il banco sia l'eccezione.
   function crea(tag, classe, testo) {
     const el = document.createElement(tag);
     if (classe) { el.className = classe; }
@@ -578,8 +462,6 @@
     quanti: function () { return casi.length; }
   };
 
-  // In pagina si disegna; sotto un motore senza documento — un banco a riga
-  // di comando — si lascia il risultato a chi ha chiamato esegui().
   if (typeof document !== 'undefined' && document.getElementById) {
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', function () { disegna(esegui()); });
