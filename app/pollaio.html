@@ -43,6 +43,41 @@
     <img class="pollaio__pollo-img" data-src="img/mascot.png" alt="" aria-hidden="true">
   </div>
 
+  <div class="pollaio__barra" hidden>
+
+    <div class="pollaio__filtri" role="group" aria-label="Cosa faccio vedere">
+      <button class="pollaio__filtro is-scelto" type="button" data-filtro="tutto" aria-pressed="true">Tutto</button>
+      <button class="pollaio__filtro" type="button" data-filtro="twitch" aria-pressed="false" hidden>Twitch</button>
+      <button class="pollaio__filtro" type="button" data-filtro="kick" aria-pressed="false" hidden>Kick</button>
+      <button class="pollaio__filtro" type="button" data-filtro="youtube" aria-pressed="false" hidden>YouTube</button>
+      <button class="pollaio__filtro" type="button" data-filtro="eventi" aria-pressed="false">Eventi</button>
+
+      <button class="pollaio__pausa" type="button" aria-pressed="false" title="Ferma la chat: quello che c’è resta lì">
+        <span class="pollaio__pausa-segno" aria-hidden="true"></span>
+        <span class="pollaio__pausa-testo">Ferma</span>
+      </button>
+    </div>
+
+    <button class="pollaio__attesa" type="button" hidden></button>
+
+    <form class="pollaio__scrivi" hidden>
+      <span class="pollaio__scrivi-conca">
+        <textarea class="pollaio__scrivi-campo" rows="1" maxlength="500"
+                  placeholder="Scrivi in chat" aria-label="Scrivi in chat"
+                  autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
+        <span class="pollaio__scrivi-resta" aria-hidden="true" hidden></span>
+      </span>
+      <button class="pollaio__scrivi-manda" type="submit" disabled>Manda</button>
+    </form>
+
+    <p class="pollaio__invito" hidden>
+      <span class="pollaio__invito-testo">Per scrivere in chat devo sapere chi sei.</span>
+      <button class="pollaio__invito-btn" type="button">Collega l’account</button>
+    </p>
+
+    <p class="pollaio__eco" role="status"></p>
+  </div>
+
 </div>
 
 <script src="js/impostazioni.js"></script>
@@ -55,6 +90,8 @@
 <script src="js/eventi.js"></script>
 <script src="js/treno.js"></script>
 <script src="js/resa.js"></script>
+<script src="js/conto.js"></script>
+<script src="js/barra.js"></script>
 <script src="js/prova.js"></script>
 <script src="js/menu.js"></script>
 <script src="js/pollaio.js"></script>

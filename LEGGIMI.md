@@ -7,8 +7,13 @@ Si collega alla chat vera, disegna emote, badge, moderatori, abbonamenti, raid e
 bits con la grafica del canale, ed evidenzia le cose che meritano di essere
 notate mentre la chat scorre.
 
-Non serve installare niente, non serve un account, non serve una password. Non
-c'è nessun `npm install`: sono file HTML, CSS e JavaScript scritti a mano.
+Per **guardarla** non serve installare niente, non serve un account, non serve
+una password: il pollaio entra in chat in anonimo, come ha sempre fatto. Un
+account Twitch serve **solo** se vuoi anche **scrivere**, dal campo in fondo
+alla chat, e si attacca in due minuti dalla regia. Se non lo attacchi, il widget
+è esattamente quello di prima.
+
+Non c'è nessun `npm install`: sono file HTML, CSS e JavaScript scritti a mano.
 
 ---
 
@@ -68,9 +73,10 @@ giusta: 400 × 600, come la chat di Twitch.
 
 In OBS: **Sorgente → + → Cattura finestra → scegli la finestra del pollaio.**
 
-Se la allarghi, la chat si allarga con lei: dentro la finestra del launcher i
-messaggi prendono tutta la larghezza e il testo cresce insieme al riquadro,
-invece di restare quello di una colonna da 400. Nella sorgente browser di OBS
+Se la allarghi — si tira un bordo, come una finestra qualunque — la chat si
+allarga con lei: dentro la finestra del launcher i messaggi prendono tutta la
+larghezza e il testo cresce insieme al riquadro, invece di restare quello di una
+colonna da 400. Nella sorgente browser di OBS
 no — lì comanda la «larghezza della colonna», perché quel numero deve
 combaciare con quello che scrivi in OBS.
 
@@ -126,14 +132,40 @@ scuro dietro ai messaggi.
 **La barra del titolo non c'è.** Il launcher la toglie: in una cattura finestra
 sarebbe entrata nell'inquadratura, sopra al gameplay. Il prezzo è che quella
 finestra non si sposta e non si chiude più nei modi soliti, e i comandi si sono
-spostati dentro: **tasto destro sulla chat**.
+spostati dentro: **tasto destro sulla chat**. Ridimensionarla, invece, si fa
+come sempre — si tira un bordo — perché quello è l'unico gesto che la barra del
+titolo, andandosene, non si è portata via.
 
 **Per spostarla**: la si prende col tasto sinistro e la si trascina, da un
-punto qualsiasi della chat. Non serve il menu — dentro non c'è niente da
-cliccare, quindi tutta la superficie è la maniglia, e il puntatore a manina lo
-dice. Nella regia invece si afferra **solo dalla testata**: il resto è pieno di
-manopole, e una pagina che scappa mentre provi a girarne una sarebbe
-inservibile.
+punto qualsiasi dei messaggi. Non serve il menu — lì dentro non c'è niente da
+cliccare, quindi tutta quella superficie è la maniglia, e il puntatore a manina
+lo dice. L'unico pezzo che non trascina è **la barra in fondo**, che invece di
+roba da cliccare ne ha: sopra di lei il puntatore torna quello di sempre, se no
+ogni clic su un filtro avrebbe rischiato di spostare la finestra. Nella regia si
+afferra **solo dalla testata**: il resto è pieno di manopole, e una pagina che
+scappa mentre provi a girarne una sarebbe inservibile.
+
+**Per ridimensionarla**: si prende un bordo o un angolo e si tira, come una
+finestra qualunque. Il puntatore cambia da sé quando ci passi sopra — doppia
+freccia orizzontale sui fianchi, verticale sopra e sotto, diagonale negli
+angoli — ed è lui a dire dov'è la presa, che senza barra del titolo e senza
+cornice non si vedrebbe. La zona sensibile è di **sei pixel** dal bordo,
+**sedici** negli angoli: al trascinamento toglie soltanto quella striscia, tutto
+il resto della superficie resta la maniglia per spostare la finestra come prima.
+Sotto **160 × 160** non si stringe — è lo stesso minimo che accetta il campo
+della regia — perché una finestra ridotta a una riga non si riafferra più.
+
+**La misura nuova se la ricorda.** Appena molli il bordo, il launcher la scrive
+in `avvio\pollaio.ini`, righe `larghezza` e `altezza`: sono **le stesse due
+righe** che scrive il bottone «Salva la misura» della regia. Non ci sono due
+misure diverse che litigano, ce n'è una sola, e la si cambia dal bordo o dalla
+regia a piacere.
+
+Tutto questo **vale per la finestra della chat**. Nella regia i bordi sono
+lasciati stare apposta: là il bordo destro è dove sta la barra di scorrimento, e
+ritrovarsi a ridimensionare la finestra quando volevi scorrere la pagina sarebbe
+peggio che non poterla ridimensionare affatto. La misura della regia si mette
+dal suo campo, come prima.
 
 Il tasto destro apre il menu:
 
@@ -156,7 +188,10 @@ ascolto di quei comandi. Chiudendo la chat si chiude anche lui.
 
 Va benissimo lo stesso per: tenere la chat aperta su un secondo monitor mentre
 giochi, metterla in un riquadro pieno del layout, o semplicemente guardarla senza
-aprire Twitch. Ed è il modo più comodo per farla partire: doppio clic e via.
+aprire Twitch. Ed è il modo più comodo per farla partire: doppio clic e via. È
+anche l'unico dei due dove c'è **la barra in fondo** — i filtri, la pausa e il
+campo per scrivere — perché nella sorgente browser di OBS non compare mai
+(la sezione qui sotto).
 
 **Se vuoi la trasparenza anche così**, c'è: metti `fondo=verde` (o `magenta`, se
 in scena c'è del verde tipo un prato) fra i parametri, e in OBS aggiungi alla
@@ -169,6 +204,62 @@ In `avvio\pollaio.ini` diventa:
 ```ini
 parametri=fondo=verde&tema=nudo&scala=100
 ```
+
+---
+
+## La barra sotto la chat: filtri e pausa
+
+In fondo alla chat c'è una striscia con i filtri, il tasto per fermarla e il
+campo per scrivere.
+
+**Compare solo dove la si può usare**: la finestra di `Pollaio.exe`, l'anteprima
+nella regia, la pagina aperta a mano in un browser. In una **sorgente browser di
+OBS non compare mai** — si riconosce da sola che è dentro OBS, e là non c'è
+nessuno che clicca: sarebbe soltanto una striscia in meno di gameplay.
+
+### I filtri
+
+Pastiglie: **Tutto**, poi una per ogni chat collegata (**Twitch**, **Kick**,
+**YouTube**), poi **Eventi**.
+
+Le pastiglie delle chat compaiono **solo quando le chat collegate sono più
+d'una**: con la sola Twitch, «Tutto» e «Twitch» sarebbero lo stesso bottone
+scritto due volte. È la stessa regola della targhetta della piattaforma sopra ai
+messaggi.
+
+**Eventi** tiene le schede di abbonamento, riabbonamento, regali, raid e
+annunci, più ogni messaggio con dei bits.
+
+Un dettaglio che vale la pena raccontare: con un filtro acceso il pollaio
+**tiene in pagina più righe** di quante ne dica la manopola «quanti messaggi
+resto ad appendere» — fino a sei volte tante — e di quelle conta solo quelle che
+si vedono. Senza, filtrare per «Eventi» avrebbe mostrato due righe su quaranta,
+cioè quasi niente, e un filtro che mostra quasi niente non lo usa nessuno due
+volte.
+
+### La pausa
+
+Il bottone **Ferma** smette di appendere: quello che c'è sullo schermo resta
+fermo. I messaggi che arrivano intanto vanno da parte — fino a duecento — e
+compare **«N messaggi in attesa — riparti»**, che è anche il bottone per farla
+ripartire.
+
+Mentre è ferma i messaggi **non svaniscono**: se hai impostato «dopo quanto
+svanisce un messaggio», quei conti alla rovescia si congelano e ripartono da
+dove erano quando riparte la chat. Sarebbe stato beffardo fermare la chat per
+rileggere una cosa e vedersela sfumare sotto gli occhi.
+
+Dove c'è la barra l'elenco diventa scorrevole, e **girare la rotella
+all'indietro ferma la chat da sé**: è il gesto che uno fa d'istinto quando vuole
+rileggere qualcosa che sta scappando. Ripartire invece è sempre un clic apposta.
+Una chat che riparte da sola mentre stai leggendo è esattamente il problema che
+volevi risolvere.
+
+### Le due manopole
+
+Stanno nella regia, gruppo **La barra sotto la chat**, e nascono accese tutte e
+due: `barra` è la striscia coi filtri e la pausa, `scrivi` è il campo per
+scrivere dentro la striscia. Spegnerne una non spegne l'altra.
 
 ---
 
@@ -185,7 +276,8 @@ scollerebbe, e mezzo launcher duplicato è il posto dove va a nascondersi il
 difetto che si vede solo in uno dei due.
 
 La misura della sua finestra sta in `avvio\pollaio.ini`, righe `regialarghezza`
-e `regiaaltezza`.
+e `regiaaltezza`. Qui i bordi non si tirano, per il motivo detto sopra: a destra
+c'è la barra di scorrimento.
 
 Se preferisci, **`regia.html` si apre ancora con un doppio clic** come sempre:
 in quel caso è una normale pagina nel tuo browser, col suo bordo e le sue
@@ -222,14 +314,25 @@ riquadro che apre `Pollaio.exe`. È un'altra cosa dalla «larghezza della
 colonna» fra le manopole — quella dice quanto sono larghi i messaggi *dentro*,
 questa quanto è grande la finestra che metti in OBS.
 
+Le strade per cambiarla sono tre, e finiscono tutte e tre sulle stesse due righe
+di `avvio\pollaio.ini`, `larghezza` e `altezza`. La più immediata non passa
+nemmeno di qui: **si tira il bordo della finestra della chat** (sopra, nella
+sezione B), e appena molli il mouse la misura è già scritta. Poi c'è questo
+campo, col bottone **Salva la misura**. E poi c'è aprire l'ini col blocco note e
+scriverla a mano.
+
+**Il campo serve per il caso opposto al bordo: quando la vuoi esatta.** 400 ×
+600 battuti qui sono 400 × 600; tirati a occhio sono 397 × 611, e te ne accorgi
+solo dopo, quando in OBS la sorgente non combacia.
+
 Il bottone **Salva la misura** funziona solo se hai aperto la regia con
 `Regia.exe`: una pagina web non può scrivere un file sul disco, e a scriverlo è
-il launcher. Aprendo `regia.html` col doppio clic il bottone è spento e la
-misura si mette a mano in `avvio\pollaio.ini`.
+il launcher. Aprendo `regia.html` col doppio clic il bottone è spento, e restano
+le altre due strade: il bordo della finestra della chat, o l'ini a mano.
 
 La misura si applica subito: se il pollaio è aperto mentre salvi, quella
 finestra si rifà della misura nuova sotto i tuoi occhi. Se non è aperto la
-misura resta scritta e nascerà così la prossima volta — è la stessa riga di
+misura resta scritta e nascerà così la prossima volta — è sempre quella riga di
 `avvio\pollaio.ini`, non due cose diverse.
 
 Accanto c'è **Ripristina le dimensioni**, che rimette 400 × 600 senza far di
@@ -240,9 +343,10 @@ prova è andata troppo in là.
 
 In fondo alla regia, dopo le istruzioni per OBS, c'è **Ripristina le
 impostazioni**: chiede conferma e poi riporta ogni manopola al valore di
-partenza — l'aspetto, cosa si vede, cosa si accende, la pulizia, l'anteprima e
-anche la misura della finestra. Le configurazioni salvate non le tocca: quelle
-si tolgono una per una, con la loro ×.
+partenza — l'aspetto, cosa si vede, cosa si accende, la pulizia, la barra sotto
+la chat, l'anteprima e anche la misura della finestra. Le configurazioni salvate
+non le tocca: quelle si tolgono una per una, con la loro ×. E non scollega
+l'account: rimette le manopole, non ti butta fuori da Twitch.
 
 ### Le configurazioni salvate
 
@@ -261,6 +365,56 @@ lavoro salvato.
 
 Restano in questo browser, non nel file: se apri la regia su un altro computer
 non le trovi. Quello che si porta in giro è sempre l'indirizzo.
+
+---
+
+## Scrivere in chat, e l'account Twitch
+
+Il campo in fondo alla chat manda i messaggi **con il tuo account**. Invio
+manda, Esc svuota il campo, e sopra i quattrocento caratteri compare quanti ne
+restano — Twitch ne accetta cinquecento. In modalità prova non manda niente per
+davvero, e te lo dice invece di far finta.
+
+Il collegamento si fa **in fondo alla regia**, sezione «Il tuo account Twitch»,
+e va fatto una volta sola.
+
+1. Su `dev.twitch.tv/console/apps` registri **un'applicazione tua**: nome
+   qualsiasi, **OAuth Redirect URL** `http://localhost`, categoria «Chat Bot»,
+   tipo **Public**. Twitch ti dà un **Client ID**. Il Client Secret **non
+   serve**: non copiarlo da nessuna parte.
+2. Incolli il Client ID nella regia e premi **Collega l'account**.
+3. La regia ti mostra un codice di otto caratteri e il bottone **Apri
+   twitch.tv/activate**, che apre quella pagina nel tuo browser di sistema —
+   quello dove sei già loggato su Twitch. Scrivi il codice, confermi, e la regia
+   se ne accorge da sola: non devi tornare a dirglielo.
+
+**Perché serve un'applicazione tua e non una mia.** Twitch vuole che chi chiede
+il permesso abbia un nome, e quel nome è l'applicazione. Il Client ID **non è un
+segreto** — è un nome, e infatti viaggia in chiaro dentro ogni richiesta.
+
+Il permesso chiesto è **uno solo**: `user:write:chat`, cioè mandare messaggi a
+nome tuo. Non può leggere i tuoi messaggi privati, non può bannare nessuno, non
+può toccare le impostazioni del canale.
+
+**Dove finisce il gettone: in questo browser e basta.** Non finisce
+nell'indirizzo che la regia ti fa copiare, non finisce in `avvio\pollaio.ini`, e
+**non arriva mai alla sorgente browser di OBS** — che è un altro browser, con la
+sua memoria separata. La chat lo trova perché `Pollaio.exe` e `Regia.exe` sono
+due finestre dello stesso programma, con lo stesso profilo: colleghi l'account
+nella regia e la finestra della chat se ne accorge subito, senza riavviare
+niente.
+
+Il collegamento **si rinnova da solo**. Se un giorno non ci riesce, il campo per
+scrivere lascia il posto alla riga che dice di rifare il collegamento dalla
+regia, e la chat continua a leggersi come sempre.
+
+Il bottone **Scollega** revoca davvero il gettone su Twitch, non si limita a
+dimenticarlo qui.
+
+**Quello che non cambia, ed è il punto**: per *leggere* la chat non serve e non
+servirà mai nessun account. Il pollaio entra in chat in anonimo come ha sempre
+fatto, e senza collegamento è esattamente il widget di prima. L'account serve a
+una cosa sola, ed è scritta nel nome del permesso.
 
 ---
 
@@ -319,7 +473,7 @@ serve per quando vuoi ritoccare a mano.
 
 | chiave | valore | cosa fa |
 |---|---|---|
-| `max` | `40` | quanti messaggi restano appesi |
+| `max` | `40` | quanti messaggi restano appesi. Con un filtro acceso ne tiene da parte fino a sei volte tanti, e conta solo quelli che si vedono |
 | `svanisci` | `0` | secondi dopo cui un messaggio sparisce. `0` = non spariscono mai |
 | `emote` | `1` | disegna le emote |
 | `sette` | `1` | emote 7TV (slayer_beard ne ha) |
@@ -346,6 +500,13 @@ serve per quando vuoi ritoccare a mano.
 | `bot` | `nightbot,streamelements,…` | nick da non mostrare |
 | `comandi` | `1` | nasconde i messaggi che iniziano per `!` |
 | `moderazione` | `sbarra` | messaggio cancellato: `sbarra` barrato · `togli` sparisce · `tieni` resta |
+
+### La barra sotto la chat
+
+| chiave | valore | cosa fa |
+|---|---|---|
+| `barra` | `1` | la striscia coi filtri e la pausa. In una sorgente browser di OBS non compare comunque, qualunque cosa dica questa chiave |
+| `scrivi` | `1` | il campo per scrivere dentro la striscia. Senza account collegato al suo posto c'è la riga che lo dice |
 
 ---
 
@@ -399,8 +560,28 @@ Se non lo vuoi proprio: `treno=0`.
 
 ## Cosa vede e cosa non vede
 
-Il widget entra in chat **in anonimo**, senza account e senza password. È una
-scelta: niente da custodire, niente che scade, niente che possa essere bannato.
+Per **leggere**, il widget entra in chat **in anonimo**, senza account e senza
+password, e questa parte non è cambiata: niente da custodire, niente che scade,
+niente che possa essere bannato. È così in `pollaio.html` aperto da solo, ed è
+così nella sorgente browser di OBS, sempre.
+
+Per **scrivere** un account serve, e allora quelle tre cose diventano tutte e
+tre false. Vale la pena dirle una per una invece di lasciarle scoprire.
+
+- **C'è qualcosa da custodire**: il gettone che Twitch rilascia dopo il tuo sì.
+  Sta nella memoria di questo browser e basta — non nell'indirizzo che copi in
+  OBS, non in `avvio\pollaio.ini`, e mai nella sorgente browser, che è un altro
+  browser con la sua memoria separata.
+- **C'è qualcosa che scade**: il gettone dura qualche ora e si rinnova da solo,
+  senza che tu te ne accorga. Il giorno che il rinnovo non riesce più, il campo
+  per scrivere si toglie di mezzo e al suo posto compare la riga che dice di
+  rifare il collegamento dalla regia. La chat, intanto, continua a leggersi.
+- **E sì, si può essere bannati.** Chi scrive in chat è il tuo account, con le
+  regole di chiunque altro: il widget non ha una corsia preferenziale, manda un
+  messaggio come lo manderesti dal sito di Twitch.
+
+Il permesso è `user:write:chat` e soltanto quello, e **Scollega** nella regia lo
+revoca davvero su Twitch invece di limitarsi a dimenticarlo qui.
 
 **Vede**: tutti i messaggi, emote di Twitch, 7TV, BetterTTV e FrankerFaceZ,
 tutti i badge, i colori dei nomi, i `/me`, le risposte, i bits e i cheermote,
@@ -409,7 +590,8 @@ primi messaggi, ban, pause e cancellazioni dei moderatori.
 
 **Non vede**: chi entra e chi esce dalla chat (Twitch non lo dice più in modo
 affidabile), gli spettatori collegati, e le cose che passano solo dall'API con
-il tuo login.
+un login che abbia il permesso di leggerle — quello che chiedo serve a scrivere,
+non a leggere, quindi non cambia niente di questo elenco.
 
 ---
 
@@ -480,8 +662,11 @@ chat/
 │  │  ├─ eventi.js       abbonamenti, raid, bits, moderazione
 │  │  ├─ treno.js        l'hype train
 │  │  ├─ resa.js         l'unico file che tocca la pagina
+│  │  ├─ conto.js        il collegamento con l'account Twitch, e il mandare
+│  │  ├─ barra.js        la striscia sotto la chat: filtri, pausa, campo
 │  │  ├─ prova.js        il traffico finto
-│  │  ├─ menu.js         il tasto destro nella finestra di Pollaio.exe
+│  │  ├─ menu.js         il tasto destro e i bordi che si tirano, nella
+│  │  │                  finestra di Pollaio.exe
 │  │  ├─ regia.js        il configuratore
 │  │  ├─ prove.js        i casi del banco di prova
 │  │  └─ pollaio.js      mette insieme i pezzi
@@ -500,7 +685,8 @@ chat/
 
 ### Le preferenze del launcher
 
-Stanno in `avvio\pollaio.ini`: misura della finestra, dove si apre, quali
+Stanno in `avvio\pollaio.ini`: misura della finestra (che il launcher riscrive
+da sé ogni volta che la tiri per un bordo), dove si apre, quali
 parametri passare al widget, quale browser usare, se controllare gli
 aggiornamenti all'avvio (`aggiorna`) e se tenere la barra del titolo
 (`cornice`). È un file di testo con le spiegazioni dentro. Se lo cancelli, il

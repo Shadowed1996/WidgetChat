@@ -19,6 +19,9 @@
   const FONDO_PREDEFINITO = 'scacchi';
   const FONDI = ['scacchi', 'chiaro', 'scuro', 'gioco'];
 
+  const ATTIVA = 'https://www.twitch.tv/activate';
+  const ATTESA_SICURO = 5000;
+
   const GRUPPI = [
     {
       chiave: 'canale',
@@ -49,6 +52,11 @@
       chiave: 'moderazione',
       titolo: 'Pulizia',
       nota: 'Quello che in diretta non ci deve finire: i bot, i comandi, e i messaggi che qualcuno ha già cancellato.'
+    },
+    {
+      chiave: 'barra',
+      titolo: 'La barra sotto la chat',
+      nota: 'La striscia con i filtri e il campo per scrivere sta dentro la finestra di Pollaio.exe e qui nell’anteprima: dove c’è un mouse, insomma. In una sorgente browser di OBS non compare mai — là non clicca nessuno, e sarebbe solo una striscia in meno di gameplay.'
     }
   ];
 
@@ -783,16 +791,45 @@
     });
   }
 
-  function selezionaIndirizzo() {
+  function seleziona(elemento) {
     try {
       const intervallo = document.createRange();
-      intervallo.selectNodeContents(nodi.indirizzo);
+      intervallo.selectNodeContents(elemento);
       const scelta = window.getSelection();
       scelta.removeAllRanges();
       scelta.addRange(intervallo);
       return true;
     } catch (err) {
       return false;
+    }
+  }
+
+  function agliAppunti(testo, fatto, fallito) {
+
+    function storico() {
+
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = testo;
+        ta.setAttribute('readonly', 'readonly');
+        ta.style.position = 'fixed';
+        ta.style.insetBlockStart = '-1000px';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        const riuscito = document.execCommand('copy');
+        document.body.removeChild(ta);
+
+        if (riuscito) { fatto(); } else { fallito(); }
+      } catch (err) {
+        fallito();
+      }
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(testo).then(fatto, storico);
+    } else {
+      storico();
     }
   }
 
@@ -809,43 +846,12 @@
   }
 
   function copia() {
-    const testo = nodi.indirizzo.textContent;
-
-    function fatto() {
+    agliAppunti(nodi.indirizzo.textContent, function () {
       segnalaCopia('Copiato', 'Copiato. In OBS va nel campo del file locale della sorgente browser.', true);
-    }
-
-    function storico() {
-
-      try {
-        const ta = document.createElement('textarea');
-        ta.value = testo;
-        ta.setAttribute('readonly', 'readonly');
-        ta.style.position = 'fixed';
-        ta.style.insetBlockStart = '-1000px';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        const riuscito = document.execCommand('copy');
-        document.body.removeChild(ta);
-
-        if (riuscito) {
-          fatto();
-        } else {
-          selezionaIndirizzo();
-          segnalaCopia('Seleziona e copia', 'Gli appunti qui non me li lascia toccare. L’indirizzo è già selezionato: Ctrl+C e sei a posto.', false);
-        }
-      } catch (err) {
-        selezionaIndirizzo();
-        segnalaCopia('Seleziona e copia', 'Gli appunti qui non me li lascia toccare. L’indirizzo è già selezionato: Ctrl+C e sei a posto.', false);
-      }
-    }
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(testo).then(fatto, storico);
-    } else {
-      storico();
-    }
+    }, function () {
+      seleziona(nodi.indirizzo);
+      segnalaCopia('Seleziona e copia', 'Gli appunti qui non me li lascia toccare. L’indirizzo è già selezionato: Ctrl+C e sei a posto.', false);
+    });
   }
 
   function apri() {
@@ -1123,6 +1129,197 @@
     });
   }
 
+  const nodiConto = {};
+
+  let sicuroConto = null;
+
+  function ecoConto(messaggio, riuscito) {
+    if (!nodiConto.eco) { return; }
+    nodiConto.eco.textContent = messaggio || '';
+    nodiConto.eco.classList.toggle('is-fatto', !!riuscito);
+  }
+
+  function agganciaConto() {
+    const id = ['cliente', 'detto', 'codice', 'cifre',
+                'collega', 'apri', 'copia', 'lascia', 'scollega', 'eco'];
+    let i;
+
+    for (i = 0; i < id.length; i += 1) {
+      nodiConto[id[i]] = document.getElementById('conto-' + id[i]);
+      if (!nodiConto[id[i]]) { return false; }
+    }
+    return true;
+  }
+
+  function fermaSicuro() {
+    clearTimeout(sicuroConto);
+    sicuroConto = null;
+    nodiConto.scollega.textContent = 'Scollega';
+    nodiConto.scollega.classList.remove('is-chiede');
+  }
+
+  function dettoConto(stato) {
+    const chi = window.Conto.chi();
+
+    if (stato === 'dentro') {
+      return 'Sei collegato come ' + ((chi && chi.nome) || 'te') + ': il campo sotto la chat scrive a nome tuo. ' +
+        'Il collegamento si rinnova da solo, qui non devi tornarci più.';
+    }
+
+    if (stato === 'attesa') {
+      if (!nodiConto.cifre.textContent) { return 'Sto chiedendo il codice a Twitch. Un attimo.'; }
+      return 'Adesso tocca a te: porta il codice su twitch.tv/activate e di’ di sì. ' +
+        'Io resto qui a controllare finché non l’hai fatto.';
+    }
+
+    if (chi && window.Conto.scaduto()) {
+      return 'Eri collegato come ' + (chi.nome || chi.nick) + ', ma il collegamento è scaduto e Twitch non me lo rinnova più. ' +
+        'Si rifà da qui con lo stesso Client ID: sono gli stessi due minuti dell’altra volta.';
+    }
+
+    return 'Non è collegato nessuno, e va benissimo così: senza collegamento il pollaio legge la chat e basta, ' +
+      'che è quello che ha sempre fatto. Serve solo se voglio anche scrivere.';
+  }
+
+  function vestiConto(stato) {
+    const niente = stato === 'niente';
+    const attesa = stato === 'attesa';
+    const dentro = stato === 'dentro';
+
+    fermaSicuro();
+
+    nodiConto.detto.textContent = dettoConto(stato);
+    nodiConto.detto.classList.toggle('is-dentro', dentro);
+    nodiConto.detto.classList.toggle('is-attesa', attesa);
+
+    nodiConto.cliente.readOnly = !niente;
+    if (!attesa) { nodiConto.cliente.value = window.Conto.cliente(); }
+
+    nodiConto.codice.hidden = !(attesa && nodiConto.cifre.textContent);
+
+    nodiConto.collega.hidden = !niente;
+    nodiConto.apri.hidden = !attesa;
+    nodiConto.copia.hidden = !attesa;
+    nodiConto.lascia.hidden = !attesa;
+    nodiConto.scollega.hidden = !dentro;
+  }
+
+  function passoConto(passo) {
+    if (!passo) { return; }
+
+    if (passo.fase === 'codice') {
+      nodiConto.cifre.textContent = passo.codice;
+      vestiConto('attesa');
+      ecoConto('Il codice è pronto qui sotto.', true);
+      return;
+    }
+
+    if (passo.fase === 'fatto') {
+      nodiConto.cifre.textContent = '';
+      vestiConto('dentro');
+      ecoConto('Fatto: da adesso posso scrivere in chat a nome tuo.', true);
+      return;
+    }
+
+    if (passo.fase === 'errore') {
+      nodiConto.cifre.textContent = '';
+      vestiConto('niente');
+      ecoConto(passo.detto, false);
+    }
+  }
+
+  function collegaConto() {
+    const id = String(nodiConto.cliente.value || '').trim().toLowerCase();
+
+    if (!window.Conto.MODELLO_CLIENT.test(id)) {
+      ecoConto('Questo non somiglia a un Client ID: sono una trentina di lettere e numeri minuscoli, senza spazi né trattini. Lo ricopio dalla pagina della mia applicazione su dev.twitch.tv.', false);
+      nodiConto.cliente.focus();
+      return;
+    }
+
+    window.Conto.ricorda(id);
+    nodiConto.cliente.value = id;
+    nodiConto.cifre.textContent = '';
+
+    vestiConto('attesa');
+    ecoConto('Chiedo il codice a Twitch.', false);
+
+    window.Conto.chiedi(id, passoConto);
+  }
+
+  function apriAttiva() {
+    if (window.Menu && window.Menu.dentro && window.Menu.dentro()) {
+      window.Menu.comanda('attiva');
+      ecoConto('L’ho aperto nel browser, fuori da questa finestra: il codice è quello qui sopra.', true);
+      return;
+    }
+
+    if (window.open(ATTIVA, '_blank')) {
+      ecoConto('L’ho aperto in un’altra scheda: il codice va scritto lì.', true);
+      return;
+    }
+
+    ecoConto('Il browser ha bloccato la finestra. Vado a mano su twitch.tv/activate, viene uguale.', false);
+  }
+
+  function copiaCodice() {
+    const testo = nodiConto.cifre.textContent;
+
+    if (!testo) {
+      ecoConto('Il codice non c’è ancora: aspetto che Twitch me lo dia.', false);
+      return;
+    }
+
+    agliAppunti(testo, function () {
+      ecoConto('Copiato: lo incollo su twitch.tv/activate.', true);
+    }, function () {
+      seleziona(nodiConto.cifre);
+      ecoConto('Gli appunti qui non me li lascia toccare. Il codice è già selezionato: Ctrl+C e sei a posto.', false);
+    });
+  }
+
+  function lasciaConto() {
+    window.Conto.ferma();
+    nodiConto.cifre.textContent = '';
+    vestiConto('niente');
+    ecoConto('Lasciato stare: non ho toccato niente e non è collegato nessuno.', false);
+  }
+
+  function scollegaConto() {
+    if (!sicuroConto) {
+      nodiConto.scollega.textContent = 'Sicuro? Scollego.';
+      nodiConto.scollega.classList.add('is-chiede');
+
+      sicuroConto = setTimeout(function () {
+        sicuroConto = null;
+        nodiConto.scollega.textContent = 'Scollega';
+        nodiConto.scollega.classList.remove('is-chiede');
+        ecoConto('Ho lasciato perdere: sei ancora collegato.', false);
+      }, ATTESA_SICURO);
+
+      ecoConto('Un altro clic e scollego davvero. Se aspetto, lascio le cose come stanno.', false);
+      return;
+    }
+
+    window.Conto.scollega();
+    nodiConto.cifre.textContent = '';
+    vestiConto('niente');
+    ecoConto('Fatto: ho detto a Twitch di dimenticare il gettone e l’ho tolto da qui. Il Client ID te lo tengo da parte, se ti ricolleghi non lo riscrivi.', true);
+  }
+
+  function ascoltaConto() {
+    if (!window.Conto) { return; }
+    if (!agganciaConto()) { return; }
+
+    nodiConto.collega.addEventListener('click', collegaConto);
+    nodiConto.apri.addEventListener('click', apriAttiva);
+    nodiConto.copia.addEventListener('click', copiaCodice);
+    nodiConto.lascia.addEventListener('click', lasciaConto);
+    nodiConto.scollega.addEventListener('click', scollegaConto);
+
+    vestiConto(window.Conto.collegato() ? 'dentro' : 'niente');
+  }
+
   function avvia() {
 
     if (!window.Impostazioni || !window.Impostazioni.SCHEMA) { return; }
@@ -1148,6 +1345,7 @@
     ascoltaPreset();
     ascoltaFinestra();
     ascoltaUso();
+    ascoltaConto();
 
     ricaricaAnteprima();
 

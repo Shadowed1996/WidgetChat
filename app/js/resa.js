@@ -55,8 +55,22 @@
 
     multi: false,
 
-    anima: true
+    anima: true,
+
+    scorre: false
   };
+
+  var FILTRI = ['tutto', 'twitch', 'kick', 'youtube', 'eventi'];
+
+  var SOSPESI_MAX = 200;
+
+  var MEMORIA_FILTRO = 6;
+
+  var filtro = 'tutto';
+
+  var sospeso = false;
+  var sospesi = [];
+  var avvisaAttesa = null;
 
   var menoMovimento = false;
   try {
@@ -412,7 +426,7 @@
     return riga;
   }
 
-  function disegna(messaggio) {
+  function costruisci(messaggio) {
     if (messaggio.evento && messaggio.tipo === 'sistema') { return disegnaModerazione(messaggio); }
     if (messaggio.evento && messaggio.tipo === 'evento')  { return disegnaEvento(messaggio); }
 
@@ -445,6 +459,35 @@
     return riga;
   }
 
+  var PIATTAFORME = { twitch: 1, youtube: 1, kick: 1, tiktok: 1 };
+
+  function disegna(messaggio) {
+    var riga = costruisci(messaggio);
+    if (!riga) { return null; }
+
+    var dove = String(messaggio.piattaforma || '').toLowerCase();
+    riga.setAttribute('data-piattaforma',
+      Object.prototype.hasOwnProperty.call(PIATTAFORME, dove) ? dove : 'twitch');
+
+    if ((messaggio.evento && messaggio.tipo === 'evento') || messaggio.bits > 0) {
+      riga.setAttribute('data-evento', '1');
+    }
+
+    return riga;
+  }
+
+  function combacia(riga) {
+    if (filtro === 'tutto') { return true; }
+    if (filtro === 'eventi') { return riga.hasAttribute('data-evento'); }
+    return riga.getAttribute('data-piattaforma') === filtro;
+  }
+
+  function vestiRiga(riga) {
+    var dentro = combacia(riga);
+    riga.classList.toggle('is-fuori', !dentro);
+    return dentro;
+  }
+
   function fra(fn, ms) {
     var id = setTimeout(function () {
       var i = timer.indexOf(id);
@@ -470,14 +513,72 @@
     spegni(riga.__entrata);
     riga.__uscita = null;
     riga.__entrata = null;
+    riga.__resta = null;
 
     if (riga.parentNode) { riga.parentNode.removeChild(riga); }
+  }
+
+  function armaUscita(riga, ms) {
+    riga.__scadenza = Date.now() + ms;
+    riga.__uscita = fra(function () {
+      riga.__uscita = null;
+      sfuma(riga);
+    }, ms);
+  }
+
+  function congelaUscite() {
+    var i;
+    var riga;
+    for (i = 0; i < righe.length; i++) {
+      riga = righe[i];
+      if (!riga.__uscita) { continue; }
+      riga.__resta = Math.max(0, (riga.__scadenza || 0) - Date.now());
+      spegni(riga.__uscita);
+      riga.__uscita = null;
+    }
+  }
+
+  function scongelaUscite() {
+    var i;
+    var riga;
+    for (i = 0; i < righe.length; i++) {
+      riga = righe[i];
+      if (typeof riga.__resta !== 'number') { continue; }
+      armaUscita(riga, riga.__resta);
+      riga.__resta = null;
+    }
+  }
+
+  function pota() {
+    if (filtro === 'tutto') {
+      while (righe.length > conf.max) { togli(righe[0]); }
+      return;
+    }
+
+    var tetto = conf.max * MEMORIA_FILTRO;
+    var visibili = 0;
+    var i;
+
+    for (i = 0; i < righe.length; i++) {
+      if (!righe[i].classList.contains('is-fuori')) { visibili++; }
+    }
+
+    while (righe.length && (visibili > conf.max || righe.length > tetto)) {
+      if (!righe[0].classList.contains('is-fuori')) { visibili--; }
+      togli(righe[0]);
+    }
+  }
+
+  function alBordo() {
+    if (!conf.scorre || !nodi.elenco) { return; }
+    nodi.elenco.scrollTop = conf.verso === 'giu' ? 0 : nodi.elenco.scrollHeight;
   }
 
   function sfuma(riga) {
     var posto = righe.indexOf(riga);
     if (posto !== -1) { righe.splice(posto, 1); }
 
+    riga.__resta = null;
     riga.classList.add('is-svanisce');
     riga.__uscita = fra(function () {
       riga.__uscita = null;
@@ -494,9 +595,13 @@
 
   function drena() {
     codaArmata = false;
+
+    if (sospeso) { travasa(); return; }
+
     var quanti = Math.min(PER_FOTOGRAMMA, coda.length);
     var i;
     for (i = 0; i < quanti; i++) { disegnaEAppendi(coda.shift()); }
+    alBordo();
     if (coda.length) { arma(); }
   }
 
@@ -544,24 +649,90 @@
 
     if (conf.effetto === 'matrix' && !menoMovimento) { scombina(riga); }
 
-    while (righe.length > conf.max) {
-      togli(righe[0]);
-    }
+    vestiRiga(riga);
+    pota();
 
     if (conf.svanisci > 0) {
-      riga.__uscita = fra(function () { sfuma(riga); }, conf.svanisci * 1000);
+      armaUscita(riga, conf.svanisci * 1000);
     }
 
     return riga;
   }
 
+  function segnalaAttesa() {
+    if (typeof avvisaAttesa !== 'function') { return; }
+    try { avvisaAttesa(sospesi.length, sospeso); }
+    catch (err) {  }
+  }
+
+  function travasa() {
+    while (coda.length) {
+      sospesi.push(coda.shift());
+      if (sospesi.length > SOSPESI_MAX) { sospesi.shift(); }
+    }
+    segnalaAttesa();
+  }
+
+  function versa() {
+    var i;
+    for (i = 0; i < sospesi.length; i++) { coda.push(sospesi[i]); }
+    sospesi = [];
+
+    while (coda.length > CODA_MAX) { coda.shift(); }
+    segnalaAttesa();
+    arma();
+  }
+
   function aggiungi(messaggio) {
     if (!nodi.elenco || !messaggio) { return false; }
+
+    if (sospeso) {
+      sospesi.push(messaggio);
+      if (sospesi.length > SOSPESI_MAX) { sospesi.shift(); }
+      segnalaAttesa();
+      return true;
+    }
 
     coda.push(messaggio);
     while (coda.length > CODA_MAX) { coda.shift(); }
     arma();
     return true;
+  }
+
+  function metti(nome) {
+    var scelto = String(nome || 'tutto').toLowerCase();
+    if (FILTRI.indexOf(scelto) === -1) { scelto = 'tutto'; }
+    if (scelto === filtro) { return filtro; }
+
+    filtro = scelto;
+    if (nodi.radice) { nodi.radice.setAttribute('data-filtro', filtro); }
+
+    var i;
+    for (i = 0; i < righe.length; i++) { vestiRiga(righe[i]); }
+
+    pota();
+    alBordo();
+    return filtro;
+  }
+
+  function pausa(si) {
+    var voluto = !!si;
+    if (voluto === sospeso) { return sospeso; }
+
+    sospeso = voluto;
+    if (nodi.radice) { nodi.radice.classList.toggle('is-pausa', sospeso); }
+
+    if (sospeso) {
+      congelaUscite();
+      travasa();
+    } else {
+      scongelaUscite();
+      versa();
+      alBordo();
+    }
+
+    segnalaAttesa();
+    return sospeso;
   }
 
   function cancella(id) {
@@ -594,10 +765,12 @@
     righe = [];
 
     coda = [];
+    sospesi = [];
 
     codaArmata = false;
 
     if (nodi.elenco) { nodi.elenco.textContent = ''; }
+    segnalaAttesa();
   }
 
   var battitoTreno = null;
@@ -785,6 +958,12 @@
 
     if (typeof o.multi === 'boolean') { conf.multi = o.multi; }
     if (typeof o.anima === 'boolean') { conf.anima = o.anima; }
+
+    if (typeof o.scorre === 'boolean') {
+      conf.scorre = o.scorre;
+      if (nodi.radice) { nodi.radice.classList.toggle('is-scorrevole', conf.scorre); }
+      alBordo();
+    }
   }
 
   function monta(radice, opzioni) {
@@ -802,6 +981,8 @@
     nodi.trenoPunti = radice.querySelector('.pollaio__treno-punti');
     nodi.trenoTempo = radice.querySelector('.pollaio__treno-tempo');
 
+    radice.setAttribute('data-filtro', filtro);
+
     imposta(opzioni);
     return !!nodi.elenco;
   }
@@ -816,7 +997,18 @@
     spia: spia,
     treno: treno,
     tinta: tinta,
-    quante: function () { return righe.length; }
+    quante: function () { return righe.length; },
+
+    FILTRI: FILTRI,
+    filtro: metti,
+    qualeFiltro: function () { return filtro; },
+
+    pausa: pausa,
+    inPausa: function () { return sospeso; },
+    inAttesa: function () { return sospesi.length; },
+    suAttesa: function (fn) { avvisaAttesa = typeof fn === 'function' ? fn : null; },
+
+    alBordo: alBordo
   };
 
 }());

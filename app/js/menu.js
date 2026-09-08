@@ -11,11 +11,15 @@
   var contatore = 0;
   var ritorno = null;
 
+  function dentroLaVetrina() {
+    return !!(window.chrome && window.chrome.webview &&
+              typeof window.chrome.webview.postMessage === 'function');
+  }
+
   function comanda(cosa) {
     contatore++;
 
-    if (window.chrome && window.chrome.webview &&
-        typeof window.chrome.webview.postMessage === 'function') {
+    if (dentroLaVetrina()) {
       try {
         window.chrome.webview.postMessage(PREFISSO + cosa + ':' + contatore);
         return;
@@ -101,9 +105,58 @@
     if (!bersaglio || typeof bersaglio.closest !== 'function') { return true; }
     if (bersaglio.closest(COMANDI)) { return false; }
     if (bersaglio.closest('.menu')) { return false; }
+    if (bersaglio.closest('.pollaio__barra')) { return false; }
 
     if (dentroLaRegia()) { return !!bersaglio.closest('.regia__testa'); }
     return true;
+  }
+
+  var MARGINE = 6;
+
+  var ANGOLO = 16;
+
+  var bordo = '';
+
+  function zonaDelBordo(x, y) {
+    var largo = window.innerWidth;
+    var alto = window.innerHeight;
+
+    if (largo < 3 * ANGOLO || alto < 3 * ANGOLO) { return ''; }
+
+    var suO = x <= MARGINE;
+    var suE = x >= largo - MARGINE;
+    var suN = y <= MARGINE;
+    var suS = y >= alto - MARGINE;
+
+    var viciO = x <= ANGOLO;
+    var viciE = x >= largo - ANGOLO;
+    var viciN = y <= ANGOLO;
+    var viciS = y >= alto - ANGOLO;
+
+    if ((suN && viciO) || (suO && viciN)) { return 'no'; }
+    if ((suN && viciE) || (suE && viciN)) { return 'ne'; }
+    if ((suS && viciO) || (suO && viciS)) { return 'so'; }
+    if ((suS && viciE) || (suE && viciS)) { return 'se'; }
+
+    if (suN) { return 'n'; }
+    if (suS) { return 's'; }
+    if (suO) { return 'o'; }
+    if (suE) { return 'e'; }
+
+    return '';
+  }
+
+  function segnaBordo(zona) {
+    if (zona === bordo) { return; }
+    bordo = zona;
+
+    if (bordo) { document.documentElement.setAttribute('data-bordo', bordo); }
+    else { document.documentElement.removeAttribute('data-bordo'); }
+  }
+
+  function guardaIlBordo(evento) {
+    if (!dentroLaVetrina() || dentroLaRegia() || pannello) { segnaBordo(''); return; }
+    segnaBordo(zonaDelBordo(evento.clientX, evento.clientY));
   }
 
   function chiudi() {
@@ -179,16 +232,30 @@
       }
 
       if (evento.button !== 0) { return; }
+
+      if (bordo) {
+        evento.preventDefault();
+        comanda('ridimensiona:' + bordo);
+        return;
+      }
+
       if (!afferrabile(evento.target)) { return; }
 
       comanda('trascina');
     });
 
+    document.addEventListener('mousemove', guardaIlBordo);
+
+    document.addEventListener('mouseleave', function () { segnaBordo(''); });
+
     document.addEventListener('keydown', function (evento) {
       if (evento.key === 'Escape') { chiudi(); }
     });
 
-    window.addEventListener('blur', chiudi);
+    window.addEventListener('blur', function () {
+      chiudi();
+      segnaBordo('');
+    });
   }
 
   window.Menu = {

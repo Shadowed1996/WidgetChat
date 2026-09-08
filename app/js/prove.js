@@ -125,6 +125,29 @@
     });
   });
 
+  prova('le due manopole della barra nascono accese', function () {
+    const v = window.Impostazioni.leggi('');
+    uguale(v.barra, true, 'barra');
+    uguale(v.scrivi, true, 'scrivi');
+  });
+
+  prova('la barra e il campo per scrivere si spengono con «=0»', function () {
+    uguale(window.Impostazioni.leggi('barra=0').barra, false, 'la barra');
+    uguale(window.Impostazioni.leggi('scrivi=0').scrivi, false, 'il campo');
+    uguale(window.Impostazioni.leggi('barra=0').scrivi, true, 'spegnerne una non spegne l’altra');
+  });
+
+  prova('accese come sono nate, non finiscono nell’indirizzo', function () {
+    uguale(window.Impostazioni.indirizzo(window.Impostazioni.leggi('barra=1&scrivi=1')),
+      'pollaio.html', 'predefinite');
+    uguale(window.Impostazioni.indirizzo(window.Impostazioni.leggi('barra=0&scrivi=0'), ''),
+      '?barra=0&scrivi=0', 'spente');
+
+    const tornato = window.Impostazioni.leggi(
+      window.Impostazioni.indirizzo(window.Impostazioni.leggi('barra=0&scrivi=0'), ''));
+    stessiCampi(tornato, { barra: false, scrivi: false });
+  });
+
   gruppo('Irc');
 
   prova('una riga nuda si analizza', function () {
@@ -382,6 +405,53 @@
     const r = window.Rilievo.valuta(messaggio({ primo: true, pezzi: [{ tipo: 'testo', testo: 'ciao' }] }));
     vero(r, 'deve uscire un giudizio');
     uguale(r.livello, 1, 'livello');
+  });
+
+  gruppo('Conto');
+
+  prova('i caratteri di controllo non arrivano fino a Twitch', function () {
+    uguale(window.Conto.ripulisci('ci\u0000ao'), 'ci ao', 'il nulla');
+    uguale(window.Conto.ripulisci('a\u001bb'), 'a b', 'un carattere di comando');
+    uguale(window.Conto.ripulisci('a\u007fb\u009fc'), 'a b c', 'la cancellazione e i comandi alti');
+  });
+
+  prova('uno scavalco della direzione non ribalta la riga di chi legge', function () {
+    uguale(window.Conto.ripulisci('ciao\u202emondo'), 'ciao mondo', 'lo scavalco');
+    uguale(window.Conto.ripulisci('a\u200eb\u200fc'), 'a b c', 'i segni di direzione');
+    uguale(window.Conto.ripulisci('a\u2066b\u2069c'), 'a b c', 'gli isolamenti');
+  });
+
+  prova('un messaggio a più righe parte come una riga sola', function () {
+    uguale(window.Conto.ripulisci('prima\nseconda\r\nterza'), 'prima seconda terza', 'gli a capo');
+    uguale(window.Conto.ripulisci('nome:\tvalore'), 'nome: valore', 'la tabulazione');
+  });
+
+  prova('gli spazi non si accumulano, e ai bordi non ne resta nessuno', function () {
+    uguale(window.Conto.ripulisci('ciao     a  tutti'), 'ciao a tutti', 'in mezzo');
+    uguale(window.Conto.ripulisci('   ciao   '), 'ciao', 'ai bordi');
+    uguale(window.Conto.ripulisci(' \n\t \u202e '), '', 'solo aria non è un messaggio');
+    uguale(window.Conto.ripulisci(undefined), '', 'e niente nemmeno');
+  });
+
+  prova('un messaggio troppo lungo si taglia, non si rifiuta', function () {
+    const lungo = 'a'.repeat(window.Conto.LIMITE + 100);
+    uguale(window.Conto.ripulisci(lungo).length, window.Conto.LIMITE, 'quanto ne resta');
+    uguale(window.Conto.ripulisci('a'.repeat(window.Conto.LIMITE)).length, window.Conto.LIMITE,
+      'chi sta dentro al limite non si tocca');
+  });
+
+  prova('il taglio conta i caratteri veri, non le unità UTF-16', function () {
+    const emoji = '😀';
+    uguale(emoji.length, 2, 'quest’emoji in JavaScript occupa due posizioni');
+
+    const muro = window.Conto.ripulisci(emoji.repeat(window.Conto.LIMITE + 50));
+    uguale(Array.from(muro).length, window.Conto.LIMITE, 'caratteri veri');
+    vero(!/[\ud800-\udbff]$/.test(muro),
+      'in fondo è rimasta mezza coppia surrogata: ' + mostra(muro.slice(-1)));
+
+    const addosso = window.Conto.ripulisci('x'.repeat(window.Conto.LIMITE - 1) + emoji + 'coda');
+    uguale(Array.from(addosso).length, window.Conto.LIMITE, 'caratteri veri col taglio addosso');
+    uguale(addosso.slice(-2), emoji, 'l’emoji sul taglio esce intera');
   });
 
   function esegui() {

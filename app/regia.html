@@ -125,6 +125,13 @@
       L’interruttore «Modalità prova» qui a sinistra riguarda solo l’indirizzo
       che mi porto via — e in diretta va spento.
     </p>
+    <p class="regia__nota">
+      Anche la barra sotto la chat è una cosa dell’anteprima e della finestra di
+      <code>Pollaio.exe</code>: <strong>in una sorgente browser di OBS non
+      compare</strong>, quindi là quello spazio torna ai messaggi. È qui perché
+      è l’unico posto dove posso farti vedere com’è mentre giri le sue due
+      manopole.
+    </p>
   </section>
 </main>
 
@@ -252,6 +259,71 @@
     </div>
   </section>
 
+  <section class="regia__conto" aria-labelledby="titolo-conto">
+    <h2 class="regia__sezione-titolo" id="titolo-conto">Il tuo account Twitch</h2>
+    <p class="regia__sezione-testo">
+      Serve a una cosa sola: <strong>scrivere</strong> in chat dal campo che sta
+      sotto la chat, nella finestra di <code>Pollaio.exe</code>. Per
+      <em>leggere</em> non serve e non servirà mai — il pollaio entra in chat in
+      anonimo, e senza collegamento resta esattamente quello di sempre.
+    </p>
+    <p class="regia__sezione-testo">
+      Twitch chiede che sia una tua applicazione, non una mia: vai su
+      <code>dev.twitch.tv/console/apps</code>, «Register Your Application»,
+      un nome qualsiasi, <strong>OAuth Redirect URL</strong>
+      <code>http://localhost</code>, categoria «Chat Bot», tipo
+      <strong>Public</strong>. Ti dà un <strong>Client ID</strong>: è quello che
+      va qui sotto. Non è un segreto — è un nome — e il tuo Client Secret non
+      serve, quindi non copiarlo da nessuna parte.
+    </p>
+
+    <div class="regia__campo regia__campo--testo">
+      <label class="regia__etichetta" for="conto-cliente">Il Client ID della tua applicazione</label>
+      <input class="regia__testo" type="text" id="conto-cliente" maxlength="40"
+             autocomplete="off" spellcheck="false" inputmode="latin"
+             placeholder="trenta lettere e numeri" aria-describedby="aiuto-conto">
+      <p class="regia__aiuto" id="aiuto-conto">
+        Lo tengo da parte in questo browser insieme al collegamento. Il gettone
+        che Twitch mi dà dopo il tuo sì <strong>non finisce nell’indirizzo</strong>
+        che copio qui sopra e non arriva mai a OBS: sta solo qui, e la chat lo
+        ritrova perché è la stessa finestra dello stesso programma. Vale
+        <code>user:write:chat</code> e basta — mandare messaggi a nome tuo. Non
+        può leggere i tuoi messaggi privati, non può bannare nessuno, non può
+        toccare il canale.
+      </p>
+    </div>
+
+    <p class="regia__conto-detto" id="conto-detto">Non è collegato nessuno.</p>
+
+    <div class="regia__conto-codice" id="conto-codice" hidden>
+      <p class="regia__conto-passo">
+        Su Twitch, alla pagina <code>twitch.tv/activate</code>, scrivi questo
+        codice e conferma. Vale mezz’ora, e io intanto resto qui ad aspettare.
+      </p>
+      <code class="regia__conto-cifre" id="conto-cifre" tabindex="0"></code>
+    </div>
+
+    <div class="regia__azioni">
+      <button class="regia__btn regia__btn--pieno" type="button" id="conto-collega">
+        Collega l’account
+      </button>
+      <button class="regia__btn regia__btn--vuoto" type="button" id="conto-apri" hidden>
+        Apri twitch.tv/activate
+      </button>
+      <button class="regia__btn regia__btn--vuoto" type="button" id="conto-copia" hidden>
+        Copia il codice
+      </button>
+      <button class="regia__btn regia__btn--vuoto" type="button" id="conto-lascia" hidden>
+        Lascia stare
+      </button>
+      <button class="regia__btn regia__btn--vuoto" type="button" id="conto-scollega" hidden>
+        Scollega
+      </button>
+    </div>
+
+    <p class="regia__eco" id="conto-eco" role="status"></p>
+  </section>
+
   <section class="regia__obs" aria-labelledby="titolo-obs">
     <h2 class="regia__sezione-titolo" id="titolo-obs">Come lo attacco a OBS</h2>
     <ol class="regia__passi">
@@ -309,6 +381,7 @@
 </footer>
 
 <script src="js/impostazioni.js"></script>
+<script src="js/conto.js"></script>
 <script src="js/menu.js"></script>
 <script src="js/regia.js"></script>
 </body>

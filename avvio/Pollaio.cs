@@ -146,7 +146,7 @@ internal static class Programma
 
     public static string Installato = "";
 
-    public const string VERSIONE = "1.0.6";
+    public const string VERSIONE = "1.1.0";
 }
 
 internal sealed class Preferenze
@@ -1879,6 +1879,8 @@ internal static class Diagnosi
 
 internal sealed class Vetrina : Form
 {
+    private const string ATTIVAZIONE = "https://www.twitch.tv/activate";
+
     private readonly WebView2 vista = new WebView2();
     private readonly string indirizzo;
     private readonly double scala;
@@ -1909,6 +1911,8 @@ internal sealed class Vetrina : Form
 
         Size = new Size((int)Math.Round(pref.Larghezza * scala),
                         (int)Math.Round(pref.Altezza * scala));
+
+        MinimumSize = new Size((int)Math.Round(160 * scala), (int)Math.Round(160 * scala));
 
         Point dove = Navigatore.DoveAprirla(pref, scala);
         Location = new Point((int)Math.Round(dove.X * scala), (int)Math.Round(dove.Y * scala));
@@ -1960,7 +1964,51 @@ internal sealed class Vetrina : Form
             return;
         }
 
+        if (m.Msg == Nativo.WM_EXITSIZEMOVE) { RicordaMisura(); }
+
         base.WndProc(ref m);
+    }
+
+    private static IntPtr ZonaDiBordo(string dove)
+    {
+        switch (dove)
+        {
+            case "n":  return Nativo.HTTOP;
+            case "s":  return Nativo.HTBOTTOM;
+            case "e":  return Nativo.HTRIGHT;
+            case "o":  return Nativo.HTLEFT;
+            case "no": return Nativo.HTTOPLEFT;
+            case "ne": return Nativo.HTTOPRIGHT;
+            case "so": return Nativo.HTBOTTOMLEFT;
+            case "se": return Nativo.HTBOTTOMRIGHT;
+        }
+        return IntPtr.Zero;
+    }
+
+    private void RicordaMisura()
+    {
+        try
+        {
+            if (WindowState != FormWindowState.Normal) return;
+
+            int l = (int)Math.Round(Size.Width / scala);
+            int a = (int)Math.Round(Size.Height / scala);
+
+            l = Math.Max(160, Math.Min(4000, l));
+            a = Math.Max(160, Math.Min(4000, a));
+
+            string ini = Path.Combine(Programma.Radice, Path.Combine("avvio", "pollaio.ini"));
+
+            if (Programma.ModoRegia)
+            {
+                Preferenze.RiscriviRiga(ini, "regialarghezza", l.ToString(CultureInfo.InvariantCulture));
+                Preferenze.RiscriviRiga(ini, "regiaaltezza", a.ToString(CultureInfo.InvariantCulture));
+                return;
+            }
+
+            Preferenze.Riscrivi(ini, l, a);
+        }
+        catch {  }
     }
 
     private void Misura(int larghezza, int altezza)
@@ -2080,6 +2128,19 @@ internal sealed class Vetrina : Form
             return;
         }
 
+        if (comando == "attiva")
+        {
+            try
+            {
+                ProcessStartInfo psi = new ProcessStartInfo(ATTIVAZIONE);
+                psi.UseShellExecute = true;
+                Process.Start(psi);
+                Rispondi("attiva:1");
+            }
+            catch { Rispondi("attiva:0"); }
+            return;
+        }
+
         if (comando == "misura")
         {
             string coda = testo.Substring("pollaio:misura".Length).TrimStart(':');
@@ -2125,6 +2186,23 @@ internal sealed class Vetrina : Form
 
             string ini = Path.Combine(Programma.Radice, Path.Combine("avvio", "pollaio.ini"));
             Rispondi("parametri:" + (Preferenze.RiscriviRiga(ini, "parametri", coda) ? "1" : "0"));
+            return;
+        }
+
+        if (comando == "ridimensiona")
+        {
+            string dove = testo.Substring("pollaio:ridimensiona".Length).TrimStart(':');
+
+            int stacco = dove.IndexOf(':');
+            if (stacco >= 0) dove = dove.Substring(0, stacco);
+
+            IntPtr zona = ZonaDiBordo(dove.ToLowerInvariant());
+            if (zona == IntPtr.Zero) return;
+
+            if (WindowState != FormWindowState.Normal) return;
+
+            Nativo.ReleaseCapture();
+            Nativo.SendMessageW(Handle, Nativo.WM_NCLBUTTONDOWN, zona, IntPtr.Zero);
             return;
         }
 
@@ -2592,6 +2670,17 @@ internal static class Nativo
 
     public const uint WM_NCLBUTTONDOWN = 0x00A1;
     public static readonly IntPtr HTCAPTION = new IntPtr(2);
+
+    public static readonly IntPtr HTLEFT        = new IntPtr(10);
+    public static readonly IntPtr HTRIGHT       = new IntPtr(11);
+    public static readonly IntPtr HTTOP         = new IntPtr(12);
+    public static readonly IntPtr HTTOPLEFT     = new IntPtr(13);
+    public static readonly IntPtr HTTOPRIGHT    = new IntPtr(14);
+    public static readonly IntPtr HTBOTTOM      = new IntPtr(15);
+    public static readonly IntPtr HTBOTTOMLEFT  = new IntPtr(16);
+    public static readonly IntPtr HTBOTTOMRIGHT = new IntPtr(17);
+
+    public const int WM_EXITSIZEMOVE = 0x0232;
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]

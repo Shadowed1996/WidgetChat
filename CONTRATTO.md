@@ -17,15 +17,35 @@ Non si importa un file, non si dipende da niente che stia là fuori.
 ## 1. Vincoli non negoziabili
 
 1. **Zero dipendenze.** Niente npm, niente build, niente framework, niente CDN di
-   librerie. Solo HTML, CSS e JavaScript scritti a mano. L'unica cosa che si
-   scarica dalla rete sono i **font Google** e le **immagini di emote e badge**.
+   librerie. Solo HTML, CSS e JavaScript scritti a mano. I caratteri stanno nel
+   progetto (`app/font/`, dichiarati da `css/font.css`): dalla rete arrivano
+   solo le **immagini di emote e badge** e le risposte delle sorgenti di §7.
 2. **Deve funzionare da `file://`.** OBS punta al file locale sul disco. Niente
    `type="module"` (i moduli ES sono bloccati da `file://` per via della CORS),
    niente `fetch` di file locali, niente percorsi assoluti. Solo `<script src>`
    classici e percorsi relativi.
-3. **Sola lettura.** Connessione anonima a IRC (`justinfan`). Nessun token,
-   nessun login, nessun segreto dentro il file. Il widget non può scrivere in
-   chat e non può essere bannato.
+3. **La lettura è anonima sempre, la scrittura si accende apposta.** La chat si
+   legge con la connessione anonima a IRC (`justinfan`): nessun login, nessuna
+   credenziale, in nessuna condizione — questa metà non è negoziabile. Chi non
+   collega niente ha il pollaio di sempre: guarda, non parla, non può essere
+   bannato.
+
+   La scrittura è una cosa in più che l'utente accende da sé: è **il suo**
+   account Twitch, collegato dalla regia (§18), con **un solo scopo**
+   (`user:write:chat`), e i messaggi partono da `helix/chat/messages`. La
+   connessione IRC **non** si tocca: resta anonima e di sola lettura anche
+   quando un account c'è, e il messaggio appena mandato torna indietro di lì
+   come quello di chiunque altro.
+
+   **Il gettone sta in `localStorage` e da nessun'altra parte**: mai nella
+   querystring, mai in `avvio\pollaio.ini`, mai in un file, mai dentro
+   l'indirizzo che si incolla in OBS. In una sorgente browser di OBS il gettone
+   non arriva e il campo per scrivere non compare: è voluto (§18).
+
+   Il vincolo che sopravvive intatto è quello di sempre: **nessun segreto dentro
+   i file del progetto**. Il Client ID lo registra l'utente ed è un nome, non un
+   segreto: viaggia in chiaro in ogni richiesta. Il client secret non serve, non
+   si chiede e non si scrive da nessuna parte.
 4. **Niente `innerHTML` con roba che arriva dalla chat.** Mai, in nessun caso,
    per nessuna scorciatoia. Si costruisce con `document.createElement` e si
    scrive con `textContent`. Gli URL delle immagini si validano con
@@ -131,7 +151,9 @@ chat/
    │  ├─ menu.css       ← il menu del tasto destro. Foglio SUO perché serve a
    │  │                    tutte e due le pagine, che per il resto non
    │  │                    condividono niente (la regia non carica pollaio.css)
-   │  └─ prove.css      ← il banco di prova
+   │  ├─ prove.css      ← il banco di prova
+   │  └─ font.css       ← i tre caratteri, presi da `font/` e non dalla rete
+   ├─ font/             ← i .woff2 e la loro licenza
    ├─ js/
    │  ├─ impostazioni.js  window.Impostazioni  — legge la querystring
    │  ├─ irc.js           window.Irc           — protocollo e connessione (Twitch)
@@ -143,8 +165,10 @@ chat/
    │  ├─ eventi.js        window.Eventi        — abbonamenti, raid, bits, moderazione
    │  ├─ treno.js         window.Treno         — l'Hype Train (vedi §15)
    │  ├─ resa.js          window.Resa          — dal messaggio al DOM
+   │  ├─ conto.js         window.Conto         — l'account Twitch: gettone e invio (§18)
+   │  ├─ barra.js         window.Barra         — la striscia sotto la chat (§18)
    │  ├─ prova.js         window.Prova         — traffico finto per sistemare in OBS
-   │  ├─ menu.js          window.Menu          — il tasto destro nella finestra del launcher
+   │  ├─ menu.js          window.Menu          — il tasto destro, il trascinamento e il bordo che ridimensiona, nella finestra del launcher (§19)
    │  ├─ regia.js         window.Regia         — il configuratore
    │  ├─ prove.js         window.Prove         — i casi del banco (§16)
    │  └─ pollaio.js       window.Pollaio       — mette insieme i pezzi
@@ -158,16 +182,34 @@ viene prima di chi lo consuma.
 <script src="js/impostazioni.js"></script>
 <script src="js/irc.js"></script>
 <script src="js/kick.js"></script>
+<script src="js/youtube.js"></script>
 <script src="js/emote.js"></script>
 <script src="js/badge.js"></script>
 <script src="js/rilievo.js"></script>
 <script src="js/eventi.js"></script>
 <script src="js/treno.js"></script>
 <script src="js/resa.js"></script>
+<script src="js/conto.js"></script>
+<script src="js/barra.js"></script>
 <script src="js/prova.js"></script>
 <script src="js/menu.js"></script>
 <script src="js/pollaio.js"></script>
 ```
+
+`barra.js` viene dopo `resa.js` e `conto.js` perché li consuma tutti e due, e
+`pollaio.js` resta ultimo perché monta l'una e l'altra.
+
+Anche `regia.html` ha il suo ordine, ed è un contratto per lo stesso motivo:
+
+```html
+<script src="js/impostazioni.js"></script>
+<script src="js/conto.js"></script>
+<script src="js/menu.js"></script>
+<script src="js/regia.js"></script>
+```
+
+La regia carica `conto.js` e non `barra.js`: là l'account si **collega**, non si
+scrive in chat.
 
 ## 5. L'oggetto «messaggio» — la moneta unica del progetto
 
@@ -248,8 +290,11 @@ funzionare** e mostrare la chat di slayer_beard.
 | `velocita` | numero | `100` | velocità dell'animazione d'ingresso, in % da 25 a 300. Moltiplica tutte e otto |
 | `moderazione` | voce | `sbarra` | cosa fare a un messaggio cancellato: `sbarra` · `togli` · `tieni` |
 | `pollo` | sìno | `0` | mostra la mascotte accanto alla chat |
+| `barra` | sìno | `1` | la striscia sotto la chat: filtri e pausa (§18). In OBS non compare comunque |
+| `scrivi` | sìno | `1` | dentro la barra, il campo per scrivere in chat con l'account collegato (§18) |
 | `prova` | sìno | `0` | modalità prova: traffico finto, per sistemare l'inquadratura in OBS |
 | `ostile` | sìno | `0` | vale solo con `prova=1`: mescola al traffico finto i casi cattivi — zalgo, scavalchi RTL, nick lunghissimi, muri di testo |
+| `finestra` | sìno | `0` | **lo mette `Pollaio.exe` da sé**, non si scrive a mano: dice alla pagina che sta girando nella finestra senza barra del titolo, e accende il menu del tasto destro, il trascinamento e il bordo che ridimensiona (§19). Nello SCHEMA è `nascosta`, quindi fra i comandi della regia non compare |
 
 API:
 
@@ -265,7 +310,16 @@ window.Impostazioni = {
 `tipo` è uno di: `testo`, `numero`, `sìno`, `voce`. `sìno` si scrive `1`/`0` nella
 querystring e diventa `true`/`false` nei valori.
 
-## 7. Le sorgenti in rete — tutte verificate, tutte senza autenticazione
+## 7. Le sorgenti in rete — tutte verificate
+
+**Due elenchi, e la differenza conta.** Il primo è tutto quello che serve a
+leggere e a disegnare la chat: nessuna autenticazione, nessun account, e così
+deve restare. Il secondo sono i sei indirizzi del conto (§18), gli unici che
+vogliono un gettone, e nessuno dei sei serve a leggere.
+
+Questa sezione si intitolava «tutte verificate, tutte senza autenticazione». La
+seconda metà non è più vera per tutte, e il titolo l'ha persa: meglio saperlo
+leggendo il titolo che scoprirlo in fondo alla tabella.
 
 | cosa | indirizzo | note |
 |---|---|---|
@@ -281,9 +335,32 @@ querystring e diventa `true`/`false` nei valori.
 | FFZ globali | `https://api.frankerfacez.com/v1/set/global` | |
 | FFZ del canale | `https://api.frankerfacez.com/v1/room/<canale>` | oggi risponde **404**: è normale, si tace |
 
+Le sei del conto (§18), che tocca soltanto `js/conto.js`, soltanto dopo che
+l'utente ha collegato un account, e mai per disegnare un messaggio:
+
+| cosa | indirizzo | note |
+|---|---|---|
+| codice del dispositivo | `POST https://id.twitch.tv/oauth2/device` | `client_id` + `scopes`. Torna `user_code` (otto caratteri) e `device_code`. Nessuna autenticazione |
+| gettone | `POST https://id.twitch.tv/oauth2/token` | `grant_type=urn:ietf:params:oauth:grant-type:device_code` finché l'utente non conferma, poi `refresh_token`. Nessun client secret |
+| controllo | `GET https://id.twitch.tv/oauth2/validate` | `Authorization: OAuth <gettone>`. Dice chi è e se il gettone vale ancora |
+| revoca | `POST https://id.twitch.tv/oauth2/revoke` | `client_id` + `token`. La chiama **Scollega**, che quindi scollega davvero |
+| id del canale | `GET https://api.twitch.tv/helix/users?login=<canale>` | `Bearer` + `Client-Id`. Dà il `broadcaster_id`, che si tiene in cache |
+| invio | `POST https://api.twitch.tv/helix/chat/messages` | `Bearer` + `Client-Id`, corpo `broadcaster_id`, `sender_id`, `message` |
+
+`id.twitch.tv` e `api.twitch.tv` mandano `Access-Control-Allow-Origin: *` sia
+sulla richiesta sia sul preflight, anche con `Origin: null`: **verificato sul
+campo prima di scrivere il modulo**, cioè anche da una pagina aperta dal disco.
+Senza quello il §1.2 non reggeva e il conto non si sarebbe potuto fare.
+
 **Regola**: ogni chiamata ha un tetto di tempo, e il fallimento è silenzioso.
 Niente `console.error` che intasa il log di OBS: al massimo un `console.warn` col
 prefisso `[pollaio]`.
+
+Le sei del conto sono la deroga dichiarata alla seconda metà della regola: il
+tetto di tempo ce l'hanno (12 secondi), ma **lì un guasto si dice**, con una
+frase in chiaro nella barra o nella regia. Non è la stessa situazione: là c'è
+un'emote che non arriva, qui c'è qualcuno che ha appena premuto Manda e sta
+aspettando di sapere se il messaggio è partito.
 
 ## 8. Il protocollo — cosa si chiede e cosa si legge
 
@@ -440,6 +517,16 @@ un'interfaccia, si guarda in un browser).
 - in basso l'indirizzo completo, in monospazio, con un bottone **Copia**
 - le scelte si ricordano in `localStorage` (`sb-pollaio-regia`)
 - un bottone **Ripristina** che rimette tutto ai predefiniti
+- una sezione **«Il tuo account Twitch»**: il campo per il Client ID, il codice
+  di otto caratteri da scrivere su `twitch.tv/activate`, e i bottoni **Collega
+  l'account**, **Apri twitch.tv/activate**, **Copia il codice**, **Lascia
+  stare**, **Scollega**. È l'unico posto da cui si collega un account (§18), e
+  la pagina lo dice per primo: serve **solo** a scrivere, per leggere non serve
+  e non servirà mai.
+
+L'account sta nella regia e non nella barra della chat perché collegarlo è una
+cosa che si fa una volta, con calma, leggendo: è la stessa ragione per cui le
+manopole stanno qui e non addosso all'overlay.
 
 Il testo del configuratore parla come il sito: prima persona, discorsivo, spiega
 il perché. Mai «Errore:». Esempi del registro giusto, presi dal sito:
@@ -453,7 +540,10 @@ L'Hype Train **non passa dalla chat**. Su IRC arrivano abbonamenti, regali,
 raid, bits e annunci, ma dell'Hype Train non c'è traccia: non è difficile da
 leggere, proprio non viene trasmesso. Il vecchio canale che lo esponeva
 (PubSub) Twitch l'ha spento. L'API pubblica documentata (EventSub) lo espone
-ma pretende un token OAuth del proprietario del canale.
+ma pretende un token OAuth del proprietario del canale. **Il conto di §18 non
+serve a questo e non va allargato per questo**: ha un solo scopo
+(`user:write:chat`), chi lo collega non è per forza il padrone del canale, e un
+treno più comodo non vale uno scopo in più.
 
 `js/treno.js` usa quindi l'**API GraphQL interna** di Twitch, la stessa che usa
 il sito di Twitch per disegnare la sua barra:
@@ -495,15 +585,22 @@ ancora.
 mezzo. `Impostazioni` (tipi, ritagli, sinonimi, andata e ritorno
 dell'indirizzo), `Irc.analizza` e `Irc.disescapa`, `Badge.leggi` e
 `Badge.ruoli`, `Eventi.leggi` e `Eventi.moderazione`, `Emote.pezzi`,
-`Rilievo.valuta`.
+`Rilievo.valuta`, `Conto.ripulisci`.
+
+`Conto.ripulisci` è l'unica parte pura di `conto.js` — testo dentro, testo
+fuori, nessuna rete — e ci sono i casi apposta: i caratteri di controllo, gli
+scavalchi di direzione, gli a capo che diventano una riga sola, e il taglio a
+`Conto.LIMITE` che **conta i caratteri veri e non le unità UTF-16**, così
+un'emoji sul taglio esce intera invece che a metà. `prove.html` carica quindi
+anche `js/conto.js`, che di rete non ne apre nessuna finché non gliela si chiede.
 
 **Non si prova la rete, il DOM, il tempo.** Non perché non contino: perché un
 banco che simula una risposta di 7TV verifica il simulatore. `prove.html` non
-carica `resa.js` (vuole il DOM montato), `treno.js` (apre una connessione
-appena parte), `prova.js` e `pollaio.js` (mettono in moto il widget vero), e
-nessun caso chiama `carica()`. Il banco deve poter dire verde col cavo
-staccato, o nei giorni in cui 7TV è giù direbbe rosso e lo si smetterebbe di
-guardare.
+carica `resa.js` (vuole il DOM montato), `barra.js` (vuole il DOM, `Resa` e
+qualcuno che clicchi), `treno.js` (apre una connessione appena parte),
+`prova.js` e `pollaio.js` (mettono in moto il widget vero), e nessun caso
+chiama `carica()`. Il banco deve poter dire verde col cavo staccato, o nei
+giorni in cui 7TV è giù direbbe rosso e lo si smetterebbe di guardare.
 
 **Un modulo che espone una funzione per il banco lo dichiara nel commento**,
 come fa `irc.js` con `analizza` e `disescapa`. Non è un'API pubblica: è la
@@ -535,8 +632,9 @@ riempimenti, mai testo, mai bordi di qualcos'altro.
 
 ### Cosa si può collegare davvero
 
-Il vincolo §1.1 (zero dipendenze, tutto da `file://`, nessun token) non tratta
-le piattaforme allo stesso modo, e va detto invece che scoprirlo dopo:
+I vincoli §1.1 e §1.2 (zero dipendenze, tutto da `file://`) e la lettura
+anonima di §1.3 non trattano le piattaforme allo stesso modo, e va detto invece
+che scoprirlo dopo:
 
 | | come | stato |
 |---|---|---|
@@ -579,3 +677,295 @@ un regalo o dei bits — cioè esattamente le cose che fanno partire e salire un
 treno — `pollaio.js` chiama `Treno.sveglia()` e la lettura parte subito.
 `treno.js` si difende dalle raffiche, quindi venti regali di fila non diventano
 venti richieste.
+
+## 18. La barra sotto la chat — guardare, fermare, scrivere
+
+Sotto l'elenco dei messaggi c'è una striscia: le pastiglie dei filtri, il tasto
+che ferma la chat, e il campo da cui si scrive in chat con il proprio account.
+La possiede `js/barra.js` (`window.Barra`), la monta `js/pollaio.js` con
+`Barra.monta(radice, opzioni)` come fa con `Resa.monta`, e la governano due
+manopole nuove nel gruppo `barra`: `barra` e `scrivi` (§6).
+
+### Dove compare, e dove non compare mai
+
+Compare dove qualcuno la può usare: la finestra di `Pollaio.exe`, l'anteprima
+dentro la regia, `pollaio.html` aperto a mano in un browser.
+
+**In una sorgente browser di OBS non compare mai**, e non è una manopola da
+ricordarsi di spegnere: lo decide `barra.js` da sé, riconoscendo
+`window.obsstudio`. In OBS non c'è nessuno che clicca — la pagina è un'immagine
+dentro una scena — e una striscia di comandi sarebbe soltanto gameplay coperto.
+`barra=0` la toglie anche dove si potrebbe usare, per chi la finestra la vuole
+nuda.
+
+### I filtri
+
+Le pastiglie sono `Tutto`, una per ogni chat collegata (`Twitch`, `Kick`,
+`YouTube`) e `Eventi`. Quelle delle chat **compaiono solo quando le chat
+collegate sono più d'una**: è la regola della targhetta di §17, e per lo stesso
+motivo — con la sola Twitch, «Tutto» e «Twitch» sarebbero lo stesso bottone
+scritto due volte.
+
+Come è fatto, e conta perché è la parte che gira a ogni messaggio: ogni riga
+porta `data-piattaforma` e, se è un evento o ha dei bits, `data-evento`; la
+radice porta `data-filtro`; le righe che non combaciano prendono `.is-fuori`,
+che è `display: none`. **Cambiare filtro non rifà il DOM**: rimette una classe
+su righe che ci sono già.
+
+`Eventi` prende le schede di `tipo: 'evento'` — abbonamenti, raid, annunci — e
+ogni messaggio con `bits > 0`. Le righe di moderazione **non** sono eventi: un
+ban è una cosa che succede in chat, non una cosa che si guarda apposta, e chi
+accende «Eventi» vuole vedere chi ha appena regalato venti abbonamenti.
+
+**Con un filtro acceso `max` conta solo le righe visibili**, e il totale tenuto
+in pagina ha per tetto sei volte `max`. Senza questo, filtrare per «Eventi»
+avrebbe mostrato due righe su quaranta: un filtro che mostra quasi niente è un
+filtro che si prova una volta. Con `filtro === 'tutto'` la potatura è
+esattamente quella di prima, riga per riga — quindi in OBS, dove la barra non
+c'è e il filtro resta `tutto`, il comportamento non cambia di un messaggio.
+
+Nota onesta: la modalità prova mescola anche messaggi TikTok, e una pastiglia
+TikTok non esiste perché TikTok non si può collegare (§17). In prova quei
+messaggi si vedono solo sotto «Tutto». È un difetto piccolo e dichiarato: la
+pastiglia mentirebbe, promettendo una chat che non c'è.
+
+### La pausa
+
+`Resa.pausa(true)` smette di appendere. I messaggi che intanto arrivano non si
+buttano: vanno in una coda a parte con tetto 200, e nella barra compare
+«N messaggi in attesa — riparti», che è anche il bottone per ripartire.
+
+**Mentre è ferma i messaggi non svaniscono.** I timer di `svanisci` si congelano
+registrando quanto restava a ciascuno, e ripartono da lì. Un messaggio che
+sparisce mentre lo stai leggendo apposta è il contrario di quello che il bottone
+promette.
+
+Dove c'è la barra l'elenco diventa scorrevole (`.is-scorrevole`), e **la rotella
+girata all'indietro ferma la chat da sé**: se stai risalendo, la chat che
+continua a spingere ti porta via il punto che stavi guardando. Si ascolta
+`wheel` e **non** `scroll`: `scroll` non distingue lo scorrimento dell'utente da
+quello che facciamo noi per restare incollati al fondo, e distinguerli con una
+bandierina è una gara che si perde. Ripartire, invece, è sempre un clic apposta:
+si ferma da sola, non riparte da sola.
+
+### Scrivere in chat — `window.Conto`
+
+Il campo dentro la barra manda i messaggi con l'account dell'utente. Se `scrivi`
+è spento non c'è; se è acceso ma nessun account è collegato, al suo posto c'è
+una riga che lo dice e un bottone che porta alla regia (§14).
+
+**OAuth Device Code Flow**, ed è l'unico che si poteva usare. `POST /oauth2/device`
+con `client_id` e `scopes` dà un `user_code` di otto caratteri e un
+`device_code`; poi si interroga `POST /oauth2/token` con
+`grant_type=urn:ietf:params:oauth:grant-type:device_code` finché l'utente non
+conferma su `twitch.tv/activate`. Le risposte intermedie sono
+`authorization_pending` (si continua), `slow_down` (si allunga il passo),
+`access_denied` e `expired_token` (si smette, e si dice perché).
+
+**Perché questo flusso e non gli altri**: l'implicit grant e l'authorization
+code vogliono un *redirect URI*, cioè un server che riceva la risposta. Qui non
+c'è nessun server: c'è una pagina aperta da `file://` o da un host virtuale di
+WebView2. Il device flow non ha redirect URI e non ha client secret, quindi è
+l'unico che regge il §1.2. Che lo si potesse chiamare da lì è stato **verificato
+sul campo prima di scrivere il modulo** (§7).
+
+**Il Client ID lo mette l'utente**, registrando un'applicazione sua su
+`dev.twitch.tv/console/apps` (tipo **Public**, redirect `http://localhost`). Non
+è un segreto: è un nome, e viaggia in chiaro in ogni richiesta. Il *client
+secret* non serve, non si chiede e non si salva — se un giorno una schermata lo
+chiede, è quella schermata a essere sbagliata.
+
+**Uno scopo solo: `user:write:chat`.** Mandare messaggi a nome proprio. Non
+leggere la chat, che si legge in anonimo come sempre; non moderare; non toccare
+il canale. Uno scopo in più si discute qui dentro prima che nel codice.
+
+Il gettone si controlla con `GET /oauth2/validate`, si rinnova da solo col
+`refresh_token` quando mancano meno di dieci minuti alla scadenza, e su
+**Scollega** si revoca davvero con `POST /oauth2/revoke`: dimenticarlo e basta
+lascerebbe in giro un gettone vivo che l'utente crede morto.
+
+Si manda con `POST /helix/chat/messages` (`broadcaster_id`, `sender_id`,
+`message`), **non via IRC**: la connessione IRC resta anonima e di sola lettura,
+e non la si tocca. Il messaggio appena mandato **torna indietro da lì** come
+quello di chiunque altro, e si disegna con lo stesso codice: non esiste un
+percorso separato per i propri messaggi, e non deve nascerne uno.
+
+**Il `broadcaster_id` non è la manopola `id`.** Si chiede a
+`GET /helix/users?login=<canale>` e si tiene in cache. La manopola `id` serve a
+7TV, BTTV e FFZ, e uno può cambiarla senza cambiare `canale` — o il contrario:
+fidarsene per decidere *dove finisce un messaggio* vuol dire scrivere nel canale
+sbagliato senza accorgersene, che è il tipo di guasto che non si vede finché non
+è tardi.
+
+**Dove sta il gettone**: `localStorage`, chiavi `sb-pollaio-conto` e
+`sb-pollaio-cliente`. Mai nella querystring, mai in `avvio\pollaio.ini`, mai in
+un file (§1.3). `Pollaio.exe` e `Regia.exe` sono due finestre WebView2 con lo
+stesso `UserDataFolder` (`%LocalAppData%\Pollaio\vetrina`) e lo stesso host
+virtuale `https://pollaio.locale`: stessa origine, stesso `localStorage`. È per
+questo che l'account collegato nella regia lo trova subito anche la chat,
+tramite l'evento `storage`, senza riavviare niente. La sorgente browser di OBS è
+un altro browser con la sua memoria: **lì il gettone non arriva, ed è voluto.**
+
+Due incroci con le manopole di §6, e vanno detti perché altrimenti sembrano
+guasti. Con `comandi=1` i messaggi che iniziano per `!` si nascondono: se ne
+mandi uno, parte davvero, ma in pagina non compare — e la barra lo dice, invece
+di lasciarti pensare che non sia partito. In modalità prova il campo c'è ma non
+manda niente, e anche questo lo dice: `prova=1` non si collega a nessuna chat
+vera (§13), e mandare per davvero da una chat finta sarebbe l'unico modo di fare
+un danno con una prova.
+
+La parte pura è `Conto.ripulisci(testo)`, dichiarata per il banco (§16): toglie
+i caratteri di controllo e gli scavalchi di direzione, riduce ogni spazio a uno
+solo, e taglia a 500 **contando i caratteri veri**, non le unità UTF-16.
+
+### `attiva`, il comando del launcher
+
+Nella finestra del launcher la regia ha un bottone che apre `twitch.tv/activate`
+nel **browser di sistema**, dove l'utente è già loggato su Twitch: la WebView2 di
+`Pollaio.exe` ha un profilo suo, vuoto, e là dentro toccherebbe rifare il login
+solo per battere otto caratteri. Lo fa il comando `attiva` di `avvio/Pollaio.cs`.
+
+**L'indirizzo è una costante dentro il launcher e non arriva dalla pagina.** Un
+comando che accetta un indirizzo qualsiasi da chi sta nella WebView è un comando
+che può far aprire qualunque cosa, e questo non ne ha bisogno: la pagina chiede
+di aprire *quella* pagina, non «una pagina».
+
+## 19. Il bordo che ridimensiona — la finestra senza cornice
+
+La finestra di `Pollaio.exe` si ridimensiona tirandone i bordi, come qualunque
+altra finestra. Il gesto è quello di sempre; quello che non è di sempre è **chi
+lo riconosce**.
+
+### Perché `WS_THICKFRAME` da solo non basta
+
+La `Vetrina` è una finestra **senza area non-client**: `FormBorderStyle.None`,
+`WS_THICKFRAME` rimesso a mano nei `CreateParams`, e `WM_NCCALCSIZE` che ritorna
+zero per mangiarsi la cornice. Sopra al client c'è la WebView2 in `Dock = Fill`,
+che lo copre tutto.
+
+Le maniglie di ridimensionamento di Windows **stanno nell'area non-client**, e
+qui l'area non-client non esiste: il frame non vede mai il mouse. **Lo stile da
+solo quindi non basta.** Serve lo stesso — senza `WS_THICKFRAME` la finestra non
+è ridimensionabile e il gesto qui sotto non avrebbe effetto — ma non è lui a far
+partire niente.
+
+Quindi **il bordo lo riconosce la pagina**, ed è la stessa strada già presa per
+lo spostamento: la pagina guarda il puntatore, il launcher esegue il gesto.
+
+### Le otto zone
+
+`app/js/menu.js` guarda il puntatore su `mousemove`: entro **6 px** (`MARGINE`)
+da un lato, **16 px** (`ANGOLO`) per gli angoli, e scrive su `<html>`
+l'attributo `data-bordo`. `app/css/pollaio.css`, in fondo, ci attacca il
+puntatore giusto.
+
+| zona | `data-bordo` | codice di Windows | puntatore |
+|---|---|---|---|
+| alto | `n` | `HTTOP` | `ns-resize` |
+| basso | `s` | `HTBOTTOM` | `ns-resize` |
+| destra | `e` | `HTRIGHT` | `ew-resize` |
+| sinistra | `o` | `HTLEFT` | `ew-resize` |
+| alto a sinistra | `no` | `HTTOPLEFT` | `nwse-resize` |
+| alto a destra | `ne` | `HTTOPRIGHT` | `nesw-resize` |
+| basso a sinistra | `so` | `HTBOTTOMLEFT` | `nesw-resize` |
+| basso a destra | `se` | `HTBOTTOMRIGHT` | `nwse-resize` |
+
+Le sigle sono i punti cardinali in italiano: `o` è ovest, `no` è nord-ovest.
+
+Tre regole di contorno, e tutte e tre hanno un motivo:
+
+- sotto i `3 × ANGOLO` di lato **non c'è nessuna zona**: in una finestra così
+  piccola le fasce si toccherebbero e non resterebbe un punto da cui trascinare;
+- il bordo è spento mentre il menu del tasto destro è aperto: là si sceglie una
+  voce, non si tira un lato;
+- si spegne su `mouseleave` e sul `blur` della finestra, perché un puntatore di
+  ridimensionamento acceso su una finestra che non ha il fuoco promette una cosa
+  che al clic non succede.
+
+Il puntatore si mette **sulla radice**, e `html[data-bordo]` rimette a
+`cursor: inherit` `body`, `.pollaio` e i suoi discendenti, `:active` e barra
+compresi. È così che si scavalca il `grab` di `html[data-finestra]` **per
+ereditarietà invece che con un `!important`** (§1.6).
+
+### Il gesto lo finisce Windows
+
+Al `mousedown`, se una zona è accesa, la pagina manda
+`pollaio:ridimensiona:<zona>` **invece** di `pollaio:trascina`. Sul bordo si
+ridimensiona, dentro si trascina, mai tutti e due. In coda al comando va il
+contatore che `Menu.comanda` aggiunge a tutti: serve al canale del titolo, dove
+due comandi uguali di fila non si distinguerebbero.
+
+Il launcher traduce la sigla in un codice `HT*` (`Vetrina.ZonaDiBordo`) e
+risponde col gesto standard di Windows:
+
+```cs
+Nativo.ReleaseCapture();
+Nativo.SendMessageW(Handle, Nativo.WM_NCLBUTTONDOWN, zona, IntPtr.Zero);
+```
+
+**Da lì in poi ridimensiona Windows, non noi**: anteprima dal vivo, aggancio ai
+bordi dello schermo, Esc che annulla — tutto gratis, e nessun ciclo di
+trascinamento scritto a mano da mantenere e da sbagliare. Una sigla che non è
+fra le otto non fa niente; con la finestra non in stato `Normal` il comando si
+ignora.
+
+### Il minimo è 160 × 160
+
+`MinimumSize` vale `160 × scala` per lato, cioè 160 logici. È **lo stesso minimo
+che accettano la regia** (i campi `min="160"`, `MISURA_MIN` in `regia.js`), **il
+comando `misura` e `avvio\pollaio.ini`**, dove `larghezza` e `altezza` si
+ritagliano a 160–4000. Una finestra che si può stringere a una riga è una
+finestra che non si riafferra più.
+
+### La misura nuova viene ricordata
+
+`Vetrina.WndProc` intercetta `WM_EXITSIZEMOVE` e chiama `RicordaMisura()`, che
+riporta la misura da pixel fisici a logici dividendo per `scala`, la ritaglia a
+160–4000 e la scrive in `avvio\pollaio.ini`:
+
+| finestra | righe scritte |
+|---|---|
+| la chat | `larghezza`, `altezza` |
+| la regia | `regialarghezza`, `regiaaltezza` |
+
+Per la chat **sono esattamente le righe che scrive il bottone «Salva la misura»
+della regia** (il comando `misura`): la misura della finestra ha **una sorgente
+di verità sola**, e i due modi di cambiarla ci scrivono dentro insieme invece di
+litigare. Le due righe della regia, invece, non le tocca nessun bottone: le
+scrive solo questo.
+
+Se la finestra non è in stato `Normal` non si scrive niente: la misura di una
+finestra ridotta a icona non è la misura che si vuole ritrovare al prossimo
+avvio.
+
+### Solo la finestra della chat
+
+Nella regia il riconoscimento del bordo è spento (`dentroLaRegia()` in
+`menu.js`). **La regia è una pagina che scorre, e il suo bordo destro è dove sta
+la barra di scorrimento**: una striscia di sei pixel che ridimensiona la finestra
+invece di far scorrere la pagina è un guasto peggiore della funzione che
+aggiunge. Là la misura resta quella dei campi numerici, che è anche il posto dove
+la si salva.
+
+### Due cose da sapere, per chi ci mette mano
+
+**`WM_EXITSIZEMOVE` arriva anche alla fine di uno spostamento**, non solo di un
+ridimensionamento: `RicordaMisura()` gira anche quando la finestra è stata solo
+trascinata, e riscrive gli stessi numeri. Va bene così — costa la scrittura di un
+file di poche righe e toglie un ramo condizionale che prima o poi si
+sbaglierebbe. Nella regia, dove il bordo è spento, è l'unico momento in cui
+`regialarghezza` e `regiaaltezza` si riscrivono.
+
+**Nel ripiego senza WebView2 il bordo non si accende affatto.** Quando WebView2
+manca, il launcher apre la pagina in Chrome o Edge con `--app`, le toglie la
+cornice (`Cornice.Togli`, che fra gli altri **leva proprio `WS_THICKFRAME`**) e
+riceve i comandi leggendo il titolo della finestra (`Ponte`). `Ponte` non ha il
+ramo `ridimensiona`, e quella finestra non ha più lo stile che servirebbe.
+
+Per questo `guardaIlBordo` parte da `dentroLaVetrina()`: senza
+`chrome.webview.postMessage` non scrive `data-bordo`, il puntatore resta quello
+di prima e i sei pixel del perimetro tornano al trascinamento. **Una funzione
+che non può funzionare non deve nemmeno farsi vedere**: un puntatore che promette
+un ridimensionamento e poi non fa niente — e che per giunta si mangia anche il
+trascinamento, perché il ramo del bordo esce prima di `trascina` — è peggio della
+funzione mancante, che almeno non mente.

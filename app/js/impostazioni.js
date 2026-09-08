@@ -50,7 +50,7 @@
 
       nascosta: true,
       etichetta: 'Dentro la finestra del launcher',
-      aiuto: 'Lo mette Pollaio.exe da sé: dice alla pagina che sta girando nella sua finestra, quella senza barra del titolo, e accende il menu del tasto destro con Chiudi, Riduci a icona, Sposta e Apri la regia.'
+      aiuto: 'Lo mette Pollaio.exe da sé: dice alla pagina che sta girando nella sua finestra, quella senza barra del titolo. Da lì dipendono le tre cose che quella finestra ha al posto della barra: il menu del tasto destro (Apri la regia, Ricarica la chat, Riduci a icona, Chiudi il pollaio), il trascinamento da un punto qualsiasi della chat, e i bordi che si tirano per ridimensionarla.'
     },
 
     {
@@ -364,6 +364,23 @@
       ],
       etichetta: 'Un messaggio cancellato dai mod',
       aiuto: '«Lo sbarro» lo tiene in pagina barrato: si capisce che è successo qualcosa e che qualcuno è intervenuto. «Lo tolgo» lo fa sparire, ed è quello che voglio se sto registrando. «Lo lascio» non fa niente: il messaggio che un moderatore ha appena cancellato resta in diretta, cioè esattamente ciò che il moderatore voleva evitare.'
+    },
+
+    {
+      gruppo: 'barra',
+      chiave: 'barra',
+      tipo: 'sìno',
+      predefinito: true,
+      etichetta: 'La barra sotto la chat',
+      aiuto: 'La striscia con i filtri e il tasto per fermare la chat. Compare dove la si può usare — la finestra di Pollaio.exe, l’anteprima qui accanto, la pagina aperta a mano in un browser — e in una sorgente browser di OBS non compare mai: là non c’è nessuno che clicca, e sarebbe solo una striscia in meno di gameplay. I filtri sono «Tutto», «Eventi» e uno per ogni chat collegata: quelli delle chat compaiono solo quando ce n’è più d’una, perché con la sola Twitch «Tutto» e «Twitch» sarebbero lo stesso bottone scritto due volte.'
+    },
+    {
+      gruppo: 'barra',
+      chiave: 'scrivi',
+      tipo: 'sìno',
+      predefinito: true,
+      etichetta: 'Il campo per scrivere in chat',
+      aiuto: 'Il campo dentro la barra da cui mando i messaggi con il mio account. Finché l’account non è collegato — si fa in fondo alla regia — al suo posto c’è solo la riga che lo dice, e senza collegamento il pollaio resta quello di sempre: legge la chat in anonimo e non scrive niente. Il gettone di Twitch resta in questo browser, non finisce mai nell’indirizzo e non passa da OBS.'
     }
   ];
 

@@ -415,6 +415,18 @@
     return !!(conf.youtube && conf.ytchiave);
   }
 
+  function piattaformeAccese() {
+    var quali = ['twitch'];
+    if (!conf) { return quali; }
+
+    if (conf.prova) { return ['twitch', 'kick', 'youtube']; }
+
+    if (conf.kick || conf.kickstanza) { quali.push('kick'); }
+    if (conf.youtube && conf.ytchiave) { quali.push('youtube'); }
+
+    return quali.length > 1 ? quali : [];
+  }
+
   function suModerazione(m) {
     if (!window.Eventi) { return; }
 
@@ -528,6 +540,18 @@
 
       anima: conf.anima
     })) { return; }
+
+    if (window.Barra) {
+      window.Barra.monta(radice, {
+        barra: conf.barra,
+        scrivi: conf.scrivi,
+        canale: conf.canale,
+        prova: conf.prova,
+        verso: conf.verso,
+        comandi: conf.comandi,
+        piattaforme: piattaformeAccese()
+      });
+    }
 
     if (window.Rilievo) {
       window.Rilievo.imposta({
