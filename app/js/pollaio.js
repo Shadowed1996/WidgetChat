@@ -28,6 +28,8 @@
     var velocita = Math.max(25, Math.min(300, valori.velocita));
     radice.style.setProperty('--tempo', (100 / velocita).toFixed(3));
 
+    document.documentElement.setAttribute('data-movimento', valori.movimento);
+
     if (document.body) { document.body.setAttribute('data-fondo', valori.fondo); }
 
     var scala = Math.max(60, Math.min(200, valori.scala)) / 100;
@@ -537,6 +539,8 @@
       velocita: conf.velocita,
 
       multi: !!conf.prova || altreChat(),
+
+      movimento: conf.movimento,
 
       anima: conf.anima
     })) { return; }

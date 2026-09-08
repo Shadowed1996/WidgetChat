@@ -801,7 +801,7 @@
     return costruisci(pescaSpettatore(), muro);
   }
 
-  function soloEmote() {
+  function muroDiEmote() {
     return costruisci(pescaSpettatore(), 'Kappa Kappa Kappa Kappa Kappa Kappa Kappa Kappa Kappa Kappa Kappa Kappa');
   }
 
@@ -817,7 +817,7 @@
 
   const CASI_OSTILI = [
     zalgo, zalgoNelNome, scavalcoDirezione, nomeLunghissimo,
-    muroDiTesto, soloEmote, controlli, linkLunghissimo
+    muroDiTesto, muroDiEmote, controlli, linkLunghissimo
   ];
 
   const COPIONE = [

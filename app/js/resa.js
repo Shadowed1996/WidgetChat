@@ -57,6 +57,8 @@
 
     anima: true,
 
+    movimento: 'auto',
+
     scorre: false
   };
 
@@ -72,11 +74,15 @@
   var sospesi = [];
   var avvisaAttesa = null;
 
-  var menoMovimento = false;
+  var sistemaChiedeCalma = false;
   try {
-    menoMovimento = !!(window.matchMedia &&
+    sistemaChiedeCalma = !!(window.matchMedia &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   } catch (err) {  }
+
+  function menoMovimento() {
+    return sistemaChiedeCalma && conf.movimento !== 'sempre';
+  }
 
   var righe = [];
 
@@ -647,7 +653,7 @@
       riga.classList.remove('is-nuovo');
     }, durataEntrata(conf.effetto));
 
-    if (conf.effetto === 'matrix' && !menoMovimento) { scombina(riga); }
+    if (conf.effetto === 'matrix' && !menoMovimento()) { scombina(riga); }
 
     vestiRiga(riga);
     pota();
@@ -958,6 +964,7 @@
 
     if (typeof o.multi === 'boolean') { conf.multi = o.multi; }
     if (typeof o.anima === 'boolean') { conf.anima = o.anima; }
+    if (o.movimento) { conf.movimento = o.movimento; }
 
     if (typeof o.scorre === 'boolean') {
       conf.scorre = o.scorre;

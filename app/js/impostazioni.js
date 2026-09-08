@@ -166,6 +166,18 @@
     },
     {
       gruppo: 'aspetto',
+      chiave: 'movimento',
+      tipo: 'voce',
+      predefinito: 'auto',
+      voci: [
+        { valore: 'auto', etichetta: 'Come dice il computer' },
+        { valore: 'sempre', etichetta: 'Anima comunque' }
+      ],
+      etichetta: 'Quando animare',
+      aiuto: 'Windows ha un interruttore — Impostazioni, Accessibilità, Effetti visivi — che chiede a tutti i programmi di muoversi il meno possibile. Serve a chi sta male a guardare le cose che si muovono, e il pollaio lo rispetta: con «come dice il computer», se quell’interruttore è spento non si anima più niente. Non solo l’effetto d’ingresso: anche la fascia dell’hype train, il pallino della spia e il pollo che dondola. C’è però un caso in cui quella risposta è alla domanda sbagliata. Dentro una sorgente browser di OBS il computer non sta guardando, sta disegnando: la preferenza è di chi trasmette, ma l’immagine la guardano gli spettatori, che non l’hanno mai espressa. Lì metto «anima comunque». Sulla macchina che uso per guardare la chat, no.'
+    },
+    {
+      gruppo: 'aspetto',
       chiave: 'larghezza',
       tipo: 'numero',
       predefinito: 420,

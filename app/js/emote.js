@@ -41,6 +41,7 @@
 
   let quantita = 0;
   let fontiOk = 0;
+  let fontiChieste = 0;
   let attesa = null;
 
   let CANALE = '';
@@ -231,7 +232,7 @@
 
   const CHIAVE_RICORDO = 'sb-pollaio-emote';
 
-  const FORMATO_RICORDO = 1;
+  const FORMATO_RICORDO = 2;
 
   const RICORDO_FRESCO  = 1800000;
   const RICORDO_SCADUTO = 43200000;
@@ -258,6 +259,7 @@
         ts: Date.now(),
         impronta: impronta(id, scelte),
         sorgenti: fontiOk,
+        chieste: fontiChieste,
         catalogo: catalogo
       });
 
@@ -302,7 +304,11 @@
     if (!quantita) { return null; }
 
     fontiOk = Number(dato.sorgenti) || 1;
-    return eta < RICORDO_FRESCO ? 'fresco' : 'stanco';
+
+    const chieste = Number(dato.chieste) || 0;
+    const intero = chieste > 0 && fontiOk >= chieste;
+
+    return eta < RICORDO_FRESCO && intero ? 'fresco' : 'stanco';
   }
 
   function esito() {
@@ -347,6 +353,8 @@
         }));
       }
     }
+
+    fontiChieste = lavori.length;
 
     function fine() {
 
@@ -605,10 +613,40 @@
     return uscita;
   }
 
+  const SUGGERITE = 8;
+
+  function cerca(prefisso, tetto) {
+    const chiave = String(prefisso || '').toLowerCase();
+    if (!chiave) { return []; }
+
+    const quante = tetto > 0 ? tetto : SUGGERITE;
+    const inizia = [];
+    const dentro = [];
+    const nomi = Object.keys(catalogo);
+
+    for (let i = 0; i < nomi.length; i++) {
+      const dove = nomi[i].toLowerCase().indexOf(chiave);
+      if (dove === 0) { inizia.push(catalogo[nomi[i]]); }
+      else if (dove > 0) { dentro.push(catalogo[nomi[i]]); }
+    }
+
+    function primaLeNostre(a, b) {
+      if (b.peso !== a.peso) { return b.peso - a.peso; }
+      if (a.nome.length !== b.nome.length) { return a.nome.length - b.nome.length; }
+      return a.nome < b.nome ? -1 : 1;
+    }
+
+    inizia.sort(primaLeNostre);
+    dentro.sort(primaLeNostre);
+
+    return inizia.concat(dentro).slice(0, quante);
+  }
+
   window.Emote = {
     carica: carica,
     pezzi: pezzi,
     pezziKick: pezziKick,
+    cerca: cerca,
     pronto: function () { return fontiOk > 0; },
     quante: function () { return quantita; }
   };

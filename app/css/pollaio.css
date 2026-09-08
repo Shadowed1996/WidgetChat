@@ -1042,7 +1042,8 @@ html[data-finestra] .pollaio .pollaio__filtro,
 html[data-finestra] .pollaio .pollaio__pausa,
 html[data-finestra] .pollaio .pollaio__attesa,
 html[data-finestra] .pollaio .pollaio__scrivi-manda,
-html[data-finestra] .pollaio .pollaio__invito-btn {
+html[data-finestra] .pollaio .pollaio__invito-btn,
+html[data-finestra] .pollaio .pollaio__suggerito {
   cursor: pointer;
 }
 
@@ -1189,6 +1190,59 @@ html[data-finestra] .pollaio .pollaio__scrivi-campo {
   background-color: var(--pannello-2);
 }
 
+.pollaio__suggeriti {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: calc(100% + 4px);
+  z-index: var(--z-spia);
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  margin: 0;
+  padding: 4px;
+  max-block-size: 14em;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+  scrollbar-width: thin;
+
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio-s);
+  background-color: var(--fondo);
+  box-shadow: var(--ombra);
+}
+
+.pollaio__suggerito {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--passo) * 0.6);
+
+  padding: 0.25em 0.5em;
+  border-radius: 5px;
+  color: var(--testo-medio);
+  font-size: 0.74em;
+  cursor: pointer;
+}
+
+.pollaio__suggerito.is-scelta {
+  background-color: var(--viola-cupo);
+  color: var(--testo);
+}
+
+.pollaio__suggerito-img {
+  flex: none;
+  block-size: 1.8em;
+  inline-size: auto;
+}
+
+.pollaio__suggerito-nome {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .pollaio__scrivi-resta {
   position: absolute;
   inset-block-end: 0.5em;
@@ -1305,16 +1359,16 @@ html[data-bordo="so"] { cursor: nesw-resize; }
 
 @media (prefers-reduced-motion: reduce) {
 
-  .pollaio__riga.is-nuovo,
-  .pollaio[data-effetto="scivola"] .pollaio__riga.is-nuovo,
-  .pollaio[data-effetto="bagliore"] .pollaio__riga.is-nuovo,
-  .pollaio[data-effetto="sfoca"] .pollaio__riga.is-nuovo,
-  .pollaio[data-effetto="glitch"] .pollaio__riga.is-nuovo,
-  .pollaio[data-effetto="insegna"] .pollaio__riga.is-nuovo,
-  .pollaio[data-effetto="scatto"] .pollaio__riga.is-nuovo,
-  .pollaio[data-effetto="matrix"] .pollaio__riga.is-nuovo,
+  html:not([data-movimento="sempre"]) .pollaio__riga.is-nuovo,
+  html:not([data-movimento="sempre"]) .pollaio[data-effetto="scivola"] .pollaio__riga.is-nuovo,
+  html:not([data-movimento="sempre"]) .pollaio[data-effetto="bagliore"] .pollaio__riga.is-nuovo,
+  html:not([data-movimento="sempre"]) .pollaio[data-effetto="sfoca"] .pollaio__riga.is-nuovo,
+  html:not([data-movimento="sempre"]) .pollaio[data-effetto="glitch"] .pollaio__riga.is-nuovo,
+  html:not([data-movimento="sempre"]) .pollaio[data-effetto="insegna"] .pollaio__riga.is-nuovo,
+  html:not([data-movimento="sempre"]) .pollaio[data-effetto="scatto"] .pollaio__riga.is-nuovo,
+  html:not([data-movimento="sempre"]) .pollaio[data-effetto="matrix"] .pollaio__riga.is-nuovo,
 
-  .pollaio[data-effetto="scatto"][data-verso="giu"] .pollaio__riga.is-nuovo {
+  html:not([data-movimento="sempre"]) .pollaio[data-effetto="scatto"][data-verso="giu"] .pollaio__riga.is-nuovo {
     animation: none;
     opacity: 1;
     translate: none;
@@ -1323,41 +1377,46 @@ html[data-bordo="so"] { cursor: nesw-resize; }
     box-shadow: none;
   }
 
-  .pollaio[data-effetto="bagliore"] .pollaio__riga.is-nuovo::after,
-  .pollaio[data-effetto="glitch"] .pollaio__riga.is-nuovo::after,
-  .pollaio[data-effetto="matrix"] .pollaio__riga.is-nuovo::after {
+  html:not([data-movimento="sempre"]) .pollaio[data-effetto="bagliore"] .pollaio__riga.is-nuovo::after,
+  html:not([data-movimento="sempre"]) .pollaio[data-effetto="glitch"] .pollaio__riga.is-nuovo::after,
+  html:not([data-movimento="sempre"]) .pollaio[data-effetto="matrix"] .pollaio__riga.is-nuovo::after {
     content: none;
   }
 
-  .pollaio[data-effetto="matrix"] .pollaio__riga.is-nuovo .pollaio__corpo {
+  html:not([data-movimento="sempre"]) .pollaio[data-effetto="matrix"] .pollaio__riga.is-nuovo .pollaio__corpo {
     font-family: var(--font-testo);
     color: var(--testo);
 
     text-shadow: var(--ombra-corrente);
   }
 
-  .pollaio__riga.is-svanisce {
+  html:not([data-movimento="sempre"]) .pollaio__riga.is-svanisce {
     animation: none;
+
     opacity: 0;
+    max-block-size: 0;
+    padding-block: 0;
+    margin-block: 0;
+    border-block-start-width: 0;
   }
 
-  .pollaio__spia-punto,
-  .pollaio__spia[data-stato="collego"] .pollaio__spia-punto,
-  .pollaio__spia[data-stato="riprovo"] .pollaio__spia-punto,
-  .pollaio__spia[data-stato="prova"] .pollaio__spia-punto {
+  html:not([data-movimento="sempre"]) .pollaio__spia-punto,
+  html:not([data-movimento="sempre"]) .pollaio__spia[data-stato="collego"] .pollaio__spia-punto,
+  html:not([data-movimento="sempre"]) .pollaio__spia[data-stato="riprovo"] .pollaio__spia-punto,
+  html:not([data-movimento="sempre"]) .pollaio__spia[data-stato="prova"] .pollaio__spia-punto {
     animation: none;
   }
 
-  .pollaio__treno[data-fase="arrivo"] .pollaio__treno-riempimento,
-  .pollaio__treno[data-golden] {
+  html:not([data-movimento="sempre"]) .pollaio__treno[data-fase="arrivo"] .pollaio__treno-riempimento,
+  html:not([data-movimento="sempre"]) .pollaio__treno[data-golden] {
     animation: none;
   }
 
-  .pollaio__treno-riempimento {
+  html:not([data-movimento="sempre"]) .pollaio__treno-riempimento {
     transition: none;
   }
 
-  .pollaio__pollo-img {
+  html:not([data-movimento="sempre"]) .pollaio__pollo-img {
     animation: none;
     rotate: 0deg;
   }

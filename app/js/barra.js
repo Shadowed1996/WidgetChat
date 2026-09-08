@@ -183,6 +183,150 @@
     });
   }
 
+  var SUGGERITE = 8;
+
+  var TROVA_CHIAVE = /(?:^|\s):([A-Za-z0-9_+-]*)$/;
+
+  var suggerite = [];
+  var scelta = -1;
+
+  function chiaveSottoIlCursore() {
+    var fine = nodi.campo.selectionStart;
+    if (typeof fine !== 'number') { return null; }
+
+    var trovato = TROVA_CHIAVE.exec(nodi.campo.value.slice(0, fine));
+    if (!trovato) { return null; }
+
+    return { chiave: trovato[1], inizio: fine - trovato[1].length - 1, fine: fine };
+  }
+
+  function chiudiSuggeriti() {
+    if (!nodi.suggeriti || nodi.suggeriti.hidden) { return; }
+
+    nodi.suggeriti.hidden = true;
+    nodi.suggeriti.textContent = '';
+    suggerite = [];
+    scelta = -1;
+  }
+
+  function vestiScelta() {
+    var voci = nodi.suggeriti.children;
+    var i;
+
+    for (i = 0; i < voci.length; i++) {
+      var sua = i === scelta;
+      voci[i].classList.toggle('is-scelta', sua);
+      voci[i].setAttribute('aria-selected', sua ? 'true' : 'false');
+    }
+  }
+
+  function metti(voce) {
+    var dove = chiaveSottoIlCursore();
+    if (!dove || !voce) { chiudiSuggeriti(); return; }
+
+    var testo = nodi.campo.value;
+    var dopo = testo.slice(dove.fine);
+    var spazio = dopo.charAt(0) === ' ' ? '' : ' ';
+
+    nodi.campo.value = testo.slice(0, dove.inizio) + voce.nome + spazio + dopo;
+
+    var cursore = dove.inizio + voce.nome.length + spazio.length;
+    nodi.campo.setSelectionRange(cursore, cursore);
+
+    chiudiSuggeriti();
+    cresci();
+    vestiResta();
+    vestiManda();
+    nodi.campo.focus();
+  }
+
+  function disegnaSuggeriti(voci) {
+    nodi.suggeriti.textContent = '';
+
+    var i;
+    for (i = 0; i < voci.length; i++) {
+      (function (voce, posto) {
+        var riga = document.createElement('li');
+        riga.className = 'pollaio__suggerito';
+        riga.setAttribute('role', 'option');
+        riga.setAttribute('aria-selected', 'false');
+
+        if (/^https:\/\//.test(voce.url)) {
+          var img = document.createElement('img');
+          img.className = 'pollaio__suggerito-img';
+          img.setAttribute('src', voce.url);
+          img.setAttribute('alt', '');
+          img.setAttribute('decoding', 'async');
+          riga.appendChild(img);
+        }
+
+        var nome = document.createElement('span');
+        nome.className = 'pollaio__suggerito-nome';
+        nome.textContent = voce.nome;
+        riga.appendChild(nome);
+
+        riga.addEventListener('mousedown', function (evento) {
+          evento.preventDefault();
+          metti(voce);
+        });
+
+        riga.addEventListener('mouseenter', function () {
+          scelta = posto;
+          vestiScelta();
+        });
+
+        nodi.suggeriti.appendChild(riga);
+      }(voci[i], i));
+    }
+
+    nodi.suggeriti.hidden = false;
+    scelta = 0;
+    vestiScelta();
+  }
+
+  function suggerisci() {
+    if (!nodi.suggeriti || !window.Emote || !window.Emote.cerca) { return; }
+
+    var dove = chiaveSottoIlCursore();
+    if (!dove || !dove.chiave) { chiudiSuggeriti(); return; }
+
+    var trovate;
+    try { trovate = window.Emote.cerca(dove.chiave, SUGGERITE); }
+    catch (err) { trovate = []; }
+
+    if (!trovate.length) { chiudiSuggeriti(); return; }
+
+    suggerite = trovate;
+    disegnaSuggeriti(trovate);
+  }
+
+  function tastiSuggeriti(evento) {
+    if (!nodi.suggeriti || nodi.suggeriti.hidden || !suggerite.length) { return false; }
+
+    if (evento.key === 'ArrowDown' || evento.key === 'ArrowUp') {
+      evento.preventDefault();
+      scelta += evento.key === 'ArrowDown' ? 1 : -1;
+      if (scelta < 0) { scelta = suggerite.length - 1; }
+      if (scelta >= suggerite.length) { scelta = 0; }
+      vestiScelta();
+      return true;
+    }
+
+    if (evento.key === 'Enter' || evento.key === 'Tab') {
+      evento.preventDefault();
+      metti(suggerite[scelta] || suggerite[0]);
+      return true;
+    }
+
+    if (evento.key === 'Escape') {
+      evento.preventDefault();
+      chiudiSuggeriti();
+      return true;
+    }
+
+    return false;
+  }
+
   function vestiConto() {
     if (!conf.scrivi) {
       nodi.scrivi.hidden = true;
@@ -253,9 +397,14 @@
       cresci();
       vestiResta();
       vestiManda();
+      suggerisci();
     });
 
+    nodi.campo.addEventListener('blur', chiudiSuggeriti);
+
     nodi.campo.addEventListener('keydown', function (evento) {
+      if (tastiSuggeriti(evento)) { return; }
+
       if (evento.key === 'Enter' && !evento.shiftKey) {
         evento.preventDefault();
         manda();
@@ -310,6 +459,7 @@
 
     nodi.scrivi = nodi.barra.querySelector('.pollaio__scrivi');
     nodi.campo = nodi.barra.querySelector('.pollaio__scrivi-campo');
+    nodi.suggeriti = nodi.barra.querySelector('.pollaio__suggeriti');
     nodi.manda = nodi.barra.querySelector('.pollaio__scrivi-manda');
     nodi.resta = nodi.barra.querySelector('.pollaio__scrivi-resta');
 
@@ -319,7 +469,7 @@
     nodi.eco = nodi.barra.querySelector('.pollaio__eco');
 
     return !!(nodi.filtri.length && nodi.pausa && nodi.pausaTesto && nodi.attesa &&
-              nodi.scrivi && nodi.campo && nodi.manda && nodi.resta &&
+              nodi.scrivi && nodi.campo && nodi.manda && nodi.resta && nodi.suggeriti &&
               nodi.invito && nodi.invitoBtn && nodi.eco);
   }
 
