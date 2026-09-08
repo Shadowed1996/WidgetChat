@@ -1923,7 +1923,7 @@ internal sealed class Scelta : Form
 
 internal static class Recupero
 {
-    private const string DEPOSITO = "Shadowed96/pollaio";
+    private const string DEPOSITO = "Shadowed1996/pollaio";
     public const string API = "https://api.github.com/repos/" + DEPOSITO + "/releases/latest";
 
     public static string TrovaArchivio()

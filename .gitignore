@@ -12,6 +12,7 @@
 # release, non qui.
 Pollaio.exe
 Regia.exe
+Installa.exe
 
 # L'icona: la genera l'eseguibile stesso da app\img\favicon.png, al secondo
 # passaggio della compilazione.

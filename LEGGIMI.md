@@ -14,7 +14,7 @@ c'è nessun `npm install`: sono file HTML, CSS e JavaScript scritti a mano.
 
 ## Installarlo
 
-Vai su [Releases](https://github.com/Shadowed96/pollaio/releases), scarica
+Vai su [Releases](https://github.com/Shadowed1996/pollaio/releases), scarica
 **`Installa.exe`** e fai doppio clic.
 
 Ti chiede dove metterlo — di suo propone `AppData\Local\Pollaio`, che va bene
