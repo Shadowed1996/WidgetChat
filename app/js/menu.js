@@ -262,7 +262,8 @@
     avvia: avvia,
     aperto: function () { return !!pannello; },
     comanda: comanda,
-    dentro: function () { return acceso; }
+    dentro: function () { return acceso; },
+    nellaVetrina: function () { return acceso && dentroLaVetrina(); }
   };
 
   if (document.readyState === 'loading') {

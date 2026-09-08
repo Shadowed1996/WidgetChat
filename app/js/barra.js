@@ -30,10 +30,6 @@
     catch (err) { return false; }
   }
 
-  function nelLauncher() {
-    return !!(window.Menu && window.Menu.dentro && window.Menu.dentro());
-  }
-
   function eco(testo, guaio) {
     if (!nodi.eco) { return; }
 
@@ -133,8 +129,12 @@
     nodi.manda.textContent = inVolo ? 'Mando…' : 'Manda';
   }
 
+  function nellaVetrina() {
+    return !!(window.Menu && window.Menu.nellaVetrina && window.Menu.nellaVetrina());
+  }
+
   function apriTwitch(passo) {
-    if (nelLauncher()) {
+    if (nellaVetrina()) {
       window.Menu.comanda('attiva:' + passo.codice);
       return true;
     }

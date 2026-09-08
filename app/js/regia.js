@@ -19,7 +19,6 @@
   const FONDO_PREDEFINITO = 'scacchi';
   const FONDI = ['scacchi', 'chiaro', 'scuro', 'gioco'];
 
-  const ATTIVA = 'https://www.twitch.tv/activate';
   const ATTESA_SICURO = 5000;
 
   const GRUPPI = [
@@ -1218,7 +1217,7 @@
   function apriTwitch() {
     if (!attivazioneConto) { return false; }
 
-    if (window.Menu && window.Menu.dentro && window.Menu.dentro()) {
+    if (window.Menu && window.Menu.nellaVetrina && window.Menu.nellaVetrina()) {
       window.Menu.comanda('attiva:' + attivazioneConto.codice);
       return true;
     }

@@ -56,6 +56,7 @@ Non si importa un file, non si dipende da niente che stia là fuori.
    con lo scopo `user:write:chat`. Se un giorno la si svuota, il Client ID torna
    a metterlo l'utente dal campo della regia; chi si porta via il progetto ci
    mette il suo.
+
    `Conto.cliente()` guarda in ordine il conto collegato, poi il Client ID messo
    da parte in `localStorage` (`sb-pollaio-cliente`), poi la costante;
    `Conto.serveClientId()` dice se dopo tutti e tre manca ancora. **Perché una
@@ -552,10 +553,10 @@ un'interfaccia, si guarda in un browser).
 in fondo alla pagina e il campo del Client ID stava davanti al bottone: l'ordine
 della pagina raccontava che la prima cosa da fare fosse registrare
 un'applicazione su Twitch. Non lo è. Il Client ID è una cosa che si fa una volta
-nella vita — zero volte quando `CLIENTE_PREDEFINITO` è pieno (§1.3) — e **una
-cosa che si fa una volta nella vita non deve stare davanti a quella che si fa
-tutti i giorni**. Quindi il bottone in vista e in alto, il campo dentro un
-`<details>` che si apre da solo quando manca davvero.
+nella vita — zero volte finché `CLIENTE_PREDEFINITO` è pieno, come è oggi (§1.3)
+— e **una cosa che si fa una volta nella vita non deve stare davanti a quella
+che si fa tutti i giorni**. Quindi il bottone in vista e in alto, il campo
+dentro un `<details>` che si apre da solo quando manca davvero.
 
 **La regia non è più l'unico posto da cui si collega un account**: lo stesso
 bottone sta nella barra sotto la chat (§18) e fa partire lo stesso device flow.
@@ -834,7 +835,7 @@ atteso non sarebbe una comodità in meno: sarebbe una pagina qualunque aperta a
 nome nostro, su un gesto che l'utente ha chiesto per Twitch. L'unica risposta è
 non fidarsene e ricostruirlo.
 
-**Il Client ID può già esserci.** `Conto.cliente()` guarda in ordine il conto
+**Il Client ID di norma c'è già.** `Conto.cliente()` guarda in ordine il conto
 collegato, il Client ID messo da parte in `localStorage` e la costante
 `CLIENTE_PREDEFINITO` di `conto.js` (§1.3); solo se dopo tutti e tre manca
 ancora — `Conto.serveClientId()` — lo mette l'utente, registrando
