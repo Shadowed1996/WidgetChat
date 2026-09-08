@@ -43,6 +43,7 @@ if not exist "Pollaio.cs" (
 
 set "OPZIONI=/nologo /target:winexe /platform:x64 /optimize+ /codepage:65001"
 set "OPZIONI=%OPZIONI% /r:System.dll /r:System.Drawing.dll /r:System.Windows.Forms.dll"
+set "OPZIONI=%OPZIONI% /r:System.IO.Compression.dll /r:System.IO.Compression.FileSystem.dll"
 set "OPZIONI=%OPZIONI% /r:..\lib\Microsoft.Web.WebView2.Core.dll /r:..\lib\Microsoft.Web.WebView2.WinForms.dll"
 set "USCITA=..\Pollaio.exe"
 

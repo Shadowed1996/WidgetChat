@@ -93,6 +93,8 @@ internal static class Programma
             if (argomenti[i] == "--installa") ModoInstalla = true;
         }
 
+        if (!ModoInstalla) Aggiornamento.PulisciVecchi();
+
         try { Nativo.SetProcessDPIAware(); } catch {  }
 
         Application.EnableVisualStyles();
@@ -143,6 +145,8 @@ internal static class Programma
     public static string Destinazione = "";
 
     public static string Installato = "";
+
+    public const string VERSIONE = "1.0.3";
 }
 
 internal sealed class Preferenze
@@ -153,6 +157,7 @@ internal sealed class Preferenze
     public int    Y         = -1;
     public string Parametri = "fondo=scuro&tema=notte&scala=100";
     public string Browser   = "auto";
+    public bool   Aggiorna  = true;
     public bool   Cornice   = false;
 
     public int    RegiaLarghezza = 1280;
@@ -214,6 +219,12 @@ internal sealed class Preferenze
         "# applicazioni. Non resti mai chiuso fuori.",
         "cornice=0",
         "",
+        "# All'avvio guardo da solo se su GitHub c'è una versione più nuova, e se",
+        "# c'è la scarico: lo splash dice «Aggiornamento in corso…» e fa vedere la",
+        "# percentuale. Se la rete non risponde lascio perdere e apro la chat lo",
+        "# stesso. Metti 0 per decidere tu quando aggiornare.",
+        "aggiorna=1",
+        "",
         "# La finestra della REGIA, che è un'altra cosa: un banco di lavoro largo,",
         "# con le manopole a sinistra e l'anteprima a destra. Si apre con Regia.exe,",
         "# oppure dal menu del tasto destro dentro la chat.",
@@ -264,6 +275,7 @@ internal sealed class Preferenze
                     case "browser":   p.Browser   = valore.ToLowerInvariant(); break;
 
                     case "cornice":   p.Cornice   = Acceso(valore); break;
+                    case "aggiorna":  p.Aggiorna  = Acceso(valore); break;
                     case "regialarghezza": p.RegiaLarghezza = Numero(valore, p.RegiaLarghezza, 640, 6000); break;
                     case "regiaaltezza":   p.RegiaAltezza   = Numero(valore, p.RegiaAltezza,   480, 4000); break;
                 }
@@ -823,6 +835,8 @@ internal sealed class Splash : Form
         }
         Respira(cr, FASE_MINIMA);
 
+        if (!regia && uso.Aggiorna && Aggiorna()) return;
+
         cr = Stopwatch.StartNew();
         bool vetrina = Vetrina.Disponibile();
         string browser = null;
@@ -927,6 +941,58 @@ internal sealed class Splash : Form
         Respira(cr, 550);
 
         Congeda();
+    }
+
+    private bool Aggiorna()
+    {
+        Stopwatch cr = Stopwatch.StartNew();
+        Annuncia("Controllo gli aggiornamenti…", 0.18f);
+
+        Novita nuova = Aggiornamento.Cerca();
+        Respira(cr, FASE_MINIMA);
+
+        if (nuova == null) return false;
+
+        string zip = Path.Combine(Path.GetTempPath(), "pollaio-agg-" + Guid.NewGuid().ToString("N") + ".zip");
+        bool andata = false;
+
+        try
+        {
+            Annuncia("Aggiornamento in corso… 0%", 0.22f);
+
+            Recupero.Scarica(nuova.Zip, zip, delegate (int p)
+            {
+                Annuncia("Aggiornamento in corso… " + p + "%", 0.22f + p * 0.0060f);
+            });
+
+            cr = Stopwatch.StartNew();
+            Annuncia("Metto a posto i file…", 0.88f);
+            andata = Aggiornamento.Applica(zip);
+            Respira(cr, 700);
+        }
+        catch
+        {
+            andata = false;
+        }
+        finally
+        {
+            try { if (File.Exists(zip)) File.Delete(zip); } catch { }
+        }
+
+        if (!andata)
+        {
+
+            Annuncia("Aggiornamento saltato, apro quello che ho…", 0.30f);
+            Respira(Stopwatch.StartNew(), 1100);
+            return false;
+        }
+
+        Annuncia("Aggiornato alla " + nuova.Tag + ": riparto.", 1.00f);
+        Respira(Stopwatch.StartNew(), 1400);
+
+        Aggiornamento.Riparti();
+        Congeda();
+        return true;
     }
 
     private void FasiInstallazione()
@@ -1987,7 +2053,11 @@ internal static class Recupero
 
     public static string TrovaArchivio()
     {
-        string json = Chiedi(API);
+        return Archivio(Json(API));
+    }
+
+    public static string Archivio(string json)
+    {
         if (json == null) return null;
 
         int i = 0;
@@ -1996,21 +2066,34 @@ internal static class Recupero
             i = json.IndexOf("\"browser_download_url\"", i, StringComparison.Ordinal);
             if (i < 0) return null;
 
-            int duepunti = json.IndexOf(':', i);
-            if (duepunti < 0) return null;
-            int apre = json.IndexOf('"', duepunti + 1);
-            if (apre < 0) return null;
-            int chiude = json.IndexOf('"', apre + 1);
-            if (chiude < 0) return null;
-
-            string url = json.Substring(apre + 1, chiude - apre - 1);
+            string url = Valore(json, i);
+            if (url == null) return null;
             if (url.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)) return url;
 
-            i = chiude;
+            i += "\"browser_download_url\"".Length;
         }
     }
 
-    private static string Chiedi(string indirizzo)
+    public static string Campo(string json, string chiave)
+    {
+        if (json == null) return null;
+        int i = json.IndexOf("\"" + chiave + "\"", StringComparison.Ordinal);
+        if (i < 0) return null;
+        return Valore(json, i);
+    }
+
+    private static string Valore(string json, int daChiave)
+    {
+        int duepunti = json.IndexOf(':', daChiave);
+        if (duepunti < 0) return null;
+        int apre = json.IndexOf('"', duepunti + 1);
+        if (apre < 0) return null;
+        int chiude = json.IndexOf('"', apre + 1);
+        if (chiude < 0) return null;
+        return json.Substring(apre + 1, chiude - apre - 1);
+    }
+
+    public static string Json(string indirizzo)
     {
         try
         {
@@ -2083,6 +2166,167 @@ internal static class Recupero
         ts.InvokeMember("Description", BindingFlags.SetProperty, null, scorciatoia,
             new object[] { "La chat di slayer_beard sopra al gioco" });
         ts.InvokeMember("Save", BindingFlags.InvokeMethod, null, scorciatoia, null);
+    }
+}
+
+internal sealed class Novita
+{
+    public string Tag;
+    public string Zip;
+}
+
+internal static class Aggiornamento
+{
+
+    public static Novita Cerca()
+    {
+        string json = Recupero.Json(Recupero.API);
+        if (json == null) return null;
+
+        string tag = Recupero.Campo(json, "tag_name");
+        if (tag == null) return null;
+        if (!PiuNuova(tag, Programma.VERSIONE)) return null;
+
+        string zip = Recupero.Archivio(json);
+        if (zip == null) return null;
+
+        Novita n = new Novita();
+        n.Tag = tag;
+        n.Zip = zip;
+        return n;
+    }
+
+    public static bool PiuNuova(string tag, string mia)
+    {
+        int[] la = Numeri(tag);
+        int[] lb = Numeri(mia);
+        if (la == null || lb == null) return false;
+
+        for (int i = 0; i < 3; i++)
+        {
+            if (la[i] > lb[i]) return true;
+            if (la[i] < lb[i]) return false;
+        }
+        return false;
+    }
+
+    private static int[] Numeri(string versione)
+    {
+        if (string.IsNullOrEmpty(versione)) return null;
+        string s = versione.Trim().TrimStart('v', 'V');
+
+        string[] pezzi = s.Split('.');
+        int[] fuori = new int[3];
+
+        for (int i = 0; i < 3; i++)
+        {
+            fuori[i] = 0;
+            if (i >= pezzi.Length) continue;
+
+            string solo = "";
+            for (int k = 0; k < pezzi[i].Length && char.IsDigit(pezzi[i][k]); k++) solo += pezzi[i][k];
+            if (solo.Length == 0) continue;
+
+            int n;
+            if (int.TryParse(solo, NumberStyles.Integer, CultureInfo.InvariantCulture, out n)) fuori[i] = n;
+        }
+
+        return fuori;
+    }
+
+    public static void PulisciVecchi()
+    {
+        try
+        {
+            foreach (string f in Directory.GetFiles(Programma.Radice, "*.vecchio", SearchOption.AllDirectories))
+            {
+                try { File.Delete(f); } catch { }
+            }
+        }
+        catch { }
+    }
+
+    public static bool Applica(string zip)
+    {
+        string temporanea = Path.Combine(Path.GetTempPath(), "pollaio-nuovo-" + Guid.NewGuid().ToString("N"));
+
+        try
+        {
+            Directory.CreateDirectory(temporanea);
+            System.IO.Compression.ZipFile.ExtractToDirectory(zip, temporanea);
+
+            if (!File.Exists(Path.Combine(temporanea, "Pollaio.exe"))) return false;
+
+            foreach (string nome in new string[] { "app", "lib" })
+            {
+                string partenza = Path.Combine(temporanea, nome);
+                if (!Directory.Exists(partenza)) continue;
+
+                Fondi(partenza, Path.Combine(Programma.Radice, nome));
+            }
+
+            foreach (string nome in new string[] { "Pollaio.exe", "Regia.exe", "LEGGIMI.md" })
+            {
+                string partenza = Path.Combine(temporanea, nome);
+                if (!File.Exists(partenza)) continue;
+
+                if (!Sostituisci(partenza, Path.Combine(Programma.Radice, nome))) return false;
+            }
+
+            return true;
+        }
+        catch { return false; }
+        finally
+        {
+            try { if (Directory.Exists(temporanea)) Directory.Delete(temporanea, true); } catch { }
+        }
+    }
+
+    private static void Fondi(string da, string a)
+    {
+        Directory.CreateDirectory(a);
+
+        foreach (string f in Directory.GetFiles(da))
+            Sostituisci(f, Path.Combine(a, Path.GetFileName(f)));
+
+        foreach (string d in Directory.GetDirectories(da))
+            Fondi(d, Path.Combine(a, Path.GetFileName(d)));
+    }
+
+    private static bool Sostituisci(string partenza, string arrivo)
+    {
+        try
+        {
+            if (File.Exists(arrivo))
+            {
+                try
+                {
+                    File.Delete(arrivo);
+                }
+                catch
+                {
+                    string daparte = arrivo + ".vecchio";
+                    try { if (File.Exists(daparte)) File.Delete(daparte); } catch { }
+                    File.Move(arrivo, daparte);
+                }
+            }
+
+            File.Copy(partenza, arrivo, true);
+            return true;
+        }
+        catch { return false; }
+    }
+
+    public static void Riparti()
+    {
+        try
+        {
+            ProcessStartInfo psi = new ProcessStartInfo(Application.ExecutablePath);
+            psi.UseShellExecute = true;
+            psi.WorkingDirectory = Programma.Radice;
+            Process.Start(psi);
+        }
+        catch { }
     }
 }
 internal static class Nativo

@@ -26,12 +26,35 @@ Non chiede i permessi di amministratore e non tocca il registro: installa sotto
 la tua cartella utente. Disinstallare vuol dire cancellare quella cartella e il
 collegamento.
 
-Per aggiornare, si rilancia lo stesso `Installa.exe`: rifà `app` e `lib` e
-**lascia stare `avvio\pollaio.ini`**, così le tue preferenze sopravvivono
-all'aggiornamento.
-
 In alternativa c'è `pollaio.zip` nella stessa pagina, da scompattare a mano
 dove preferisci.
+
+---
+
+## Gli aggiornamenti se li fa da solo
+
+`Pollaio.exe` all'avvio chiede a GitHub qual è l'ultima versione pubblicata. Se
+è più recente di quella che hai, sullo splash compare **«Aggiornamento in
+corso…»** con la percentuale che sale mentre scarica, poi rimette a posto i
+file, riparte da solo e apre la chat. Sono i soliti pochi secondi in più, e
+solo quando c'è davvero qualcosa di nuovo.
+
+Il file `avvio\pollaio.ini` **non viene toccato**: le tue preferenze
+sopravvivono all'aggiornamento. Se la rete non risponde o qualcosa va storto,
+non insiste: dice che l'aggiornamento l'ha saltato e apre la versione che hai
+già. Una chat che non parte perché GitHub è lento sarebbe molto peggio di una
+versione vecchia di un giorno.
+
+Se preferisci decidere tu quando aggiornare, in `avvio\pollaio.ini` metti
+`aggiorna=0` e il controllo non lo fa più.
+
+Il vecchio `Pollaio.exe` non si può cancellare mentre sta girando, quindi
+durante l'aggiornamento viene spostato di lato in `Pollaio.exe.vecchio` e
+buttato via al lancio dopo. Se ne vedi qualcuno in giro, è quello: si può
+cancellare a mano senza pensarci.
+
+Resta buono anche il vecchio modo: rilanciare `Installa.exe`, che rifà `app` e
+`lib` lasciando stare l'ini.
 
 ---
 
@@ -434,9 +457,10 @@ chat/
 ### Le preferenze del launcher
 
 Stanno in `avvio\pollaio.ini`: misura della finestra, dove si apre, quali
-parametri passare al widget, quale browser usare, e se tenere la barra del
-titolo (`cornice`). È un file di testo con le spiegazioni dentro. Se lo
-cancelli, il launcher lo riscrive.
+parametri passare al widget, quale browser usare, se controllare gli
+aggiornamenti all'avvio (`aggiorna`) e se tenere la barra del titolo
+(`cornice`). È un file di testo con le spiegazioni dentro. Se lo cancelli, il
+launcher lo riscrive.
 
 ### Ricompilare il launcher
 
