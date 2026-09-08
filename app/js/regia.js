@@ -69,7 +69,7 @@
     const id = [
       'gruppi', 'gruppi-vuoto', 'scena', 'telaio', 'misura',
       'altezza', 'altezza-valore', 'indirizzo', 'copia', 'copia-testo',
-      'apri', 'ripristina', 'conferma', 'conferma-si', 'conferma-no', 'eco',
+      'apri', 'ripristina', 'conferma', 'conferma-si', 'conferma-no', 'eco', 'azzera-eco',
       'preset-elenco', 'preset-vuoto', 'preset-salva', 'preset-nome-riga',
       'preset-nome', 'preset-conferma', 'preset-annulla'
     ];
@@ -888,7 +888,14 @@
     ricaricaAnteprima();
     aggiornaAttuale();
 
-    eco('Fatto: tutto com’era all’inizio. Le configurazioni salvate restano dove sono.', true);
+    mandaMisura(LARGHEZZA_FINESTRA, ALTEZZA_FINESTRA);
+
+    const detto = 'Fatto: tutto com’era all’inizio, misura della finestra compresa. Le configurazioni salvate restano dove sono.';
+
+    eco(detto, true);
+
+    nodi.azzeraEco.textContent = detto;
+    nodi.azzeraEco.classList.add('is-fatto');
   }
 
   function scriviFondo() {
@@ -957,6 +964,12 @@
 
   var MISURA_MIN = 160;
   var MISURA_MAX = 4000;
+  var MISURA_PASSO = 10;
+
+  var LARGHEZZA_FINESTRA = 400;
+  var ALTEZZA_FINESTRA = 600;
+
+  var fin = { larghezza: null, altezza: null, eco: null, dentro: false };
 
   function numeroDalLink(chiave, ripiego) {
     var q = String(location.search || '');
@@ -974,38 +987,92 @@
     return Math.max(MISURA_MIN, Math.min(MISURA_MAX, n));
   }
 
+  function ecoMisura(messaggio, riuscito) {
+    if (!fin.eco) { return; }
+    fin.eco.textContent = messaggio || '';
+    fin.eco.classList.toggle('is-fatto', !!riuscito);
+  }
+
+  function mandaMisura(larghezza, altezza) {
+    if (!fin.larghezza || !fin.altezza) { return; }
+
+    fin.larghezza.value = String(larghezza);
+    fin.altezza.value = String(altezza);
+
+    if (!fin.dentro) { return; }
+
+    window.Menu.comanda('misura:' + larghezza + 'x' + altezza);
+
+    ecoMisura('Fatto: ' + larghezza + ' × ' + altezza + '.', true);
+  }
+
+  function rispostaMisura(quante) {
+    var larghezza = ritagliaMisura(fin.larghezza, LARGHEZZA_FINESTRA);
+    var altezza = ritagliaMisura(fin.altezza, ALTEZZA_FINESTRA);
+    var misura = larghezza + ' × ' + altezza;
+
+    if (quante > 0) {
+      ecoMisura('Fatto: ' + misura + ', e la finestra della chat si è già rifatta così.', true);
+    } else {
+      ecoMisura('Fatto: ' + misura + '. La chat adesso non è aperta: nascerà di questa misura.', true);
+    }
+  }
+
+  function passoMisura(bottone) {
+    var campo = document.getElementById(bottone.getAttribute('data-campo'));
+    if (!campo) { return; }
+
+    var verso = bottone.getAttribute('data-verso') === 'giu' ? -1 : 1;
+    var partenza = campo.id === 'fin-altezza' ? ALTEZZA_FINESTRA : LARGHEZZA_FINESTRA;
+    var n = ritagliaMisura(campo, partenza) + verso * MISURA_PASSO;
+
+    campo.value = String(Math.max(MISURA_MIN, Math.min(MISURA_MAX, n)));
+  }
+
   function ascoltaFinestra() {
-    var l = document.getElementById('fin-larghezza');
-    var a = document.getElementById('fin-altezza');
     var salva = document.getElementById('fin-salva');
-    var eco = document.getElementById('fin-eco');
+    var azzera = document.getElementById('fin-ripristina');
     var nota = document.getElementById('fin-nota');
-    if (!l || !a || !salva || !eco || !nota) { return; }
 
-    l.value = String(numeroDalLink('finw', 400));
-    a.value = String(numeroDalLink('finh', 600));
+    fin.larghezza = document.getElementById('fin-larghezza');
+    fin.altezza = document.getElementById('fin-altezza');
+    fin.eco = document.getElementById('fin-eco');
 
-    var dentro = !!(window.Menu && window.Menu.dentro && window.Menu.dentro());
+    if (!fin.larghezza || !fin.altezza || !fin.eco || !salva || !azzera || !nota) { return; }
 
-    if (!dentro) {
+    fin.larghezza.value = String(numeroDalLink('finw', LARGHEZZA_FINESTRA));
+    fin.altezza.value = String(numeroDalLink('finh', ALTEZZA_FINESTRA));
+
+    var frecce = document.getElementsByClassName('regia__freccia');
+    var i;
+    for (i = 0; i < frecce.length; i += 1) {
+      (function (bottone) {
+        bottone.addEventListener('click', function () { passoMisura(bottone); });
+      }(frecce[i]));
+    }
+
+    fin.dentro = !!(window.Menu && window.Menu.dentro && window.Menu.dentro());
+
+    if (!fin.dentro) {
       salva.disabled = true;
+      azzera.disabled = true;
       return;
     }
 
     nota.hidden = true;
 
+    document.addEventListener('pollaio-risposta', function (evento) {
+      if (!evento.detail || evento.detail.comando !== 'misura') { return; }
+      rispostaMisura(parseInt(evento.detail.coda, 10) || 0);
+    });
+
     salva.addEventListener('click', function () {
-      var larghezza = ritagliaMisura(l, 400);
-      var altezza = ritagliaMisura(a, 600);
+      mandaMisura(ritagliaMisura(fin.larghezza, LARGHEZZA_FINESTRA),
+                  ritagliaMisura(fin.altezza, ALTEZZA_FINESTRA));
+    });
 
-      l.value = String(larghezza);
-      a.value = String(altezza);
-
-      window.Menu.comanda('misura:' + larghezza + 'x' + altezza);
-
-      eco.textContent = 'Fatto: ' + larghezza + ' × ' + altezza +
-        '. La finestra nasce così dalla prossima volta che apri il pollaio.';
-      eco.classList.add('is-fatto');
+    azzera.addEventListener('click', function () {
+      mandaMisura(LARGHEZZA_FINESTRA, ALTEZZA_FINESTRA);
     });
   }
   function avvia() {

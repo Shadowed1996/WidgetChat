@@ -32,6 +32,30 @@
     }, DURATA_COMANDO);
   }
 
+  function ascoltaRisposte() {
+    if (!window.chrome || !window.chrome.webview ||
+        typeof window.chrome.webview.addEventListener !== 'function') { return; }
+
+    window.chrome.webview.addEventListener('message', function (evento) {
+      var testo;
+
+      try { testo = String(evento.data == null ? '' : evento.data); }
+      catch (err) { return; }
+
+      if (testo.indexOf(PREFISSO) !== 0) { return; }
+
+      var resto = testo.slice(PREFISSO.length);
+      var taglio = resto.indexOf(':');
+
+      document.dispatchEvent(new CustomEvent('pollaio-risposta', {
+        detail: {
+          comando: taglio > 0 ? resto.slice(0, taglio) : resto,
+          coda: taglio > 0 ? resto.slice(taglio + 1) : ''
+        }
+      }));
+    });
+  }
+
   var VOCI = [
     {
       testo: 'Apri la regia',
@@ -140,6 +164,8 @@
     titoloVero = document.title;
 
     document.documentElement.setAttribute('data-finestra', '1');
+
+    ascoltaRisposte();
 
     document.addEventListener('contextmenu', function (evento) {
       evento.preventDefault();

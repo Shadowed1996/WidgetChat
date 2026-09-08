@@ -68,6 +68,12 @@ giusta: 400 × 600, come la chat di Twitch.
 
 In OBS: **Sorgente → + → Cattura finestra → scegli la finestra del pollaio.**
 
+Se la allarghi, la chat si allarga con lei: dentro la finestra del launcher i
+messaggi prendono tutta la larghezza e il testo cresce insieme al riquadro,
+invece di restare quello di una colonna da 400. Nella sorgente browser di OBS
+no — lì comanda la «larghezza della colonna», perché quel numero deve
+combaciare con quello che scrivi in OBS.
+
 ---
 
 ## I due modi di metterlo in OBS, e quale scegliere
@@ -203,8 +209,22 @@ Il bottone **Salva la misura** funziona solo se hai aperto la regia con
 il launcher. Aprendo `regia.html` col doppio clic il bottone è spento e la
 misura si mette a mano in `avvio\pollaio.ini`.
 
-La nuova misura vale dalla prossima apertura del pollaio, non subito: la
-finestra aperta in quel momento resta com'è.
+La misura si applica subito: se il pollaio è aperto mentre salvi, quella
+finestra si rifà della misura nuova sotto i tuoi occhi. Se non è aperto la
+misura resta scritta e nascerà così la prossima volta — è la stessa riga di
+`avvio\pollaio.ini`, non due cose diverse.
+
+Accanto c'è **Ripristina le dimensioni**, che rimette 400 × 600 senza far di
+conto: è la misura di una chat di Twitch, il punto da cui ripartire quando una
+prova è andata troppo in là.
+
+### Rimettere tutto com'era
+
+In fondo alla regia, dopo le istruzioni per OBS, c'è **Ripristina le
+impostazioni**: chiede conferma e poi riporta ogni manopola al valore di
+partenza — l'aspetto, cosa si vede, cosa si accende, la pulizia, l'anteprima e
+anche la misura della finestra. Le configurazioni salvate non le tocca: quelle
+si tolgono una per una, con la loro ×.
 
 ### Le configurazioni salvate
 

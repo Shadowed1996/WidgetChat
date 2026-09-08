@@ -146,7 +146,7 @@ internal static class Programma
 
     public static string Installato = "";
 
-    public const string VERSIONE = "1.0.3";
+    public const string VERSIONE = "1.0.4";
 }
 
 internal sealed class Preferenze
@@ -389,7 +389,7 @@ internal sealed class Splash : Form
         AutoScaleMode   = AutoScaleMode.None;
         BackColor       = Tinte.Fondo;
         Opacity         = 0.0;
-        Text            = "il pollaio";
+        Text            = "Apro il pollaio";
         ClientSize      = new Size((int)Math.Round(L * scala), (int)Math.Round(A * scala));
 
         SetStyle(ControlStyles.UserPaint
@@ -1623,7 +1623,7 @@ internal static class Ponte
                     if (gettone.Length > 0 && gettone != ultimoFatto)
                     {
                         ultimoFatto = gettone;
-                        Esegui(finestra, Comando(gettone));
+                        Esegui(finestra, gettone);
                     }
                 }
             }
@@ -1647,8 +1647,10 @@ internal static class Ponte
         return (taglio > 0 ? gettone.Substring(0, taglio) : gettone).ToLowerInvariant();
     }
 
-    private static void Esegui(IntPtr finestra, string comando)
+    private static void Esegui(IntPtr finestra, string gettone)
     {
+        string comando = Comando(gettone);
+
         if (comando == "chiudi")
         {
 
@@ -1673,6 +1675,29 @@ internal static class Ponte
                 Process.Start(psi);
             }
             catch {  }
+            return;
+        }
+
+        if (comando == "misura")
+        {
+            string coda = gettone.Substring("misura".Length).TrimStart(':');
+
+            int fine = coda.IndexOf(':');
+            if (fine >= 0) coda = coda.Substring(0, fine);
+
+            string[] pezzi = coda.Split('x');
+            int l, a;
+            if (pezzi.Length == 2 &&
+                int.TryParse(pezzi[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out l) &&
+                int.TryParse(pezzi[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out a))
+            {
+                l = Math.Max(160, Math.Min(4000, l));
+                a = Math.Max(160, Math.Min(4000, a));
+
+                string ini = Path.Combine(Programma.Radice, Path.Combine("avvio", "pollaio.ini"));
+                Preferenze.Riscrivi(ini, l, a);
+                Sorelle.Ridimensiona(l, a, Sorelle.Scala());
+            }
             return;
         }
 
@@ -1705,6 +1730,73 @@ internal static class Ponte
     }
 }
 
+internal static class Sorelle
+{
+    public const string TITOLO_CHAT  = "il pollaio";
+    public const string TITOLO_REGIA = "la regia del pollaio";
+
+    public static double Scala()
+    {
+        try
+        {
+            using (Graphics g = Graphics.FromHwnd(IntPtr.Zero)) return g.DpiX / 96.0;
+        }
+        catch { return 1.0; }
+    }
+
+    public static int Ridimensiona(int larghezza, int altezza, double scala)
+    {
+        int l = (int)Math.Round(larghezza * scala);
+        int a = (int)Math.Round(altezza * scala);
+        if (l < 80 || a < 80) return 0;
+
+        uint mio;
+        try { mio = (uint)Process.GetCurrentProcess().Id; }
+        catch { return 0; }
+
+        int quante = 0;
+
+        try
+        {
+            Nativo.EnumWindows(delegate (IntPtr finestra, IntPtr dato)
+            {
+                try
+                {
+                    if (!Nativo.IsWindowVisible(finestra)) return true;
+
+                    uint suo;
+                    Nativo.GetWindowThreadProcessId(finestra, out suo);
+                    if (suo == mio) return true;
+
+                    string titolo = Nativo.Titolo(finestra);
+
+                    if (titolo == TITOLO_CHAT)
+                    {
+                        Nativo.PostMessage(finestra, (uint)Nativo.WM_MISURA,
+                                           (IntPtr)larghezza, (IntPtr)altezza);
+                        quante++;
+                        return true;
+                    }
+
+                    if (!titolo.StartsWith(TITOLO_CHAT + " —", StringComparison.Ordinal)) return true;
+
+                    Nativo.RECT r;
+                    if (!Nativo.GetWindowRect(finestra, out r)) return true;
+
+                    Nativo.MoveWindow(finestra, r.Sinistra, r.Alto, l, a, true);
+                    quante++;
+                }
+                catch {  }
+
+                return true;
+            }, IntPtr.Zero);
+        }
+        catch {  }
+
+        return quante;
+    }
+}
+
 internal static class Diagnosi
 {
     public static void Scrivi(string riga)
@@ -1723,6 +1815,7 @@ internal sealed class Vetrina : Form
 {
     private readonly WebView2 vista = new WebView2();
     private readonly string indirizzo;
+    private readonly double scala;
 
     public static bool Disponibile()
     {
@@ -1737,12 +1830,14 @@ internal sealed class Vetrina : Form
     public Vetrina(string indirizzo, Preferenze pref, double scala)
     {
         this.indirizzo = indirizzo;
+        this.scala = scala;
 
         FormBorderStyle = FormBorderStyle.None;
         StartPosition = FormStartPosition.Manual;
         ShowInTaskbar = true;
         KeyPreview = true;
-        Text = "il pollaio";
+
+        Text = Programma.ModoRegia ? Sorelle.TITOLO_REGIA : Sorelle.TITOLO_CHAT;
 
         BackColor = Color.Black;
 
@@ -1792,7 +1887,29 @@ internal sealed class Vetrina : Form
             return;
         }
 
+        if (m.Msg == Nativo.WM_MISURA)
+        {
+            Misura(m.WParam.ToInt32(), m.LParam.ToInt32());
+            m.Result = IntPtr.Zero;
+            return;
+        }
+
         base.WndProc(ref m);
+    }
+
+    private void Misura(int larghezza, int altezza)
+    {
+        if (larghezza < 160 || larghezza > 4000) return;
+        if (altezza < 160 || altezza > 4000) return;
+
+        try
+        {
+            if (WindowState != FormWindowState.Normal) WindowState = FormWindowState.Normal;
+
+            Size = new Size((int)Math.Round(larghezza * scala),
+                            (int)Math.Round(altezza * scala));
+        }
+        catch {  }
     }
 
     protected override void OnShown(EventArgs e)
@@ -1914,6 +2031,16 @@ internal sealed class Vetrina : Form
                 a = Math.Max(160, Math.Min(4000, a));
                 string ini = Path.Combine(Programma.Radice, Path.Combine("avvio", "pollaio.ini"));
                 Preferenze.Riscrivi(ini, l, a);
+
+                int quante = Sorelle.Ridimensiona(l, a, scala);
+
+                if (!Programma.ModoRegia)
+                {
+                    Misura(l, a);
+                    quante++;
+                }
+
+                Rispondi("misura:" + quante.ToString(CultureInfo.InvariantCulture));
             }
             return;
         }
@@ -1924,6 +2051,12 @@ internal sealed class Vetrina : Form
             Nativo.ReleaseCapture();
             Nativo.SendMessageW(Handle, Nativo.WM_NCLBUTTONDOWN, Nativo.HTCAPTION, IntPtr.Zero);
         }
+    }
+
+    private void Rispondi(string cosa)
+    {
+        try { vista.CoreWebView2.PostWebMessageAsString("pollaio:" + cosa); }
+        catch {  }
     }
 
     protected override void OnFormClosed(FormClosedEventArgs e)
@@ -2371,6 +2504,8 @@ internal static class Nativo
     public const int SW_MINIMIZE = 6;
 
     public const uint WM_CLOSE = 0x0010;
+
+    public const int WM_MISURA = 0x8000 + 7;
 
     public const uint WM_NCLBUTTONDOWN = 0x00A1;
     public static readonly IntPtr HTCAPTION = new IntPtr(2);

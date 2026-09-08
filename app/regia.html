@@ -150,17 +150,6 @@
       <button class="regia__btn regia__btn--vuoto" type="button" id="apri">
         Apri in una finestra
       </button>
-
-      <span class="regia__ripristina">
-        <button class="regia__btn regia__btn--vuoto" type="button" id="ripristina" aria-expanded="false">
-          Ripristina
-        </button>
-        <span class="regia__conferma" id="conferma" hidden>
-          <span class="regia__conferma-testo">Sicuro? Rimetto tutto com’era.</span>
-          <button class="regia__btn regia__btn--mini" type="button" id="conferma-si">Sì</button>
-          <button class="regia__btn regia__btn--mini" type="button" id="conferma-no">No</button>
-        </span>
-      </span>
     </div>
 
     <p class="regia__eco" id="eco" role="status"></p>
@@ -175,14 +164,37 @@
       metti in OBS. 400 × 600 è la misura di una chat di Twitch.
     </p>
 
-    <div class="regia__campo regia__campo--riga">
-      <div class="regia__riga">
+    <div class="regia__misure">
+      <div class="regia__campo regia__campo--misura">
         <label class="regia__etichetta" for="fin-larghezza">Larghezza</label>
-        <input class="regia__casella" type="number" id="fin-larghezza"
-               min="160" max="4000" step="10" value="400">
+        <div class="regia__conta">
+          <input class="regia__numero regia__numero--misura" type="number" id="fin-larghezza"
+                 min="160" max="4000" step="10" value="400" inputmode="numeric">
+          <span class="regia__unita-etichetta" aria-hidden="true">px</span>
+          <span class="regia__frecce">
+            <button class="regia__freccia regia__freccia--su" type="button"
+                    data-campo="fin-larghezza" data-verso="su" aria-label="Allarga"></button>
+            <button class="regia__freccia regia__freccia--giu" type="button"
+                    data-campo="fin-larghezza" data-verso="giu" aria-label="Stringi"></button>
+          </span>
+        </div>
+      </div>
+
+      <span class="regia__per" aria-hidden="true">×</span>
+
+      <div class="regia__campo regia__campo--misura">
         <label class="regia__etichetta" for="fin-altezza">Altezza</label>
-        <input class="regia__casella" type="number" id="fin-altezza"
-               min="160" max="4000" step="10" value="600">
+        <div class="regia__conta">
+          <input class="regia__numero regia__numero--misura" type="number" id="fin-altezza"
+                 min="160" max="4000" step="10" value="600" inputmode="numeric">
+          <span class="regia__unita-etichetta" aria-hidden="true">px</span>
+          <span class="regia__frecce">
+            <button class="regia__freccia regia__freccia--su" type="button"
+                    data-campo="fin-altezza" data-verso="su" aria-label="Alza"></button>
+            <button class="regia__freccia regia__freccia--giu" type="button"
+                    data-campo="fin-altezza" data-verso="giu" aria-label="Abbassa"></button>
+          </span>
+        </div>
       </div>
     </div>
 
@@ -190,14 +202,18 @@
       <button class="regia__btn regia__btn--vuoto" type="button" id="fin-salva">
         Salva la misura
       </button>
+
+      <button class="regia__btn regia__btn--vuoto" type="button" id="fin-ripristina">
+        Ripristina le dimensioni
+      </button>
     </div>
 
     <p class="regia__eco" id="fin-eco" role="status"></p>
 
     <p class="regia__nota" id="fin-nota">
       Da qui non posso scriverla: questa è una pagina, e una pagina non tocca i
-      file del disco. Aprendo la regia con <code>Regia.exe</code> il bottone qui
-      sopra funziona, perché a scrivere è il launcher. Altrimenti la misura si
+      file del disco. Aprendo la regia con <code>Regia.exe</code> i bottoni qui
+      sopra funzionano, perché a scrivere è il launcher. Altrimenti la misura si
       mette a mano in <code>avvio\pollaio.ini</code>, righe
       <code>larghezza</code> e <code>altezza</code>.
     </p>
@@ -260,6 +276,33 @@
       è la coda dell’indirizzo. In OBS si incolla tutto insieme nel campo del
       file locale, oppure si sceglie il file e si aggiunge la coda a mano.
     </p>
+  </section>
+
+  <section class="regia__azzera" aria-labelledby="titolo-azzera">
+    <div class="regia__azzera-detto">
+      <h2 class="regia__sezione-titolo" id="titolo-azzera">Ripristina le impostazioni</h2>
+      <p class="regia__sezione-testo">
+        Rimette ogni manopola com’era la prima volta: l’aspetto, cosa si vede,
+        cosa si accende, la pulizia, l’anteprima e la misura della finestra. Le
+        configurazioni salvate qui sopra restano dove sono — quelle si tolgono
+        una per una, con la loro ×.
+      </p>
+    </div>
+
+    <div class="regia__azioni">
+      <span class="regia__ripristina">
+        <button class="regia__btn regia__btn--vuoto" type="button" id="ripristina" aria-expanded="false">
+          Ripristina le impostazioni
+        </button>
+        <span class="regia__conferma" id="conferma" hidden>
+          <span class="regia__conferma-testo">Sicuro? Rimetto tutto com’era.</span>
+          <button class="regia__btn regia__btn--mini" type="button" id="conferma-si">Sì</button>
+          <button class="regia__btn regia__btn--mini" type="button" id="conferma-no">No</button>
+        </span>
+      </span>
+    </div>
+
+    <p class="regia__eco" id="azzera-eco" role="status"></p>
   </section>
 
   <p class="regia__firma">Il pollaio — widget chat per OBS · slayer_beard</p>

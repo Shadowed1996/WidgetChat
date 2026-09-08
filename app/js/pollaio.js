@@ -31,7 +31,7 @@
     if (document.body) { document.body.setAttribute('data-fondo', valori.fondo); }
 
     var scala = Math.max(60, Math.min(200, valori.scala)) / 100;
-    document.documentElement.style.setProperty('--corpo', (16 * scala).toFixed(2) + 'px');
+    document.documentElement.style.setProperty('--scala-testo', scala.toFixed(3));
 
     if (valori.larghezza > 0) {
       document.documentElement.style.setProperty('--larghezza', valori.larghezza + 'px');

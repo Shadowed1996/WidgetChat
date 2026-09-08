@@ -53,6 +53,9 @@ img {
 }
 
 .pollaio {
+  --corpo-base: 16px;
+  --corpo: calc(var(--corpo-base) * var(--scala-testo, 1));
+
   position: relative;
   display: flex;
   flex-direction: column;
@@ -67,6 +70,19 @@ img {
 
   font-size: var(--corpo);
   line-height: 1.5;
+}
+
+html[data-finestra] .pollaio {
+  --corpo-base: min(clamp(16px, 12px + 1vw, 30px), 7vh);
+
+  --passo:   calc(var(--corpo) * 0.5);
+  --passo-2: calc(var(--corpo) * 1);
+  --passo-3: calc(var(--corpo) * 1.5);
+
+  --raggio:   calc(var(--corpo) * 0.875);
+  --raggio-s: calc(var(--corpo) * 0.5);
+
+  max-inline-size: none;
 }
 
 .pollaio[data-verso="giu"] {

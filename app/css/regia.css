@@ -457,6 +457,15 @@ label.regia__etichetta { cursor: pointer; }
   min-block-size: 44px;
   font-variant-numeric: tabular-nums slashed-zero;
   text-align: end;
+
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.regia__numero::-webkit-outer-spin-button,
+.regia__numero::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .regia__testo {
@@ -643,7 +652,8 @@ label.regia__etichetta { cursor: pointer; }
 }
 
 @media (min-width: 1080px) {
-  .regia__piede { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+  .regia__piede { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .regia__azzera,
   .regia__firma { grid-column: 1 / -1; }
 }
 
@@ -902,6 +912,137 @@ label.regia__etichetta { cursor: pointer; }
   border-radius: var(--raggio-s);
   background-color: var(--r-campo);
   color: var(--testo);
+}
+
+.regia__finestra { min-inline-size: 0; }
+
+.regia__misure {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--passo-2);
+  margin-block-start: var(--passo-3);
+}
+
+.regia__campo--misura {
+  flex: 0 1 auto;
+  gap: 6px;
+}
+
+.regia__per {
+  padding-block-end: 12px;
+  color: var(--testo-tenue);
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+}
+
+.regia__conta {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio-s);
+  background-color: var(--r-campo);
+  overflow: hidden;
+  transition:
+    border-color var(--durata) var(--curva),
+    background-color var(--durata) var(--curva),
+    box-shadow var(--durata) var(--curva);
+}
+
+.regia__conta:hover { border-color: var(--linea-viva); }
+
+.regia__conta:focus-within {
+  border-color: var(--ciano);
+  background-color: var(--pannello-2);
+  box-shadow: var(--bagliore-ciano);
+}
+
+.regia__numero--misura {
+  inline-size: 8ch;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  padding-inline-end: 4px;
+}
+
+.regia__numero--misura:hover,
+.regia__numero--misura:focus { background-color: transparent; }
+
+.regia__numero--misura:focus-visible { outline: none; }
+
+.regia__conta .regia__unita-etichetta {
+  display: flex;
+  align-items: center;
+  padding-inline-end: var(--passo);
+  cursor: default;
+}
+
+.regia__frecce {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  border-inline-start: 1px solid var(--linea);
+}
+
+.regia__freccia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 0;
+  inline-size: 28px;
+  padding: 0;
+  border: 0;
+  background-color: transparent;
+  color: var(--testo-tenue);
+  cursor: pointer;
+  transition:
+    color var(--durata) var(--curva),
+    background-color var(--durata) var(--curva);
+}
+
+.regia__freccia + .regia__freccia { border-block-start: 1px solid var(--linea); }
+
+.regia__freccia:hover {
+  background-color: var(--pannello-2);
+  color: var(--ciano);
+}
+
+.regia__freccia:active { color: var(--testo); }
+
+.regia__freccia::before {
+  content: "";
+  inline-size: 0;
+  block-size: 0;
+  border-inline: 4px solid transparent;
+}
+
+.regia__freccia--su::before  { border-block-end: 5px solid currentColor; }
+.regia__freccia--giu::before { border-block-start: 5px solid currentColor; }
+
+.regia__azzera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--passo-2) var(--passo-3);
+
+  margin-block-start: var(--r-passo-6);
+  padding: var(--passo-3) var(--passo-2);
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio);
+  background-color: var(--pannello);
+}
+
+.regia__azzera-detto {
+  flex: 1 1 32ch;
+  min-inline-size: 0;
+}
+
+.regia__azzera .regia__azioni { margin-block-start: 0; }
+
+.regia__azzera .regia__eco {
+  flex-basis: 100%;
+  margin-block-start: 0;
 }
 
 .regia__firma {
