@@ -439,6 +439,8 @@ label.regia__etichetta { cursor: pointer; }
   flex: none;
 }
 
+.regia__campo--numero:has(.regia__esatto) .regia__valore { display: none; }
+
 .regia__numero,
 .regia__testo {
   min-inline-size: 0;
@@ -547,7 +549,7 @@ label.regia__etichetta { cursor: pointer; }
 .regia__barra {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: var(--passo-2);
 }
@@ -1043,6 +1045,11 @@ label.regia__etichetta { cursor: pointer; }
 .regia__azzera .regia__eco {
   flex-basis: 100%;
   margin-block-start: 0;
+}
+
+.regia__azzera .regia__eco:empty {
+  min-block-size: 0;
+  margin: 0;
 }
 
 .regia__firma {
