@@ -12,6 +12,29 @@ c'è nessun `npm install`: sono file HTML, CSS e JavaScript scritti a mano.
 
 ---
 
+## Installarlo
+
+Vai su [Releases](https://github.com/Shadowed96/pollaio/releases), scarica
+**`Installa.exe`** e fai doppio clic.
+
+Ti chiede dove metterlo — di suo propone `AppData\Local\Pollaio`, che va bene
+nel 99% dei casi — poi scarica l'ultima versione, la scompatta e ti lascia
+**il collegamento sul desktop**. Un collegamento solo, al pollaio: la regia si
+apre dal tasto destro dentro la chat, che è il posto dove uno la cerca.
+
+Non chiede i permessi di amministratore e non tocca il registro: installa sotto
+la tua cartella utente. Disinstallare vuol dire cancellare quella cartella e il
+collegamento.
+
+Per aggiornare, si rilancia lo stesso `Installa.exe`: rifà `app` e `lib` e
+**lascia stare `avvio\pollaio.ini`**, così le tue preferenze sopravvivono
+all'aggiornamento.
+
+In alternativa c'è `pollaio.zip` nella stessa pagina, da scompattare a mano
+dove preferisci.
+
+---
+
 ## Partire in trenta secondi
 
 **Doppio clic su `Pollaio.exe`.**

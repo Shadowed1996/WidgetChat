@@ -85,9 +85,12 @@ internal static class Programma
         string ioSono = Path.GetFileNameWithoutExtension(Application.ExecutablePath);
         ModoRegia = ioSono.IndexOf("regia", StringComparison.OrdinalIgnoreCase) >= 0;
 
+        ModoInstalla = ioSono.IndexOf("installa", StringComparison.OrdinalIgnoreCase) >= 0;
+
         for (int i = 0; i < argomenti.Length; i++)
         {
             if (argomenti[i] == "--regia") ModoRegia = true;
+            if (argomenti[i] == "--installa") ModoInstalla = true;
         }
 
         try { Nativo.SetProcessDPIAware(); } catch {  }
@@ -95,9 +98,35 @@ internal static class Programma
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
 
+        if (ModoInstalla)
+        {
+            using (Scelta scelta = new Scelta())
+            {
+                if (scelta.ShowDialog() != DialogResult.OK) return 0;
+                if (scelta.Percorso.Length == 0) return 0;
+                Destinazione = scelta.Percorso;
+            }
+        }
+
         Splash splash = new Splash();
         splash.Show();
         Application.Run(new ApplicationContext());
+
+        if (ModoInstalla)
+        {
+            if (Installato.Length > 0)
+            {
+                try
+                {
+                    ProcessStartInfo psi = new ProcessStartInfo(Installato);
+                    psi.UseShellExecute = true;
+                    psi.WorkingDirectory = Path.GetDirectoryName(Installato);
+                    Process.Start(psi);
+                }
+                catch { }
+            }
+            return 0;
+        }
 
         Ponte.Ascolta(FinestraChat);
         return 0;
@@ -108,6 +137,12 @@ internal static class Programma
     public static bool ModoRegia = false;
 
     public static bool VetrinaViva = false;
+
+    public static bool ModoInstalla = false;
+
+    public static string Destinazione = "";
+
+    public static string Installato = "";
 }
 
 internal sealed class Preferenze
@@ -731,6 +766,7 @@ internal sealed class Splash : Form
 
     private void Lavora()
     {
+        if (Programma.ModoInstalla) { FasiInstallazione(); return; }
 
         bool regia = Programma.ModoRegia;
 
@@ -855,6 +891,72 @@ internal sealed class Splash : Form
         Congeda();
     }
 
+    private void FasiInstallazione()
+    {
+        string destinazione = Programma.Destinazione;
+        string zip = Path.Combine(Path.GetTempPath(), "pollaio-" + Guid.NewGuid().ToString("N") + ".zip");
+        Stopwatch cr;
+
+        try
+        {
+            cr = Stopwatch.StartNew();
+            Annuncia("Preparo l'installazione…", 0.06f);
+            Directory.CreateDirectory(destinazione);
+            Respira(cr, 900);
+
+            cr = Stopwatch.StartNew();
+            Annuncia("Cerco l'ultima versione…", 0.16f);
+            string indirizzo = Recupero.TrovaArchivio();
+            if (indirizzo == null)
+            {
+                Fatale("Non trovo nessuna versione pubblicata. Controlla la rete e riprova.");
+                return;
+            }
+            Respira(cr, 1100);
+
+            cr = Stopwatch.StartNew();
+            Annuncia("Installazione in corso…", 0.20f);
+            Recupero.Scarica(indirizzo, zip, delegate (int p)
+            {
+                Annuncia("Installazione in corso…", 0.20f + p * 0.0055f);
+            });
+            Respira(cr, 900);
+
+            cr = Stopwatch.StartNew();
+            Annuncia("Metto a posto i file…", 0.82f);
+            Recupero.Svuota(destinazione);
+            System.IO.Compression.ZipFile.ExtractToDirectory(zip, destinazione);
+            Respira(cr, 1000);
+
+            string eseguibile = Path.Combine(destinazione, "Pollaio.exe");
+            if (!File.Exists(eseguibile))
+            {
+                Fatale("L'archivio scaricato non conteneva Pollaio.exe.");
+                return;
+            }
+
+            cr = Stopwatch.StartNew();
+            Annuncia("Creo il collegamento sul desktop…", 0.93f);
+            Recupero.Collegamento(eseguibile);
+            Respira(cr, 900);
+
+            Programma.Installato = eseguibile;
+
+            cr = Stopwatch.StartNew();
+            Annuncia("Fatto: il pollaio è sul desktop.", 1.00f);
+            Respira(cr, 1600);
+
+            Congeda();
+        }
+        catch (Exception ex)
+        {
+            Fatale("Non ci sono riuscito: " + ex.Message);
+        }
+        finally
+        {
+            try { if (File.Exists(zip)) File.Delete(zip); } catch { }
+        }
+    }
     private static void Respira(Stopwatch cr, int minimo)
     {
         int resto = minimo - (int)cr.ElapsedMilliseconds;
@@ -1708,6 +1810,222 @@ internal sealed class Vetrina : Form
     }
 }
 
+internal sealed class Scelta : Form
+{
+    private readonly TextBox dove;
+    public string Percorso { get { return dove.Text.Trim(); } }
+
+    public Scelta()
+    {
+        FormBorderStyle = FormBorderStyle.None;
+        StartPosition = FormStartPosition.CenterScreen;
+        ShowInTaskbar = true;
+        BackColor = Tinte.Fondo;
+        ClientSize = new Size(560, 250);
+        Text = "Installa il pollaio";
+        KeyPreview = true;
+
+        try { Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath); }
+        catch { }
+
+        Etichetta("il pollaio",
+            new Font("Segoe UI", 27f, FontStyle.Bold, GraphicsUnit.Pixel), Tinte.Testo, 34, 30, 480, 40);
+
+        Etichetta("Scelgo dove metterlo, poi ci penso io: scarico l'ultima versione, la " +
+                  "scompatto e ti lascio il collegamento sul desktop.",
+            new Font("Segoe UI", 13f, FontStyle.Regular, GraphicsUnit.Pixel), Tinte.Tenue, 34, 78, 492, 46);
+
+        dove = new TextBox();
+        dove.Location = new Point(34, 136);
+        dove.Size = new Size(376, 28);
+        dove.BorderStyle = BorderStyle.FixedSingle;
+        dove.BackColor = ColorTranslator.FromHtml("#12101f");
+        dove.ForeColor = Tinte.Testo;
+        dove.Font = new Font("Consolas", 12f, FontStyle.Regular, GraphicsUnit.Pixel);
+        dove.Text = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Pollaio");
+        Controls.Add(dove);
+
+        Button sfoglia = Bottone("Sfoglia", 420, 134, 106, 32, false);
+        sfoglia.Click += delegate { Cerca(); };
+
+        Button vai = Bottone("Installa", 34, 194, 150, 38, true);
+        vai.Click += delegate { DialogResult = DialogResult.OK; Close(); };
+
+        Button lascia = Bottone("Annulla", 196, 194, 116, 38, false);
+        lascia.Click += delegate { DialogResult = DialogResult.Cancel; Close(); };
+
+        AcceptButton = vai;
+        KeyDown += delegate (object m, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Escape) { DialogResult = DialogResult.Cancel; Close(); }
+        };
+    }
+
+    private void Etichetta(string testo, Font f, Color c, int x, int y, int w, int h)
+    {
+        Label l = new Label();
+        l.Text = testo; l.Font = f; l.ForeColor = c;
+        l.BackColor = Color.Transparent;
+        l.Location = new Point(x, y); l.Size = new Size(w, h);
+        Controls.Add(l);
+    }
+
+    private Button Bottone(string testo, int x, int y, int w, int h, bool pieno)
+    {
+        Button b = new Button();
+        b.Text = testo;
+        b.Location = new Point(x, y); b.Size = new Size(w, h);
+        b.FlatStyle = FlatStyle.Flat;
+        b.FlatAppearance.BorderSize = 1;
+        b.FlatAppearance.BorderColor = pieno ? Tinte.Viola : ColorTranslator.FromHtml("#2e2b40");
+        b.BackColor = pieno ? Tinte.Viola : Tinte.Fondo;
+        b.ForeColor = Tinte.Testo;
+        b.Font = new Font("Segoe UI", 13f, FontStyle.Regular, GraphicsUnit.Pixel);
+        b.Cursor = Cursors.Hand;
+        Controls.Add(b);
+        return b;
+    }
+
+    private void Cerca()
+    {
+        using (FolderBrowserDialog f = new FolderBrowserDialog())
+        {
+            f.Description = "Dove metto il pollaio";
+            f.ShowNewFolderButton = true;
+            if (f.ShowDialog(this) == DialogResult.OK && f.SelectedPath.Length > 0)
+                dove.Text = Path.Combine(f.SelectedPath, "Pollaio");
+        }
+    }
+
+    protected override void OnShown(EventArgs e)
+    {
+        base.OnShown(e);
+        try
+        {
+            int tondi = Nativo.DWMWCP_ROUND;
+            Nativo.DwmSetWindowAttribute(Handle, Nativo.DWMWA_WINDOW_CORNER_PREFERENCE, ref tondi, sizeof(int));
+            Color c = Tinte.Bordo;
+            int colore = (c.B << 16) | (c.G << 8) | c.R;
+            Nativo.DwmSetWindowAttribute(Handle, Nativo.DWMWA_BORDER_COLOR, ref colore, sizeof(int));
+        }
+        catch { }
+    }
+
+    protected override void OnMouseDown(MouseEventArgs e)
+    {
+        base.OnMouseDown(e);
+        if (e.Button != MouseButtons.Left) return;
+        Nativo.ReleaseCapture();
+        Nativo.SendMessageW(Handle, Nativo.WM_NCLBUTTONDOWN, Nativo.HTCAPTION, IntPtr.Zero);
+    }
+}
+
+internal static class Recupero
+{
+    private const string DEPOSITO = "Shadowed96/pollaio";
+    public const string API = "https://api.github.com/repos/" + DEPOSITO + "/releases/latest";
+
+    public static string TrovaArchivio()
+    {
+        string json = Chiedi(API);
+        if (json == null) return null;
+
+        int i = 0;
+        while (true)
+        {
+            i = json.IndexOf("\"browser_download_url\"", i, StringComparison.Ordinal);
+            if (i < 0) return null;
+
+            int duepunti = json.IndexOf(':', i);
+            if (duepunti < 0) return null;
+            int apre = json.IndexOf('"', duepunti + 1);
+            if (apre < 0) return null;
+            int chiude = json.IndexOf('"', apre + 1);
+            if (chiude < 0) return null;
+
+            string url = json.Substring(apre + 1, chiude - apre - 1);
+            if (url.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)) return url;
+
+            i = chiude;
+        }
+    }
+
+    private static string Chiedi(string indirizzo)
+    {
+        try
+        {
+            ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
+            HttpWebRequest r = (HttpWebRequest)WebRequest.Create(indirizzo);
+            r.UserAgent = "pollaio-installer";
+            r.Accept = "application/vnd.github+json";
+            r.Timeout = 15000;
+
+            using (WebResponse risposta = r.GetResponse())
+            using (StreamReader lettore = new StreamReader(risposta.GetResponseStream()))
+                return lettore.ReadToEnd();
+        }
+        catch { return null; }
+    }
+
+    public static void Scarica(string indirizzo, string dove, Action<int> avanza)
+    {
+        ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
+
+        HttpWebRequest r = (HttpWebRequest)WebRequest.Create(indirizzo);
+        r.UserAgent = "pollaio-installer";
+        r.Timeout = 30000;
+
+        using (WebResponse risposta = r.GetResponse())
+        using (Stream entra = risposta.GetResponseStream())
+        using (FileStream esce = File.Create(dove))
+        {
+            long totale = risposta.ContentLength;
+            long fatto = 0;
+            byte[] pezzo = new byte[64 * 1024];
+            int quanti;
+
+            while ((quanti = entra.Read(pezzo, 0, pezzo.Length)) > 0)
+            {
+                esce.Write(pezzo, 0, quanti);
+                fatto += quanti;
+                if (totale > 0 && avanza != null) avanza((int)(fatto * 100 / totale));
+            }
+        }
+    }
+
+    public static void Svuota(string destinazione)
+    {
+        foreach (string nome in new string[] { "app", "lib" })
+        {
+            string p = Path.Combine(destinazione, nome);
+            try { if (Directory.Exists(p)) Directory.Delete(p, true); } catch { }
+        }
+    }
+
+    public static void Collegamento(string eseguibile)
+    {
+        string desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+        string lnk = Path.Combine(desktop, "il pollaio.lnk");
+
+        Type tipo = Type.GetTypeFromProgID("WScript.Shell");
+        if (tipo == null) return;
+
+        object shell = Activator.CreateInstance(tipo);
+        object scorciatoia = tipo.InvokeMember("CreateShortcut", BindingFlags.InvokeMethod,
+            null, shell, new object[] { lnk });
+
+        Type ts = scorciatoia.GetType();
+        ts.InvokeMember("TargetPath", BindingFlags.SetProperty, null, scorciatoia, new object[] { eseguibile });
+        ts.InvokeMember("WorkingDirectory", BindingFlags.SetProperty, null, scorciatoia,
+            new object[] { Path.GetDirectoryName(eseguibile) });
+        ts.InvokeMember("IconLocation", BindingFlags.SetProperty, null, scorciatoia,
+            new object[] { eseguibile + ",0" });
+        ts.InvokeMember("Description", BindingFlags.SetProperty, null, scorciatoia,
+            new object[] { "La chat di slayer_beard sopra al gioco" });
+        ts.InvokeMember("Save", BindingFlags.InvokeMethod, null, scorciatoia, null);
+    }
+}
 internal static class Nativo
 {
     [DllImport("user32.dll")]

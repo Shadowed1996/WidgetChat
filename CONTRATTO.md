@@ -109,6 +109,9 @@ Ogni file possiede **solo** il proprio blocco. Nessuno scrive le classi di un al
 chat/
 ├─ Pollaio.exe       ← il launcher: apre l'overlay nella sua finestra
 ├─ Regia.exe         ← lo stesso eseguibile copiato: apre la regia
+│                       (e Installa.exe, terzo nome, sta nelle release:
+│                       scarica e installa. Un solo sorgente, tre nomi:
+│                       il programma guarda come si chiama)
 ├─ LEGGIMI.md        ← per chi lo usa
 ├─ CONTRATTO.md      ← questo documento, per chi ci mette mano
 ├─ lib/              ← le tre librerie di WebView2 (§1.1, deroga dichiarata).

@@ -1,0 +1,82 @@
+name: Release
+
+# Parte quando si spinge un tag che comincia per v (v1.0.0, v1.1.0...).
+# Compila il launcher, mette insieme l'archivio e lo pubblica come release:
+# e' quell'archivio che Installa.exe va a scaricare.
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  costruisci:
+    runs-on: windows-latest
+
+    steps:
+      - name: Prendo il codice
+        uses: actions/checkout@v4
+
+      - name: Compilo il launcher
+        shell: pwsh
+        run: |
+          # Lo stesso csc.exe che usa avvio\compila.cmd: quello che Windows si
+          # porta dietro dal 2010. Niente SDK da installare sul runner.
+          $csc = Get-ChildItem "$env:WINDIR\Microsoft.NET\Framework64\v4.*\csc.exe" |
+                 Select-Object -Last 1
+          if (-not $csc) { throw "csc.exe non trovato sul runner" }
+          Write-Host "compilatore: $($csc.FullName)"
+
+          $opz = @(
+            '/nologo', '/target:winexe', '/platform:x64', '/optimize+', '/codepage:65001',
+            '/r:System.dll', '/r:System.Drawing.dll', '/r:System.Windows.Forms.dll',
+            '/r:System.IO.Compression.dll', '/r:System.IO.Compression.FileSystem.dll',
+            '/r:lib\Microsoft.Web.WebView2.Core.dll',
+            '/r:lib\Microsoft.Web.WebView2.WinForms.dll'
+          )
+
+          # Primo passaggio senza icona, poi l'eseguibile genera il .ico da
+          # app\img\favicon.png, poi si ricompila con l'icona in mano.
+          & $csc.FullName @opz /out:Pollaio.exe avvio\Pollaio.cs
+          if ($LASTEXITCODE -ne 0) { throw "compilazione fallita" }
+
+          & .\Pollaio.exe --crea-icona
+          if (Test-Path avvio\pollaio.ico) {
+            & $csc.FullName @opz /win32icon:avvio\pollaio.ico /out:Pollaio.exe avvio\Pollaio.cs
+            if ($LASTEXITCODE -ne 0) { throw "compilazione con icona fallita" }
+          }
+
+          Copy-Item Pollaio.exe Regia.exe -Force
+          Copy-Item Pollaio.exe Installa.exe -Force
+
+          Write-Host "Pollaio.exe: $((Get-Item Pollaio.exe).Length) byte"
+
+      - name: Metto insieme l'archivio
+        shell: pwsh
+        run: |
+          # Nell'archivio va quello che serve a FAR GIRARE il pollaio, non a
+          # svilupparlo: niente sorgente C#, niente compila.cmd, niente
+          # CONTRATTO. Chi vuole quelli clona il repository.
+          $dest = "pacchetto\Pollaio"
+          New-Item -ItemType Directory -Force $dest | Out-Null
+
+          Copy-Item Pollaio.exe, Regia.exe, LEGGIMI.md $dest
+          Copy-Item app -Destination $dest -Recurse
+          Copy-Item lib -Destination $dest -Recurse
+
+          Compress-Archive -Path "$dest\*" -DestinationPath pollaio.zip -Force
+          Write-Host "pollaio.zip: $((Get-Item pollaio.zip).Length) byte"
+
+      - name: Pubblico la release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          gh release create $tag pollaio.zip Installa.exe `
+            --title "il pollaio $tag" `
+            --notes "Scarica **Installa.exe** e fai doppio clic: sceglie lui dove mettere le cose e crea il collegamento sul desktop.
+
+          In alternativa, **pollaio.zip** contiene tutto gia' pronto da scompattare a mano dove preferisci."
