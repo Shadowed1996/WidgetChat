@@ -367,7 +367,7 @@
     if (!c) { su('Non sei collegato.', null, true); return; }
 
     if (!c.rinnovo) {
-      su('Il collegamento è scaduto. Va rifatto dalla regia.', null, true);
+      su('Il collegamento è scaduto: si rifà con «Connetti account».', null, true);
       return;
     }
 
@@ -379,7 +379,7 @@
       if (guaio) { su(guaio); return; }
 
       if (esito.stato !== 200 || !esito.dati || !esito.dati.access_token) {
-        su('Il collegamento è scaduto e Twitch non me lo rinnova. Va rifatto dalla regia.', null, true);
+        su('Il collegamento è scaduto e Twitch non me lo rinnova: si rifà con «Connetti account».', null, true);
         return;
       }
 
@@ -397,7 +397,7 @@
 
   function pronto(su) {
     var c = leggi();
-    if (!c) { su('Non sei collegato: l’account si attacca dalla regia.', null, true); return; }
+    if (!c) { su('Non sei collegato: si parte da «Connetti account».', null, true); return; }
 
     if (c.scade === 0 || c.scade - Date.now() > MARGINE) { su(null, c); return; }
     rinnova(su);
@@ -455,7 +455,7 @@
       }
 
       if (esito.stato === 401) {
-        su('Twitch non mi riconosce più. Ricollego l’account dalla regia.', null, true);
+        su('Twitch non mi riconosce più: si rifà con «Connetti account».', null, true);
         return;
       }
       if (esito.stato === 403) {

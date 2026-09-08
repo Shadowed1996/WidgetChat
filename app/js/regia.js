@@ -1207,7 +1207,7 @@
     nodiConto.codice.hidden = !(attesa && nodiConto.cifre.textContent);
 
     nodiConto.collega.hidden = !niente;
-    nodiConto.collega.textContent = window.Conto.collegato() ? 'Riconnetti account' : 'Connetti account';
+    nodiConto.collega.textContent = window.Conto.chi() ? 'Riconnetti account' : 'Connetti account';
 
     nodiConto.apri.hidden = !attesa;
     nodiConto.copia.hidden = !attesa;

@@ -31,7 +31,8 @@ Non si importa un file, non si dipende da niente che stia là fuori.
    bannato.
 
    La scrittura è una cosa in più che l'utente accende da sé: è **il suo**
-   account Twitch, collegato dalla regia (§18), con **un solo scopo**
+   account Twitch, collegato con un clic dalla regia oppure dal bottone che sta
+   nella barra sotto la chat (§18), con **un solo scopo**
    (`user:write:chat`), e i messaggi partono da `helix/chat/messages`. La
    connessione IRC **non** si tocca: resta anonima e di sola lettura anche
    quando un account c'è, e il messaggio appena mandato torna indietro di lì
@@ -43,9 +44,29 @@ Non si importa un file, non si dipende da niente che stia là fuori.
    non arriva e il campo per scrivere non compare: è voluto (§18).
 
    Il vincolo che sopravvive intatto è quello di sempre: **nessun segreto dentro
-   i file del progetto**. Il Client ID lo registra l'utente ed è un nome, non un
-   segreto: viaggia in chiaro in ogni richiesta. Il client secret non serve, non
-   si chiede e non si scrive da nessuna parte.
+   i file del progetto**. La riga di confine, però, passa fra due cose che si
+   somigliano e non sono la stessa, e va detta chiaramente: è quella distinzione
+   che regge tutto il vincolo.
+
+   Il **Client ID è un nome, non un segreto**. Viaggia in chiaro dentro ogni
+   richiesta, chiunque guardi la rete lo legge, e da solo non apre niente: senza
+   il sì dell'utente su Twitch non vale nulla. Quindi **può stare nel sorgente**,
+   ed è la costante `CLIENTE_PREDEFINITO` in cima a `app/js/conto.js`, il Client
+   ID dell'applicazione del canale, registrata su `dev.twitch.tv` come **Public**
+   con lo scopo `user:write:chat`. Se un giorno la si svuota, il Client ID torna
+   a metterlo l'utente dal campo della regia; chi si porta via il progetto ci
+   mette il suo.
+   `Conto.cliente()` guarda in ordine il conto collegato, poi il Client ID messo
+   da parte in `localStorage` (`sb-pollaio-cliente`), poi la costante;
+   `Conto.serveClientId()` dice se dopo tutti e tre manca ancora. **Perché una
+   costante e non soltanto il campo della regia**: registrare un'applicazione su
+   `dev.twitch.tv` era l'unico passaggio che si frapponeva fra l'utente e
+   qualsiasi cosa, ed è un passaggio che non protegge niente.
+
+   Il **gettone** è esattamente ciò che il Client ID non è: apre davvero, vale
+   per l'account di chi l'ha dato, e **non deve finire in nessun file, mai** —
+   `localStorage` e basta, come sopra. Il client secret non serve, non si chiede
+   e non si scrive da nessuna parte.
 4. **Niente `innerHTML` con roba che arriva dalla chat.** Mai, in nessun caso,
    per nessuna scorciatoia. Si costruisce con `document.createElement` e si
    scrive con `textContent`. Gli URL delle immagini si validano con
@@ -291,7 +312,7 @@ funzionare** e mostrare la chat di slayer_beard.
 | `moderazione` | voce | `sbarra` | cosa fare a un messaggio cancellato: `sbarra` · `togli` · `tieni` |
 | `pollo` | sìno | `0` | mostra la mascotte accanto alla chat |
 | `barra` | sìno | `1` | la striscia sotto la chat: filtri e pausa (§18). In OBS non compare comunque |
-| `scrivi` | sìno | `1` | dentro la barra, il campo per scrivere in chat con l'account collegato (§18) |
+| `scrivi` | sìno | `1` | dentro la barra, il campo per scrivere in chat con l'account collegato — e, se non c'è ancora un account, il bottone che lo collega (§18) |
 | `prova` | sìno | `0` | modalità prova: traffico finto, per sistemare l'inquadratura in OBS |
 | `ostile` | sìno | `0` | vale solo con `prova=1`: mescola al traffico finto i casi cattivi — zalgo, scavalchi RTL, nick lunghissimi, muri di testo |
 | `finestra` | sìno | `0` | **lo mette `Pollaio.exe` da sé**, non si scrive a mano: dice alla pagina che sta girando nella finestra senza barra del titolo, e accende il menu del tasto destro, il trascinamento e il bordo che ridimensiona (§19). Nello SCHEMA è `nascosta`, quindi fra i comandi della regia non compare |
@@ -340,10 +361,10 @@ l'utente ha collegato un account, e mai per disegnare un messaggio:
 
 | cosa | indirizzo | note |
 |---|---|---|
-| codice del dispositivo | `POST https://id.twitch.tv/oauth2/device` | `client_id` + `scopes`. Torna `user_code` (otto caratteri) e `device_code`. Nessuna autenticazione |
+| codice del dispositivo | `POST https://id.twitch.tv/oauth2/device` | `client_id` + `scopes`. Torna `user_code` (otto caratteri), `device_code` e `verification_uri`, che è già `twitch.tv/activate?device-code=<codice>`: si usa, ma **validato prima di essere aperto** (§18). Nessuna autenticazione |
 | gettone | `POST https://id.twitch.tv/oauth2/token` | `grant_type=urn:ietf:params:oauth:grant-type:device_code` finché l'utente non conferma, poi `refresh_token`. Nessun client secret |
 | controllo | `GET https://id.twitch.tv/oauth2/validate` | `Authorization: OAuth <gettone>`. Dice chi è e se il gettone vale ancora |
-| revoca | `POST https://id.twitch.tv/oauth2/revoke` | `client_id` + `token`. La chiama **Scollega**, che quindi scollega davvero |
+| revoca | `POST https://id.twitch.tv/oauth2/revoke` | `client_id` + `token`. La chiama **Revoca account**, che quindi revoca davvero |
 | id del canale | `GET https://api.twitch.tv/helix/users?login=<canale>` | `Bearer` + `Client-Id`. Dà il `broadcaster_id`, che si tiene in cache |
 | invio | `POST https://api.twitch.tv/helix/chat/messages` | `Bearer` + `Client-Id`, corpo `broadcaster_id`, `sender_id`, `message` |
 
@@ -510,6 +531,15 @@ confonde con la chat vera.
 Una pagina sola, con la grafica del sito (questa **non** è trasparente: è
 un'interfaccia, si guarda in un browser).
 
+- **in cima**, dentro `<main>` e prima delle due colonne (`grid-column: 1 / -1`),
+  la sezione **«Il tuo account Twitch»**: una riga che dice a che punto sta, il
+  codice di otto caratteri quando c'è, e i bottoni **Connetti account**
+  (**Riconnetti account** se un account c'è già), **Riapri Twitch**, **Copia il
+  codice**, **Lascia stare** e **Revoca account**. Il campo del Client ID non
+  sta lì in mezzo: sta piegato dentro un `<details class="regia__conto-app">`
+  chiuso, che si apre da sé **solo** quando `Conto.serveClientId()` è vero. La
+  pagina lo dice per prima: l'account serve **solo** a scrivere, per leggere non
+  serve e non servirà mai.
 - a sinistra i comandi, uno per ogni voce di `Impostazioni.SCHEMA`
 - a destra l'anteprima dal vivo dentro un `<iframe>` che punta a `pollaio.html`
   con i parametri correnti, su uno sfondo a scacchi che rende evidente la
@@ -517,16 +547,21 @@ un'interfaccia, si guarda in un browser).
 - in basso l'indirizzo completo, in monospazio, con un bottone **Copia**
 - le scelte si ricordano in `localStorage` (`sb-pollaio-regia`)
 - un bottone **Ripristina** che rimette tutto ai predefiniti
-- una sezione **«Il tuo account Twitch»**: il campo per il Client ID, il codice
-  di otto caratteri da scrivere su `twitch.tv/activate`, e i bottoni **Collega
-  l'account**, **Apri twitch.tv/activate**, **Copia il codice**, **Lascia
-  stare**, **Scollega**. È l'unico posto da cui si collega un account (§18), e
-  la pagina lo dice per primo: serve **solo** a scrivere, per leggere non serve
-  e non servirà mai.
 
-L'account sta nella regia e non nella barra della chat perché collegarlo è una
-cosa che si fa una volta, con calma, leggendo: è la stessa ragione per cui le
-manopole stanno qui e non addosso all'overlay.
+**Perché in cima, e perché il Client ID è piegato via.** Prima la sezione stava
+in fondo alla pagina e il campo del Client ID stava davanti al bottone: l'ordine
+della pagina raccontava che la prima cosa da fare fosse registrare
+un'applicazione su Twitch. Non lo è. Il Client ID è una cosa che si fa una volta
+nella vita — zero volte quando `CLIENTE_PREDEFINITO` è pieno (§1.3) — e **una
+cosa che si fa una volta nella vita non deve stare davanti a quella che si fa
+tutti i giorni**. Quindi il bottone in vista e in alto, il campo dentro un
+`<details>` che si apre da solo quando manca davvero.
+
+**La regia non è più l'unico posto da cui si collega un account**: lo stesso
+bottone sta nella barra sotto la chat (§18) e fa partire lo stesso device flow.
+Qui c'è in più quello che nella barra non entrerebbe — il codice grande da
+leggere, i bottoni per riaprire Twitch o copiarlo, il campo del Client ID — e
+c'è la calma di leggere cosa si sta autorizzando prima di dire di sì.
 
 Il testo del configuratore parla come il sito: prima persona, discorsivo, spiega
 il perché. Mai «Errore:». Esempi del registro giusto, presi dal sito:
@@ -752,11 +787,24 @@ si ferma da sola, non riparte da sola.
 
 Il campo dentro la barra manda i messaggi con l'account dell'utente. Se `scrivi`
 è spento non c'è; se è acceso ma nessun account è collegato, al suo posto c'è
-una riga che lo dice e un bottone che porta alla regia (§14).
+**un bottone solo, centrato, «Connetti account»**, che fa partire il device flow
+**da qui**, senza passare dalla regia.
+
+Lì prima c'era la riga «Per scrivere in chat devo sapere chi sei» più un rimando
+alla regia: spiegava una cosa che si capisce da sé, e per farla mandava da
+un'altra parte. Adesso c'è il bottone e basta, e il bottone la fa.
+
+**Collegare è un clic.** `Conto.chiedi(id, su)` chiamato senza `id` usa
+`Conto.cliente()` (§1.3), quindi il bottone non ha niente da chiedere prima di
+partire: domanda il codice a Twitch, apre la pagina di attivazione **con il
+codice già dentro**, e resta ad aspettare il sì. L'unico caso in cui la barra
+non può fare da sé è `Conto.serveClientId()` vero: allora lo dice e manda in
+cima alla regia (§14), che è l'unico posto dove quel campo esiste. In modalità
+prova il bottone c'è ma non collega niente per davvero, e lo dice (§13).
 
 **OAuth Device Code Flow**, ed è l'unico che si poteva usare. `POST /oauth2/device`
-con `client_id` e `scopes` dà un `user_code` di otto caratteri e un
-`device_code`; poi si interroga `POST /oauth2/token` con
+con `client_id` e `scopes` dà un `user_code` di otto caratteri, un `device_code`
+e un `verification_uri`; poi si interroga `POST /oauth2/token` con
 `grant_type=urn:ietf:params:oauth:grant-type:device_code` finché l'utente non
 conferma su `twitch.tv/activate`. Le risposte intermedie sono
 `authorization_pending` (si continua), `slow_down` (si allunga il passo),
@@ -769,11 +817,31 @@ WebView2. Il device flow non ha redirect URI e non ha client secret, quindi è
 l'unico che regge il §1.2. Che lo si potesse chiamare da lì è stato **verificato
 sul campo prima di scrivere il modulo** (§7).
 
-**Il Client ID lo mette l'utente**, registrando un'applicazione sua su
-`dev.twitch.tv/console/apps` (tipo **Public**, redirect `http://localhost`). Non
-è un segreto: è un nome, e viaggia in chiaro in ogni richiesta. Il *client
-secret* non serve, non si chiede e non si salva — se un giorno una schermata lo
-chiede, è quella schermata a essere sbagliata.
+**L'indirizzo di attivazione arriva dalla rete, quindi non gli si crede.** Nella
+risposta del device endpoint Twitch manda `verification_uri`, che è già
+`https://www.twitch.tv/activate?device-code=<codice>`: usarlo vuol dire che a chi
+collega non tocca ricopiare otto caratteri a mano. Prima veniva buttato via e si
+apriva l'indirizzo nudo. Adesso `Conto` lo consegna in `passo.indirizzo`, **ma
+solo dopo averlo confrontato con `MODELLO_ATTIVAZIONE`**: deve essere esattamente
+`https://www.twitch.tv/activate`, con al più un `?device-code=` di 4-16 caratteri
+alfanumerici, e nient'altro. Se non combacia, `Conto` se lo ricostruisce da sé
+dalla propria costante `ATTIVAZIONE` più il codice.
+
+**Il perché va dichiarato, perché è tutto il punto**: quell'indirizzo finisce in
+`window.open` e nel comando `attiva` del launcher, cioè è un indirizzo che
+arriva dalla rete e che poi **si apre**. Un `verification_uri` diverso da quello
+atteso non sarebbe una comodità in meno: sarebbe una pagina qualunque aperta a
+nome nostro, su un gesto che l'utente ha chiesto per Twitch. L'unica risposta è
+non fidarsene e ricostruirlo.
+
+**Il Client ID può già esserci.** `Conto.cliente()` guarda in ordine il conto
+collegato, il Client ID messo da parte in `localStorage` e la costante
+`CLIENTE_PREDEFINITO` di `conto.js` (§1.3); solo se dopo tutti e tre manca
+ancora — `Conto.serveClientId()` — lo mette l'utente, registrando
+un'applicazione sua su `dev.twitch.tv/console/apps` (tipo **Public**, redirect
+`http://localhost`). Non è un segreto: è un nome, e viaggia in chiaro in ogni
+richiesta. Il *client secret* non serve, non si chiede e non si salva — se un
+giorno una schermata lo chiede, è quella schermata a essere sbagliata.
 
 **Uno scopo solo: `user:write:chat`.** Mandare messaggi a nome proprio. Non
 leggere la chat, che si legge in anonimo come sempre; non moderare; non toccare
@@ -781,8 +849,9 @@ il canale. Uno scopo in più si discute qui dentro prima che nel codice.
 
 Il gettone si controlla con `GET /oauth2/validate`, si rinnova da solo col
 `refresh_token` quando mancano meno di dieci minuti alla scadenza, e su
-**Scollega** si revoca davvero con `POST /oauth2/revoke`: dimenticarlo e basta
-lascerebbe in giro un gettone vivo che l'utente crede morto.
+**Revoca account** si revoca davvero con `POST /oauth2/revoke`: dimenticarlo e
+basta lascerebbe in giro un gettone vivo che l'utente crede morto. Il Client ID
+messo da parte resta, così riconnettersi torna a essere un clic.
 
 Si manda con `POST /helix/chat/messages` (`broadcaster_id`, `sender_id`,
 `message`), **non via IRC**: la connessione IRC resta anonima e di sola lettura,
@@ -802,9 +871,11 @@ sbagliato senza accorgersene, che è il tipo di guasto che non si vede finché n
 un file (§1.3). `Pollaio.exe` e `Regia.exe` sono due finestre WebView2 con lo
 stesso `UserDataFolder` (`%LocalAppData%\Pollaio\vetrina`) e lo stesso host
 virtuale `https://pollaio.locale`: stessa origine, stesso `localStorage`. È per
-questo che l'account collegato nella regia lo trova subito anche la chat,
-tramite l'evento `storage`, senza riavviare niente. La sorgente browser di OBS è
-un altro browser con la sua memoria: **lì il gettone non arriva, ed è voluto.**
+questo che l'account collegato in una delle due finestre lo trova subito anche
+l'altra, tramite l'evento `storage`, senza riavviare niente — e adesso vale nei
+due sensi, perché si collega tanto dalla regia quanto dalla chat. La sorgente
+browser di OBS è un altro browser con la sua memoria: **lì il gettone non
+arriva, ed è voluto.**
 
 Due incroci con le manopole di §6, e vanno detti perché altrimenti sembrano
 guasti. Con `comandi=1` i messaggi che iniziano per `!` si nascondono: se ne
@@ -820,15 +891,27 @@ solo, e taglia a 500 **contando i caratteri veri**, non le unità UTF-16.
 
 ### `attiva`, il comando del launcher
 
-Nella finestra del launcher la regia ha un bottone che apre `twitch.tv/activate`
-nel **browser di sistema**, dove l'utente è già loggato su Twitch: la WebView2 di
-`Pollaio.exe` ha un profilo suo, vuoto, e là dentro toccherebbe rifare il login
-solo per battere otto caratteri. Lo fa il comando `attiva` di `avvio/Pollaio.cs`.
+Nella finestra del launcher il bottone «Connetti account» — quello della regia e
+quello della barra sotto la chat, che fanno la stessa cosa — apre
+`twitch.tv/activate` nel **browser di sistema**, dove l'utente è già loggato su
+Twitch: la WebView2 di `Pollaio.exe` ha un profilo suo, vuoto, e là dentro
+toccherebbe rifare il login solo per confermare un codice. Lo fa il comando
+`attiva` di `avvio/Pollaio.cs` (`Vetrina.Messaggio`).
 
-**L'indirizzo è una costante dentro il launcher e non arriva dalla pagina.** Un
+**Il comando adesso porta il codice**: `pollaio:attiva:<codice>`. Il launcher lo
+passa a `CodiceBuono()` — da 4 a 16 caratteri, soltanto lettere e cifre, niente
+altro — e solo se passa apre `ATTIVAZIONE + "?device-code=" + codice`; se non
+passa apre `ATTIVAZIONE` nudo, cioè esattamente quello che faceva prima. Il
+guadagno è tutto lì: prima, arrivato sulla pagina appena aperta, l'utente doveva
+ricopiare otto caratteri a mano; adesso non deve fare altro che dire di sì.
+
+**La proprietà che si voleva tenere è intatta: l'indirizzo di base resta una
+costante dentro il launcher, e dalla pagina non arriva mai un indirizzo.** Arriva
+un codice alfanumerico corto, e viene verificato prima di essere concatenato. Un
 comando che accetta un indirizzo qualsiasi da chi sta nella WebView è un comando
-che può far aprire qualunque cosa, e questo non ne ha bisogno: la pagina chiede
-di aprire *quella* pagina, non «una pagina».
+che può far aprire qualunque cosa, e questo non ne ha bisogno né allora né
+adesso: la pagina chiede di aprire *quella* pagina, e dice soltanto con quale
+codice.
 
 ## 19. Il bordo che ridimensiona — la finestra senza cornice
 
