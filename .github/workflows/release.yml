@@ -32,7 +32,9 @@ jobs:
           $dentro = $riga.Matches[0].Groups[1].Value
           Write-Host "tag: $tag - codice: $dentro"
           if ($tag -ne $dentro) {
-            throw "il tag e' v$tag ma nel codice VERSIONE e' $dentro: allineali e rifai il tag"
+            # ${dentro} e non $dentro: subito dopo c'e' un ':', e PowerShell
+            # legge "$dentro:" come una variabile con qualificatore di drive.
+            throw "il tag e' v$tag ma nel codice VERSIONE e' ${dentro}: allineali e rifai il tag"
           }
 
       - name: Compilo il launcher
