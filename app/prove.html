@@ -1,0 +1,94 @@
+<!doctype html>
+<!-- =====================================================================
+     prove.html — «il pollaio» · il banco di prova
+
+     POSSIEDE: l'ossatura della pagina che mostra l'esito dei casi, e i
+     due id che sono contratto con js/prove.js: #sommario e #esito.
+
+     NON POSSIEDE: i casi. Stanno in js/prove.js, che è anche l'unico
+     posto in cui si aggiungono. Questa pagina li carica e basta.
+
+     COSA CARICA, E PERCHÉ QUESTI
+     I moduli che espongono funzioni pure. NON si caricano resa.js,
+     treno.js, prova.js e pollaio.js: il primo vuole il DOM montato, il
+     secondo apre una connessione appena parte, gli ultimi due mettono
+     in moto il widget vero. Un banco che fa partire quello che deve
+     provare non prova più niente: guarda un widget che gira.
+
+     NIENTE RETE. Nessuno di questi casi chiama carica(): emote.js e
+     badge.js toccano la rete solo lì dentro. Il banco si apre anche con
+     il cavo staccato, ed è giusto che sia così — se dipendesse da 7TV
+     direbbe rosso nei giorni in cui 7TV è giù, e a quel punto lo si
+     smetterebbe di guardare.
+
+     Gira da file:// come tutto il resto: percorsi relativi, script
+     classici in fondo al body, nessun type="module".
+     ===================================================================== -->
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Banco di prova — il pollaio</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="img/favicon.png" type="image/png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&amp;family=Manrope:wght@400;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/prove.css">
+</head>
+
+<body class="prove">
+
+<header class="prove__testa">
+  <p class="prove__occhiello">Il pollaio · banco di prova</p>
+  <h1 class="prove__titolo">Le cose che devono restare vere</h1>
+  <p class="prove__sottotitolo">
+    Questo progetto passa la giornata a leggere roba scritta da altri: i tag di
+    un protocollo, i nomi che la gente si sceglie, gli indirizzi battuti a mano
+    dentro un campo di OBS. Le difese ci sono, ma sono silenziose: quando cedono
+    non si vede un errore, si vede un messaggio plausibile che dice una cosa
+    diversa da quella scritta. Qui si controlla che tengano.
+  </p>
+
+  <!-- Lo scrive js/prove.js appena ha finito. Se resta questa riga, vuol
+       dire che non è partito, e lo dice in italiano invece di lasciare una
+       pagina vuota che sembra un guasto del caricamento. -->
+  <p class="prove__sommario" id="sommario" data-stato="attesa" role="status">
+    Sto provando. Se questa riga resta qui, non ci sono riuscito: apri la
+    console del browser e guarda cosa dice.
+  </p>
+</header>
+
+<main>
+  <ul class="prove__elenco" id="esito"></ul>
+</main>
+
+<footer class="prove__piede">
+  <p>
+    I casi stanno in <code>js/prove.js</code>, ed è lì che se ne aggiungono.
+    Non c'è niente da installare e niente da far partire: questa pagina si apre
+    con un doppio clic, come tutto il resto del pollaio.
+  </p>
+  <p>
+    Non si prova la rete, né il DOM, né il tempo. Non perché non contino, ma
+    perché proverebbero il finto: un banco che simula una risposta di 7TV
+    verifica il simulatore, non il widget.
+  </p>
+</footer>
+
+<!-- Ordine obbligatorio come in pollaio.html: chi espone un globale viene
+     prima di chi lo consuma. prove.js li consuma tutti, e va per ultimo. -->
+<script src="js/impostazioni.js"></script>
+<script src="js/irc.js"></script>
+<script src="js/youtube.js"></script>
+<script src="js/emote.js"></script>
+<script src="js/badge.js"></script>
+<script src="js/rilievo.js"></script>
+<script src="js/eventi.js"></script>
+<script src="js/prove.js"></script>
+</body>
+</html>

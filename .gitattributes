@@ -1,0 +1,18 @@
+# =============================================================================
+# .gitattributes — «il pollaio»
+#
+# Questo progetto gira solo su Windows: il launcher è C#, si compila con il
+# csc.exe di sistema, e compila.cmd è un file batch. Quindi i fine riga si
+# fissano a CRLF invece di lasciarli decidere alla macchina di turno — un
+# .cmd con fine riga di Unix funziona finché non incontra una `goto`, e poi
+# smette senza dire perché.
+# =============================================================================
+
+* text=auto eol=crlf
+
+# I binari non si toccano: convertire i fine riga dentro un PNG o una DLL
+# significa distruggerli.
+*.png  binary
+*.ico  binary
+*.dll  binary
+*.exe  binary

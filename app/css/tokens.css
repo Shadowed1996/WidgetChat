@@ -1,0 +1,227 @@
+/* =============================================================================
+   tokens.css — «il pollaio» · widget chat per OBS
+
+   POSSIEDE: tutte le variabili del widget.
+   NON POSSIEDE: nessuna regola che disegni qualcosa. Qui dentro non c'è un solo
+   selettore che non sia :root.
+
+   È l'UNICO file del progetto che contiene colori esadecimali (§1.5 del
+   contratto). Ogni altro foglio consuma queste variabili con var(), e se gli
+   serve una tinta intermedia la ricava con color-mix() partendo da qui.
+
+   La palette è quella del canale, campionata dagli asset reali dello streamer:
+   · viola  ... corpo della mascotte (il pollo)  → #8b2fff
+   · ciano  ... cresta della mascotte            → #22e0ff
+   · viola cupo . banner del canale              → #4b1391
+   · magenta .. lettering del canale             → #ff2fa0
+
+   DUE DIFFERENZE dal sito, volute, e sono la ragione per cui questo file esiste
+   invece di copiare quello del sito:
+
+   1. NON c'è --grad-pagina e non c'è nessun fondo di pagina. In OBS il fondo
+      della pagina deve restare trasparente, altrimenti copre il gameplay. Lo
+      sfondo lo mettono i singoli messaggi, mai il documento.
+   2. C'è la tavolozza dei nick (§13), che il sito non ha perché il sito non
+      disegna la chat.
+   ============================================================================= */
+
+:root {
+
+  /* ---------------------------------------------------------------------------
+     1. SUPERFICI
+     I pannelli sono vetri: colore con alpha, così lasciano passare quello che
+     hanno sotto — che qui non è un alone viola, è il gioco. Le alpha sono più
+     alte di quelle del sito proprio per questo: sotto c'è un'immagine viva e
+     piena di dettaglio, e il testo deve restare leggibile comunque.
+     --------------------------------------------------------------------------- */
+  --fondo:      #07070c;                 /* nero del canale. Serve SOLO come riferimento
+                                            per i calcoli di contrasto, non si dipinge. */
+  --pannello:   rgba(18, 15, 32, 0.78);  /* vetro standard: la colonna, le righe */
+  --pannello-2: rgba(34, 27, 56, 0.86);  /* vetro sollevato: riga in rilievo, schede */
+  --velo:       rgba(7, 7, 12, 0.72);    /* velo sotto il testo nel tema «nudo» */
+
+  /* ---------------------------------------------------------------------------
+     2. LINEE
+     Inchiostro bianco con alpha, non un grigio: così la linea prende la tinta
+     di quello che ha sotto invece di sembrare sporca sopra a un gioco colorato.
+     --------------------------------------------------------------------------- */
+  --linea:       rgba(255, 255, 255, 0.09);   /* divisori e bordi a riposo */
+  --linea-forte: rgba(255, 255, 255, 0.18);   /* bordo dei pannelli */
+  --linea-viva:  rgba(139, 47, 255, 0.55);    /* bordo di ciò che è acceso */
+
+  /* ---------------------------------------------------------------------------
+     3. TESTO — tre livelli, contrasto verificato sul vetro --pannello
+     I rapporti sono misurati sul vetro composito, non sul nero pieno: è il caso
+     vero, perché sotto al vetro c'è sempre qualcosa.
+     --------------------------------------------------------------------------- */
+  --testo:       #f2f0f8;   /* il corpo dei messaggi ..... 15.9:1 — AAA */
+  --testo-medio: #c3bdd6;   /* testo di servizio ......... 10.1:1 — AAA */
+  --testo-tenue: #9a93b0;   /* orario, meta, etichette ....  6.3:1 — AA e AAA grande */
+
+  /* ---------------------------------------------------------------------------
+     4. MARCHIO
+     --viola sul vetro sta sotto la soglia per il testo: si usa per riempimenti,
+     bordi e aloni. Per SCRIVERE in viola c'è --viola-chiaro.
+     --------------------------------------------------------------------------- */
+  --viola:        #8b2fff;  /* riempimenti, bordi, aloni */
+  --viola-cupo:   #4b1391;  /* coda dei gradienti */
+  --viola-chiaro: #c5a4ff;  /* viola LEGGIBILE: testo e icone — 8.8:1 */
+  --ciano:        #22e0ff;  /* «acceso»: focus, rilievo medio — 11.4:1 */
+  --magenta:      #ff2fa0;  /* accento raro: rilievo alto — 5.3:1 */
+
+  /* ---------------------------------------------------------------------------
+     5. STATI
+     --------------------------------------------------------------------------- */
+  /* Le due tinte per il chroma key. NON fanno parte della palette del canale e
+     non si usano per disegnare niente: servono solo come fondo pieno da far
+     sparire in OBS. Sono i due verdi/magenta canonici da green screen, saturi
+     al massimo, proprio perché non devono somigliare a niente che possa
+     comparire in un gioco — se somigliassero, il chroma key porterebbe via
+     anche pezzi di gameplay. */
+  --chroma-verde:   #00b140;
+  --chroma-magenta: #ff00ff;
+
+  --live:    #ff3d5e;  /* in onda, e anche: bannato, cancellato */
+  --ok:      #35e0a1;  /* riuscito, connesso */
+  --allerta: #ffc65c;  /* sto riprovando, prova in corso */
+
+  /* ---------------------------------------------------------------------------
+     5-bis. LE PIATTAFORME
+     La targhetta che dice da dove scrive una persona, quando la chat ne
+     raccoglie più di una.
+
+     Sono le UNICHE tinte del progetto che non escono dalla palette del canale,
+     ed è voluto: la targhetta deve essere riconosciuta prima di essere letta.
+     Il verde di Kick e il rosso di YouTube sono già in testa a chi guarda, e
+     ridisegnarli in viola vorrebbe dire buttare via l'unica cosa che rende
+     una targhetta più veloce di una parola. Sono anche l'eccezione più stretta
+     possibile: quattro riempimenti, mai testo, mai bordi di qualcos'altro.
+
+     Il viola di Twitch è quello vero del marchio e non --viola del canale: se
+     fossero lo stesso, in una chat di sole persone da Twitch la targhetta si
+     confonderebbe col resto dell'overlay e smetterebbe di dire qualcosa.
+     --------------------------------------------------------------------------- */
+  --piattaforma-twitch:  #9146ff;
+  --piattaforma-youtube: #ff0033;
+  --piattaforma-kick:    #53fc18;
+  --piattaforma-tiktok:  #25f4ee;
+
+  /* ---------------------------------------------------------------------------
+     6. FORMA
+     --------------------------------------------------------------------------- */
+  --raggio:       14px;   /* la colonna, le schede evento */
+  --raggio-s:      8px;   /* righe, badge, pill piccole */
+  --raggio-pill: 999px;   /* etichette di rilievo */
+
+  /* ---------------------------------------------------------------------------
+     7. OMBRE E BAGLIORI
+     --ombra-testo è la sola cosa che tiene in piedi il tema «nudo»: senza, il
+     testo chiaro sparisce sopra a un gioco chiaro. Sono quattro ombre a croce
+     più una diffusa, perché un solo drop-shadow lascia scoperto un lato.
+     --------------------------------------------------------------------------- */
+  --ombra:         0 18px 44px -20px rgba(0, 0, 0, 0.9), 0 2px 8px rgba(0, 0, 0, 0.45);
+  --ombra-morbida: 0 10px 26px -16px rgba(0, 0, 0, 0.75);
+  --ombra-testo:
+     0  1px 2px rgba(0, 0, 0, 0.95),
+     0 -1px 2px rgba(0, 0, 0, 0.95),
+     1px  0 2px rgba(0, 0, 0, 0.95),
+    -1px  0 2px rgba(0, 0, 0, 0.95),
+     0  2px 10px rgba(0, 0, 0, 0.85);
+
+  --bagliore-viola:   0 0 22px rgba(139,  47, 255, 0.45);
+  --bagliore-ciano:   0 0 20px rgba( 34, 224, 255, 0.40);
+  --bagliore-magenta: 0 0 22px rgba(255,  47, 160, 0.42);
+
+  /* ---------------------------------------------------------------------------
+     8. TIPOGRAFIA
+     Gli stessi tre caratteri del sito, con lo stesso ruolo: Space Grotesk
+     titola, Manrope racconta, JetBrains Mono etichetta. I ripieghi sono font di
+     sistema con metriche vicine, così se Google non risponde — e in OBS può
+     succedere, la sorgente parte prima della rete — il layout non salta.
+     --------------------------------------------------------------------------- */
+  --font-titolo: 'Space Grotesk', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-testo:  'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono:   'JetBrains Mono', ui-monospace, 'Cascadia Mono', Consolas, 'SFMono-Regular', monospace;
+
+  /* La spaziatura delle etichette maiuscole in monospazio: è la cifra visiva
+     del canale, e va identica ovunque compaia. */
+  --spazio-etichetta: 0.18em;
+
+  /* ---------------------------------------------------------------------------
+     9. MISURE
+     --corpo è il perno di tutto il widget: lo riscrive js/pollaio.js con la
+     percentuale scelta in «scala», e da lì scendono nomi, emote, badge e
+     spaziature, che sono tutti in em. Cambiare quel numero riscala il widget
+     intero senza toccare nient'altro.
+     --------------------------------------------------------------------------- */
+  --corpo:   16px;   /* dimensione del testo dei messaggi */
+  --passo:    8px;   /* unità di spaziatura: tutto è un suo multiplo */
+  --passo-2: 16px;
+  --passo-3: 24px;
+
+  --t-micro:   0.75rem;    /* etichette */
+  --t-piccolo: 0.875rem;   /* testo di servizio */
+
+  /* ---------------------------------------------------------------------------
+     10. DURATE E CURVE
+     TUTTE le transizioni passano da qui: il §finale di ogni foglio le porta a
+     1ms dentro prefers-reduced-motion, e così una riga sola spegne il movimento
+     dell'intero widget senza ricorrere a !important, che il contratto vieta.
+
+     Sono più brevi di quelle del sito, e non è un caso: in un overlay una
+     comparsa lenta non si legge come eleganza, si legge come ritardo.
+     --------------------------------------------------------------------------- */
+  --durata-lampo:  120ms;   /* spie */
+  --durata:        180ms;   /* entrata di un messaggio */
+  --durata-lunga:  400ms;   /* dissolvenza in uscita */
+  --curva:         cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  /* ---------------------------------------------------------------------------
+     11. SFOCATURA DEL VETRO
+     Un valore solo per colonna, righe e schede: se il vetro va ritoccato si
+     tocca qui e cambia dappertutto.
+     --------------------------------------------------------------------------- */
+  --sfocatura: 12px;
+
+  /* ---------------------------------------------------------------------------
+     12. PIANI (z-index)
+     Pochi livelli dichiarati, per non ritrovarsi con z-index: 99999.
+     --------------------------------------------------------------------------- */
+  --z-messaggi: 1;
+  --z-mascotte: 5;
+  --z-spia:    10;   /* la spia di stato e quella della prova */
+  --z-menu:    20;   /* il menu del tasto destro: sopra anche alla spia, perché
+                        è l'unica cosa con cui si comanda la finestra nuda */
+
+  /* ---------------------------------------------------------------------------
+     13. LA TAVOLOZZA DEI NICK
+     Chi non ha mai scelto un colore su Twitch arriva col tag `color` vuoto. Non
+     si può lasciarlo bianco: in una chat veloce il colore del nome è il modo
+     principale per distinguere chi parla senza leggere.
+
+     Sedici tinte, tutte verificate sopra 4.5:1 sul vetro --pannello, tutte
+     dentro la famiglia cromatica del canale (viola, ciano, magenta, e i loro
+     vicini). js/resa.js ne pesca una in modo stabile dal nick: la stessa
+     persona ha sempre lo stesso colore, oggi e fra un mese.
+
+     Sedici e non otto perché sotto le dodici tinte le collisioni si notano a
+     occhio in una chat da venti persone; e non trentadue perché oltre quel
+     numero le tinte iniziano a somigliarsi e il colore smette di distinguere.
+     --------------------------------------------------------------------------- */
+  --nick-0:  #c5a4ff;   /* viola chiaro del marchio */
+  --nick-1:  #22e0ff;   /* ciano della cresta */
+  --nick-2:  #ff7ac0;   /* magenta schiarito */
+  --nick-3:  #7ce0b8;   /* verde acqua */
+  --nick-4:  #ffb86c;   /* ambra */
+  --nick-5:  #8ab4ff;   /* azzurro */
+  --nick-6:  #ff9f9f;   /* corallo */
+  --nick-7:  #b9f18d;   /* verde chiaro */
+  --nick-8:  #d8a0ff;   /* lilla */
+  --nick-9:  #5fd4e8;   /* turchese */
+  --nick-10: #ffd166;   /* giallo caldo */
+  --nick-11: #a5b4ff;   /* pervinca */
+  --nick-12: #ff8fd8;   /* rosa */
+  --nick-13: #6fe3c4;   /* menta */
+  --nick-14: #e0b0ff;   /* glicine */
+  --nick-15: #90e0a8;   /* salvia */
+}

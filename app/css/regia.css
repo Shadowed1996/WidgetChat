@@ -1,0 +1,1242 @@
+/* =============================================================================
+   regia.css — «il pollaio» · il foglio del configuratore
+
+   POSSIEDE: il blocco .regia e nient'altro. Testata, le due colonne, i
+   campi che js/regia.js costruisce dallo SCHEMA, la scena dell'anteprima con
+   i suoi quattro fondi, la barra dell'indirizzo, i bottoni.
+
+   NON POSSIEDE: .pollaio. L'overlay vive dentro all'iframe, che è un altro
+   documento con i suoi fogli: da qui non lo si tocca nemmeno volendo, ed è
+   giusto così — l'anteprima deve mostrare l'overlay vero, non una versione
+   ritoccata dal foglio di chi la guarda.
+
+   -----------------------------------------------------------------------------
+   QUESTA PAGINA HA UN FONDO, ED È L'UNICA DEL PROGETTO
+   -----------------------------------------------------------------------------
+   pollaio.css lascia html e body trasparenti perché in OBS un fondo opaco
+   coprirebbe il gameplay (CONTRATTO §12). Qui è l'opposto: è un'interfaccia
+   che si guarda in un browser, e senza fondo sarebbe testo bianco sul bianco
+   del browser. Il fondo se lo dipinge questo foglio, partendo da --fondo e da
+   due aloni ricavati col color-mix dal viola e dal ciano del canale — perché
+   tokens.css, per la ragione di cui sopra, un --grad-pagina non ce l'ha.
+
+   -----------------------------------------------------------------------------
+   REGOLE DELLA CASA, RISPETTATE RIGA PER RIGA
+   -----------------------------------------------------------------------------
+   · nessun esadecimale: tutto arriva da tokens.css, e le tinte intermedie da
+     color-mix() (CONTRATTO §1.5)
+   · nessun !important (§1.6)
+   · proprietà logiche: inline-size, block-size, inset-inline-start, padding-block
+   · focus visibile ovunque, 2px --ciano con 3px di stacco
+   · bersagli da 44px, che è la misura del dito e anche quella del mouse di chi
+     sta configurando un overlay alle due di notte
+   · prefers-reduced-motion spegne tutto, nel paragrafo finale
+
+   -----------------------------------------------------------------------------
+   INDICE
+   -----------------------------------------------------------------------------
+     1. Reset e variabili locali
+     2. Impianto della pagina e tipografia
+     3. Testata
+     4. Le due colonne
+     5. Gruppi di comandi e ossatura del campo
+     6. I campi: interruttore, cursore, casella, segmenti, testo
+     7. L'anteprima: barra, scena, i quattro fondi, telaio, righello
+     8. L'indirizzo, i bottoni, la conferma inline
+     8-bis. Le configurazioni salvate
+     9. La nota su OBS e il piede
+    10. Schermi stretti
+    11. Movimento ridotto
+   ============================================================================= */
+
+
+/* =============================================================================
+   1. RESET E VARIABILI LOCALI
+   ============================================================================= */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Il fondo sta su html e non solo su body: se il contenuto è più corto
+     della finestra, la banda che avanza deve restare del colore del canale
+     e non diventare il bianco del browser. */
+  background-color: var(--fondo);
+  scrollbar-width: thin;
+  scrollbar-color: var(--linea-forte) transparent;
+}
+
+body,
+h1, h2, h3,
+p, ol, ul, fieldset, legend, figure { margin: 0; }
+
+fieldset {
+  min-inline-size: 0;   /* senza, un fieldset si rifiuta di stringersi in un grid */
+  padding: 0;
+  border: 0;
+}
+
+ol[class],
+ul[class] {
+  list-style: none;
+  padding: 0;
+}
+
+img, svg { display: block; max-inline-size: 100%; }
+
+input, button, textarea, select {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+button {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Il focus si vede SEMPRE e non si toglie mai: questa è una pagina di
+   comandi, e si usa anche solo con la tastiera. L'outline segue da sé il
+   border-radius, quindi non serve ridichiararlo. */
+:focus-visible {
+  outline: 2px solid var(--ciano);
+  outline-offset: 3px;
+}
+
+::selection {
+  background-color: var(--viola);
+  color: var(--testo);
+}
+
+/* Doppio attributo per portare la specificità a (0,2,0) senza !important:
+   così l'attributo `hidden` scritto da js/regia.js sulla conferma inline
+   vince sul display:flex che la classe le dà più sotto. È la stessa lezione
+   imparata sul sito, dove un bottone nascosto restava in pagina. */
+[hidden][hidden] { display: none; }
+
+.regia {
+  /* tokens.css è la palette del WIDGET: ha --corpo (il testo dei messaggi) e
+     tre passi di spaziatura, non le misure di una pagina. Quelle stanno qui,
+     con il prefisso --r-, e non escono dal blocco .regia. */
+  --r-corpo: 15px;
+  --r-h1: clamp(2rem, 1.3rem + 2.4vw, 3rem);
+  --r-h2: 1.05rem;
+
+  --r-margine: clamp(var(--passo-2), 1rem + 2vw, calc(var(--passo-3) * 2));
+  --r-comandi: 440px;
+  --r-passo-4: calc(var(--passo) * 4);
+  --r-passo-6: calc(var(--passo) * 6);
+
+  /* Le tinte derivate. Stanno qui in cima tutte insieme perché sono la parte
+     del foglio che si finisce per ritoccare, e cercarle sparse fra
+     duecento righe è tempo perso. */
+  --r-fondo-2: color-mix(in srgb, var(--viola-cupo) 22%, var(--fondo));
+  --r-campo: color-mix(in srgb, var(--fondo) 62%, transparent);
+  --r-acceso: color-mix(in srgb, var(--ciano) 16%, transparent);
+  --r-binario: color-mix(in srgb, var(--testo-tenue) 28%, transparent);
+  --r-scacco: color-mix(in srgb, var(--testo-tenue) 34%, transparent);
+  --r-scacco-fondo: color-mix(in srgb, var(--testo-tenue) 12%, transparent);
+}
+
+
+/* =============================================================================
+   2. IMPIANTO DELLA PAGINA E TIPOGRAFIA
+   ============================================================================= */
+
+.regia {
+  min-block-size: 100vh;
+  min-block-size: 100svh;
+  padding-inline: var(--r-margine);
+  padding-block: var(--r-passo-6) var(--r-passo-4);
+
+  /* Due aloni e un fondo: la stessa nebulosa del sito, ricostruita coi token
+     invece che con --grad-pagina, che qui non esiste. Sono fissi rispetto al
+     documento, così scorrendo non si vede una cucitura. */
+  background-color: var(--fondo);
+  background-image:
+    radial-gradient(62% 48% at 8% -6%, color-mix(in srgb, var(--viola) 26%, transparent) 0%, transparent 62%),
+    radial-gradient(48% 42% at 102% 2%, color-mix(in srgb, var(--ciano) 12%, transparent) 0%, transparent 58%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+
+  color: var(--testo-medio);
+  font-family: var(--font-testo);
+  font-size: var(--r-corpo);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-titolo);
+  color: var(--testo);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+p { text-wrap: pretty; }
+
+/* URL, nomi di bot, elenchi di parole: niente deve poter allargare la
+   pagina fino a farla scorrere in orizzontale. */
+p, li, label, legend { overflow-wrap: break-word; }
+
+strong {
+  font-weight: 600;
+  color: var(--testo);
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  font-variant-ligatures: none;
+}
+
+/* --- Skip link: fuori campo con una traslazione, non con display:none,
+   altrimenti non lo raggiungerebbe più nemmeno il Tab. ---------------------- */
+.regia__salta {
+  position: fixed;
+  z-index: var(--z-spia);
+  inset-block-start: var(--passo-2);
+  inset-inline-start: var(--passo-2);
+  padding: var(--passo) var(--passo-2);
+  border: 1px solid var(--linea-viva);
+  border-radius: var(--raggio-s);
+  background-color: var(--r-fondo-2);
+  box-shadow: var(--ombra);
+  color: var(--testo);
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: var(--spazio-etichetta);
+  transform: translateY(-400%);
+  transition: transform var(--durata) var(--curva);
+}
+
+.regia__salta:focus { transform: none; }
+
+
+/* =============================================================================
+   3. TESTATA
+   ============================================================================= */
+
+/* Dentro la finestra di Regia.exe la testata è la maniglia con cui si sposta
+   la finestra, e il puntatore lo dice. Solo la testata: il resto della pagina
+   è pieno di manopole, e una pagina che scappa mentre provi a girarne una
+   sarebbe inservibile. L'attributo lo mette js/menu.js. */
+html[data-finestra] .regia__testa { cursor: grab; }
+html[data-finestra] .regia__testa:active { cursor: grabbing; }
+
+.regia__testa {
+  max-inline-size: 68ch;
+  margin-block-end: var(--r-passo-6);
+}
+
+/* L'occhiello con la lineetta ciano davanti è il segno che ricorre in tutta
+   la strumentazione del canale: dice «questa parte si accende». */
+.regia__occhiello {
+  display: flex;
+  align-items: center;
+  gap: var(--passo);
+  margin-block-end: var(--passo-2);
+  color: var(--testo-tenue);
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--spazio-etichetta);
+}
+
+.regia__occhiello::before {
+  content: "";
+  flex: none;
+  inline-size: var(--passo-3);
+  block-size: 1px;
+  background-color: var(--ciano);
+}
+
+.regia__titolo {
+  font-size: var(--r-h1);
+  font-weight: 700;
+}
+
+.regia__sottotitolo {
+  margin-block-start: var(--passo-2);
+  max-inline-size: 62ch;
+}
+
+.regia__sottotitolo em {
+  font-style: normal;
+  color: var(--viola-chiaro);
+}
+
+
+/* =============================================================================
+   4. LE DUE COLONNE
+   Sotto la soglia è una colonna sola, comandi sopra e anteprima sotto. Sopra
+   la soglia sono due, e l'anteprima si incolla in alto: girare una manopola
+   mentre l'anteprima è scorsa via è esattamente il modo di NON accorgersi di
+   cosa si sta facendo.
+   ============================================================================= */
+
+.regia__corpo {
+  display: grid;
+  gap: var(--r-passo-6) var(--passo-3);
+  align-items: start;
+}
+
+.regia__colonna {
+  min-inline-size: 0;   /* la regola d'oro dei figli di un grid: senza, il
+                           contenuto lungo li allarga oltre la colonna */
+}
+
+.regia__sezione-titolo {
+  font-size: var(--r-h2);
+  font-weight: 500;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: var(--spazio-etichetta);
+  color: var(--testo);
+}
+
+.regia__sezione-testo {
+  margin-block-start: var(--passo);
+  max-inline-size: 58ch;
+  color: var(--testo-medio);
+  font-size: var(--t-piccolo);
+}
+
+.regia__nota {
+  margin-block-start: var(--passo-2);
+  max-inline-size: 62ch;
+  color: var(--testo-tenue);
+  font-size: var(--t-piccolo);
+}
+
+.regia__vuoto {
+  padding: var(--passo-2);
+  border: 1px dashed var(--linea-forte);
+  border-radius: var(--raggio-s);
+  color: var(--testo-tenue);
+  font-size: var(--t-piccolo);
+}
+
+@media (min-width: 1080px) {
+  .regia__corpo {
+    grid-template-columns: minmax(0, var(--r-comandi)) minmax(0, 1fr);
+  }
+
+  .regia__colonna--anteprima {
+    position: sticky;
+    inset-block-start: var(--passo-2);
+    /* Se l'anteprima è più alta della finestra scorre dentro di sé invece di
+       trascinarsi via l'intestazione: è la sola forma di sticky che regge
+       anche con un'anteprima alta 1080px. */
+    max-block-size: calc(100svh - var(--passo-3));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-inline-end: var(--passo);
+  }
+}
+
+
+/* =============================================================================
+   5. GRUPPI DI COMANDI E OSSATURA DEL CAMPO
+   Da qui in poi il markup non sta in regia.html: lo costruisce js/regia.js
+   leggendo Impostazioni.SCHEMA. Queste classi sono il contratto fra i due.
+   ============================================================================= */
+
+.regia__gruppi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--passo-3);
+  margin-block-start: var(--passo-3);
+}
+
+.regia__gruppo {
+  padding: var(--passo-3) var(--passo-2);
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio);
+  background-color: var(--pannello);
+  box-shadow: var(--ombra-morbida);
+}
+
+.regia__gruppo-titolo {
+  display: flex;
+  align-items: center;
+  gap: var(--passo);
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: var(--spazio-etichetta);
+  color: var(--viola-chiaro);
+}
+
+.regia__gruppo-titolo::before {
+  content: "";
+  flex: none;
+  inline-size: var(--passo-2);
+  block-size: 1px;
+  background-color: currentColor;
+}
+
+.regia__gruppo-nota {
+  margin-block-start: 6px;
+  color: var(--testo-tenue);
+  font-size: var(--t-piccolo);
+}
+
+.regia__campi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--passo-3);
+  margin-block-start: var(--passo-3);
+}
+
+/* Un campo è sempre: etichetta, comando, aiuto. In quest'ordine, per tutti e
+   quattro i tipi — così l'occhio impara la forma una volta sola e poi scorre
+   ventiquattro campi senza doverla reimparare. */
+.regia__campo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--passo);
+  min-inline-size: 0;
+}
+
+.regia__etichetta {
+  color: var(--testo);
+  font-size: var(--t-piccolo);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+/* La manina solo sulle <label> vere. Nel campo «voce» l'etichetta è uno
+   <span> che fa da titolo al gruppo (vedi §6.4): non si clicca, e mostrare
+   la manina su una cosa che non fa niente è una piccola bugia. */
+label.regia__etichetta { cursor: pointer; }
+
+/* L'aiuto è il testo che spiega a cosa serve la manopola in OBS. È tenue di
+   proposito: si legge la prima volta e poi si salta, ma resta lì per quando
+   si torna dopo tre mesi e non ci si ricorda più cosa faceva «anima». */
+.regia__aiuto {
+  color: var(--testo-tenue);
+  font-size: var(--t-micro);
+  line-height: 1.5;
+  max-inline-size: 60ch;
+}
+
+.regia__riga {
+  display: flex;
+  align-items: center;
+  gap: var(--passo-2);
+  min-block-size: 44px;
+  min-inline-size: 0;
+}
+
+
+/* =============================================================================
+   6. I CAMPI
+   js/regia.js mette su ogni campo la classe del suo tipo — --sino, --numero,
+   --voce, --testo — sempre, anche quando non serve a niente. Qui sotto hanno
+   una regola solo --sino e --numero: .regia__campo--voce e
+   .regia__campo--testo esistono come appiglio e oggi non chiedono nulla al
+   foglio. Non è una dimenticanza: è il posto già pronto per il giorno che
+   servirà, e vale la riga di commento che risparmia a qualcuno la ricerca.
+   ============================================================================= */
+
+/* --- 6.1 Interruttore (sìno) -----------------------------------------------
+   È un <input type="checkbox"> vero, ridisegnato: niente <button> con
+   aria-checked. Un checkbox porta con sé la sua etichetta, lo stato per le
+   tecnologie assistive, la barra spaziatrice e il click sul <label>. Tutta
+   roba che rifatta a mano si rompe.
+
+   La pallina è un radial-gradient dentro al background, non uno ::after: sui
+   controlli con appearance:none gli pseudo-elementi sono terreno incerto fra
+   un motore e l'altro, mentre background-position si anima ovunque. */
+.regia__interruttore {
+  --r-pallina: var(--testo-medio);
+
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  inline-size: 56px;
+  block-size: 32px;
+  margin: 0;
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio-pill);
+  background-color: var(--r-campo);
+  background-image: radial-gradient(circle at 50% 50%, var(--r-pallina) 0 10px, transparent 10px);
+  background-repeat: no-repeat;
+  background-size: 32px 100%;
+  background-position: 0% 50%;
+  cursor: pointer;
+  transition:
+    background-color var(--durata) var(--curva),
+    background-position var(--durata) var(--curva),
+    border-color var(--durata) var(--curva);
+}
+
+.regia__interruttore:hover { border-color: var(--linea-viva); }
+
+.regia__interruttore:checked {
+  --r-pallina: var(--ciano);
+  background-color: var(--r-acceso);
+  background-position: 100% 50%;
+  border-color: var(--ciano);
+}
+
+/* Lo stato scritto accanto all'interruttore: il colore da solo non basta a
+   chi i colori non li distingue, e nemmeno a chi guarda di sfuggita. */
+.regia__stato {
+  flex: none;
+  min-inline-size: 4ch;
+  color: var(--testo-tenue);
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--spazio-etichetta);
+  transition: color var(--durata) var(--curva);
+}
+
+.regia__campo[data-acceso="1"] .regia__stato { color: var(--ciano); }
+
+/* Nel campo interruttore l'etichetta sta sulla stessa riga del comando, e si
+   prende tutto lo spazio che avanza: così il bersaglio da cliccare non è la
+   pallina da 32px, è mezza colonna. */
+.regia__campo--sino .regia__etichetta {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  padding-block: var(--passo);
+}
+
+/* --- 6.2 Cursore (numero) --------------------------------------------------
+   Il binario e la manopola vanno dichiarati due volte, una per motore. Non si
+   possono accorpare in un elenco di selettori: un solo pseudo sconosciuto
+   invaliderebbe l'intera regola, e resterebbe un cursore di sistema in mezzo
+   a una pagina disegnata. */
+.regia__cursore {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  block-size: 44px;          /* bersaglio comodo: il binario è 6px, la presa 44 */
+  margin: 0;
+  padding: 0;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.regia__cursore::-webkit-slider-runnable-track {
+  block-size: 6px;
+  border-radius: var(--raggio-pill);
+  background-color: var(--r-binario);
+}
+
+.regia__cursore::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  inline-size: 20px;
+  block-size: 20px;
+  margin-block-start: -7px;   /* (6 - 20) / 2 : centra la manopola sul binario */
+  border: 2px solid var(--fondo);
+  border-radius: 50%;
+  background-color: var(--ciano);
+  box-shadow: var(--bagliore-ciano);
+  transition: transform var(--durata-lampo) var(--curva);
+}
+
+.regia__cursore:active::-webkit-slider-thumb { transform: scale(1.12); }
+
+.regia__cursore::-moz-range-track {
+  block-size: 6px;
+  border-radius: var(--raggio-pill);
+  background-color: var(--r-binario);
+}
+
+.regia__cursore::-moz-range-thumb {
+  inline-size: 20px;
+  block-size: 20px;
+  border: 2px solid var(--fondo);
+  border-radius: 50%;
+  background-color: var(--ciano);
+  box-shadow: var(--bagliore-ciano);
+}
+
+/* Il valore in monospazio accanto al cursore. Cifre tabulari: trascinando,
+   il numero cambia senza che tutta la riga balli da 100 a 105. */
+.regia__valore {
+  flex: none;
+  min-inline-size: 6ch;
+  color: var(--testo);
+  font-family: var(--font-mono);
+  font-size: var(--t-piccolo);
+  font-variant-numeric: tabular-nums slashed-zero;
+  text-align: end;
+}
+
+.regia__unita {
+  margin-inline-start: 2px;
+  color: var(--testo-tenue);
+  font-size: 0.85em;
+}
+
+/* --- 6.3 Casella numerica --------------------------------------------------
+   Solo per larghezza, max e svanisci (voce.esatto nello SCHEMA): sono i tre
+   numeri che si vogliono battere esatti, perché o corrispondono a quelli di
+   OBS o non servono a niente. Col cursore, 420 su un arco che arriva a 1000
+   non lo si prende. */
+.regia__esatto {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+
+.regia__numero,
+.regia__testo {
+  min-inline-size: 0;
+  padding: 10px var(--passo);
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio-s);
+  background-color: var(--r-campo);
+  color: var(--testo);
+  font-family: var(--font-mono);
+  font-size: var(--t-piccolo);
+  transition: border-color var(--durata) var(--curva), background-color var(--durata) var(--curva);
+}
+
+.regia__numero {
+  inline-size: 7ch;
+  min-block-size: 44px;
+  font-variant-numeric: tabular-nums slashed-zero;
+  text-align: end;
+}
+
+.regia__testo {
+  inline-size: 100%;
+  min-block-size: 44px;
+}
+
+.regia__numero:hover,
+.regia__testo:hover { border-color: var(--linea-viva); }
+
+.regia__numero:focus,
+.regia__testo:focus { background-color: var(--pannello-2); }
+
+/* L'unità è una <label> vera legata alla casella con for/id: due caratteri
+   che sembrano decorazione e invece sono il nome del campo per chi naviga a
+   voce, dove «px» accanto a «Larghezza della colonna» basta e avanza. */
+.regia__unita-etichetta {
+  color: var(--testo-tenue);
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  cursor: pointer;
+}
+
+/* --- 6.4 Segmenti (voce) ---------------------------------------------------
+   Bottoni affiancati e non una <select>: le opzioni sono due o tre, si
+   vedono tutte insieme, e si cambia idea con un clic invece che con due.
+   Sotto sono <input type="radio">, quindi le frecce funzionano da sole.
+
+   I radio non si nascondono con display:none — sparirebbero anche dal Tab.
+   Stanno sotto, trasparenti, e il focus lo disegna l'etichetta al posto loro. */
+.regia__segmenti {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-inline-size: 0;
+}
+
+.regia__radio {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.regia__segmento {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 44px;
+  padding-inline: var(--passo-2);
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio-pill);
+  background-color: var(--r-campo);
+  color: var(--testo-medio);
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  line-height: 1.1;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition:
+    background-color var(--durata) var(--curva),
+    border-color var(--durata) var(--curva),
+    color var(--durata) var(--curva);
+}
+
+.regia__segmento:hover {
+  border-color: var(--linea-viva);
+  color: var(--testo);
+}
+
+.regia__radio:checked + .regia__segmento {
+  border-color: var(--ciano);
+  background-color: var(--r-acceso);
+  color: var(--ciano);
+}
+
+/* Il focus dell'input invisibile si disegna sull'etichetta che gli sta
+   accanto: senza questa riga, navigando col Tab non si vedrebbe niente. */
+.regia__radio:focus-visible + .regia__segmento {
+  outline: 2px solid var(--ciano);
+  outline-offset: 3px;
+}
+
+
+/* =============================================================================
+   7. L'ANTEPRIMA
+   ============================================================================= */
+
+.regia__barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--passo-2);
+}
+
+.regia__fondi-titolo {
+  padding: 0;
+  color: var(--testo-tenue);
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--spazio-etichetta);
+}
+
+.regia__fondi .regia__segmenti { margin-block-start: 6px; }
+
+/* --- La scena: il fondo su cui si prova l'overlay --------------------------
+   Scorre invece di rimpicciolire il telaio. Un'anteprima ridimensionata
+   mentirebbe sulle misure, e le misure sono metà del motivo per cui questa
+   pagina esiste: se dico 420 e mostro 380, il testo sembra più grande di
+   quello che sarà in diretta. */
+.regia__scena {
+  margin-block-start: var(--passo-2);
+  padding: var(--passo-2);
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio);
+  overflow: auto;
+  overscroll-behavior-x: contain;
+
+  /* Il telaio sta al centro della scena, non appoggiato a sinistra.
+
+     Con la colonna stretta — 420px dentro un pannello che ne è largo il
+     doppio — l'overlay finiva schiacciato contro il bordo sinistro e metà
+     scacchiera restava vuota a destra. Non è solo brutto: in OBS quella
+     colonna la si mette quasi sempre in mezzo o a filo di un lato, e
+     giudicare il contrasto del testo con tutto lo spazio libero da una parte
+     sola inganna l'occhio.
+
+     `safe center` e non `center` secco: quando la colonna è più larga della
+     scena — succede alzando «larghezza» oltre il pannello — il centraggio
+     spingerebbe il bordo sinistro fuori dall'area che scorre, e quella parte
+     diventerebbe irraggiungibile: non c'è modo di scorrere all'indietro oltre
+     l'inizio. Con `safe` l'allineamento torna da solo a sinistra appena lo
+     spazio non basta, che è esattamente il caso in cui serve poter scorrere. */
+  display: flex;
+  justify-content: safe center;
+}
+
+/* Scacchi: due gradienti a 45° sfalsati di mezza cella. È il fondo che dice
+   la verità sulla trasparenza — dove si vedono i quadretti, in OBS si vedrà
+   il gioco. Ricavato col color-mix da --testo-tenue: nessun grigio inventato. */
+.regia__scena[data-fondo="scacchi"] {
+  background-color: var(--r-scacco-fondo);
+  background-image:
+    linear-gradient(45deg, var(--r-scacco) 25%, transparent 25%, transparent 75%, var(--r-scacco) 75%),
+    linear-gradient(45deg, var(--r-scacco) 25%, transparent 25%, transparent 75%, var(--r-scacco) 75%);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
+}
+
+/* Chiaro: è la prova che conta. Un tema senza ombra sopra a un caricamento
+   bianco sparisce, e lo si scopre qui invece che in diretta. */
+.regia__scena[data-fondo="chiaro"] { background-color: var(--testo); }
+
+.regia__scena[data-fondo="scuro"] { background-color: var(--fondo); }
+
+/* Finto gameplay: acceso, sporco, con una banda chiara in basso — cioè il
+   caso peggiore per un testo chiaro. Tutte tinte del canale, nessun colore
+   nuovo: serve un fondo movimentato, non una tavolozza. */
+.regia__scena[data-fondo="gioco"] {
+  background-color: var(--viola-cupo);
+  background-image:
+    radial-gradient(42% 46% at 22% 26%, color-mix(in srgb, var(--ciano) 72%, transparent) 0%, transparent 62%),
+    radial-gradient(38% 40% at 78% 18%, color-mix(in srgb, var(--allerta) 78%, transparent) 0%, transparent 58%),
+    radial-gradient(52% 44% at 68% 82%, color-mix(in srgb, var(--ok) 58%, transparent) 0%, transparent 60%),
+    linear-gradient(148deg, color-mix(in srgb, var(--magenta) 52%, transparent) 0%, transparent 46%),
+    linear-gradient(to top, var(--testo) 0%, color-mix(in srgb, var(--testo) 30%, transparent) 14%, transparent 30%);
+}
+
+/* Il telaio NON ha max-inline-size: 100%. È l'unica cosa della pagina a cui
+   quella regola farebbe danno — vedi il commento sulla scena. */
+.regia__telaio {
+  display: block;
+
+  /* flex: none perché la scena è diventata un contenitore flex per centrarlo.
+     Senza, il telaio erediterebbe flex-shrink: 1 e si lascerebbe stringere
+     quando il pannello è più stretto della colonna scelta — cioè mostrerebbe
+     una chat da 380px dicendo 420. È la bugia che la scena vieta apposta,
+     solo introdotta dal lato opposto: non rimpicciolendo l'anteprima, ma
+     lasciando che sia il layout a farlo di nascosto. */
+  flex: none;
+
+  inline-size: 420px;
+  block-size: 640px;
+  border: 0;
+  border-radius: var(--raggio-s);
+  color-scheme: normal;   /* il documento dentro è trasparente: nessun fondo
+                             di sistema deve essere dipinto sotto di lui */
+}
+
+/* --- Il righello ----------------------------------------------------------- */
+.regia__righello {
+  display: flex;
+  flex-direction: column;
+  gap: var(--passo-2);
+  margin-block-start: var(--passo-2);
+  padding: var(--passo-2);
+  border: 1px solid var(--linea);
+  border-radius: var(--raggio-s);
+  background-color: var(--pannello);
+}
+
+.regia__misura {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--passo);
+}
+
+.regia__misura-valore {
+  color: var(--ciano);
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums slashed-zero;
+  letter-spacing: 0.04em;
+}
+
+.regia__misura-nota {
+  color: var(--testo-tenue);
+  font-size: var(--t-micro);
+}
+
+.regia__campo--riga { gap: 6px; }
+
+
+/* =============================================================================
+   8. L'INDIRIZZO, I BOTTONI, LA CONFERMA INLINE
+   ============================================================================= */
+
+.regia__piede {
+  display: grid;
+  gap: var(--r-passo-4);
+  margin-block-start: var(--r-passo-6);
+  padding-block-start: var(--r-passo-4);
+  border-block-start: 1px solid var(--linea);
+}
+
+@media (min-width: 1080px) {
+  .regia__piede { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+  .regia__firma { grid-column: 1 / -1; }
+}
+
+/* La solita regola d'oro dei figli di un grid: senza min-inline-size a zero,
+   un indirizzo lungo allargherebbe la colonna invece di andare a capo, e si
+   porterebbe dietro tutta la pagina. */
+.regia__consegna { min-inline-size: 0; }
+
+/* L'indirizzo è la consegna di tutta la pagina: sta in un riquadro suo, in
+   monospazio, e va a capo dove capita perché deve stare tutto sotto gli
+   occhi — un indirizzo troncato con i puntini non si può controllare. */
+.regia__indirizzo {
+  display: block;
+  margin-block-start: var(--passo-2);
+  padding: var(--passo-2);
+  border: 1px solid var(--linea-viva);
+  border-radius: var(--raggio-s);
+  background-color: var(--r-campo);
+  color: var(--testo);
+  font-size: var(--t-piccolo);
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+.regia__azioni {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--passo);
+  margin-block-start: var(--passo-2);
+}
+
+/* Un bottone qui è un comando di regia: etichetta in monospazio maiuscolo,
+   44px di altezza minima, e lo scatto di un pixel al passaggio del mouse che
+   il sito ha su tutti i suoi. */
+.regia__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--passo);
+  min-block-size: 44px;
+  padding-inline: var(--passo-3);
+  border: 1px solid transparent;
+  border-radius: var(--raggio-pill);
+  font-family: var(--font-mono);
+  font-size: var(--t-piccolo);
+  font-weight: 500;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  transition:
+    background-color var(--durata) var(--curva),
+    border-color var(--durata) var(--curva),
+    color var(--durata) var(--curva),
+    box-shadow var(--durata) var(--curva),
+    translate var(--durata-lampo) var(--curva);
+}
+
+.regia__btn:hover { translate: 0 -1px; }
+.regia__btn:active { translate: 0 1px; }
+
+.regia__btn--pieno {
+  background-image: linear-gradient(118deg, var(--viola-cupo) 0%, var(--viola) 100%);
+  border-color: var(--linea-viva);
+  color: var(--testo);
+}
+
+.regia__btn--pieno:hover { box-shadow: var(--bagliore-viola); }
+
+.regia__btn--vuoto {
+  background-color: transparent;
+  border-color: var(--linea-forte);
+  color: var(--testo);
+}
+
+.regia__btn--vuoto:hover {
+  border-color: var(--ciano);
+  background-color: var(--pannello-2);
+}
+
+.regia__btn--mini {
+  padding-inline: var(--passo-2);
+  border-color: var(--linea-forte);
+  color: var(--testo);
+}
+
+.regia__btn--mini:hover { border-color: var(--ciano); }
+
+/* Riuscito: bordo e testo, niente riempimento. Il bottone resta lo stesso
+   oggetto invece di diventarne un altro per due secondi. La regola sta DOPO
+   gli :hover perché a parità di specificità deve vincere lei — dopo un clic
+   il puntatore è quasi sempre ancora lì sopra. */
+.regia__btn.is-fatto {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+.regia__ripristina {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--passo);
+}
+
+/* Il «Sicuro?» nasce accanto al bottone che l'ha provocato, dove l'occhio sta
+   già guardando. Un confirm() del browser ferma la pagina, arriva in inglese
+   di sistema e non si può nemmeno scrivere in italiano. */
+.regia__conferma {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--passo);
+  padding-inline-start: var(--passo);
+  border-inline-start: 1px solid var(--linea-forte);
+}
+
+.regia__conferma-testo {
+  color: var(--allerta);
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--spazio-etichetta);
+}
+
+/* L'eco è la riga che racconta cos'è successo. Vuota non occupa spazio, così
+   il piede non balla ogni volta che si copia. */
+.regia__eco {
+  margin-block-start: var(--passo-2);
+  min-block-size: 1.2em;
+  color: var(--testo-tenue);
+  font-size: var(--t-piccolo);
+}
+
+.regia__eco.is-fatto { color: var(--ok); }
+
+
+/* =============================================================================
+   8-bis. LE CONFIGURAZIONI SALVATE
+   Le pastiglie con i nomi delle configurazioni messe da parte. Riusano il
+   vocabolario dei bottoni del blocco 8 invece di inventarne uno nuovo: qui
+   dentro non nasce nessuna forma che la pagina non abbia già.
+   ============================================================================= */
+
+.regia__preset {
+  margin-block-start: var(--r-passo-6);
+}
+
+.regia__preset-elenco {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--passo);
+  margin-block-start: var(--passo-2);
+  padding: 0;
+  list-style: none;
+}
+
+/* Una voce è due bottoni attaccati dentro un bordo solo: si legge come un
+   oggetto unico, ma il bersaglio per caricare e quello per dimenticare
+   restano separati. Attaccarli senza distinguerli farebbe cancellare una
+   configurazione a chi voleva soltanto richiamarla. */
+.regia__preset-voce {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio-pill);
+  overflow: hidden;
+  transition: border-color var(--durata) var(--curva);
+}
+
+.regia__preset-voce:hover { border-color: var(--ciano); }
+
+/* La configurazione in uso adesso. Non è una selezione da rifare a ogni
+   clic: si ricalcola confrontando l'indirizzo, quindi resta accesa finché
+   le manopole dicono davvero quella cosa lì, e si spegne da sola appena se
+   ne tocca una. È l'unico modo perché voglia dire qualcosa. */
+.regia__preset-voce.is-attuale {
+  border-color: var(--ciano);
+  background-color: var(--pannello-2);
+}
+
+.regia__preset-carica {
+  min-block-size: 40px;
+  padding-inline: var(--passo-2);
+  border: 0;
+  background-color: transparent;
+  color: var(--testo);
+  font-family: var(--font-mono);
+  font-size: var(--t-piccolo);
+  letter-spacing: var(--spazio-etichetta);
+  cursor: pointer;
+}
+
+.regia__preset-carica:hover { color: var(--ciano); }
+
+/* La × sta in monospazio come tutto il resto e non è un'icona: un carattere
+   si ridimensiona col testo e non ha bisogno di un file. */
+.regia__preset-togli {
+  min-block-size: 40px;
+  padding-inline: var(--passo);
+  border: 0;
+  border-inline-start: 1px solid var(--linea);
+  background-color: transparent;
+  color: var(--testo-tenue);
+  font-family: var(--font-mono);
+  font-size: var(--t-piccolo);
+  line-height: 1;
+  cursor: pointer;
+  transition: color var(--durata) var(--curva), background-color var(--durata) var(--curva);
+}
+
+.regia__preset-togli:hover {
+  background-color: color-mix(in srgb, var(--allerta) 22%, transparent);
+  color: var(--allerta);
+}
+
+/* La domanda prende il posto della voce, dentro lo stesso bordo: la riga non
+   si allunga e le pastiglie accanto non si spostano sotto il dito mentre si
+   sta per rispondere. */
+.regia__preset-voce.is-chiede .regia__preset-carica,
+.regia__preset-voce.is-chiede .regia__preset-togli {
+  display: none;
+}
+
+.regia__preset-chiesta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--passo);
+  padding-inline: var(--passo-2);
+  color: var(--allerta);
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+}
+
+/* Il campo del nome: stessa altezza dei bottoni mini che gli stanno
+   accanto, così la riga della conferma non fa il gradino. */
+.regia__nome {
+  min-block-size: 36px;
+  max-inline-size: 16ch;
+  padding-inline: var(--passo);
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio-s);
+  background-color: var(--fondo);
+  color: var(--testo);
+  font-family: var(--font-mono);
+  font-size: var(--t-piccolo);
+}
+
+.regia__nome:focus-visible {
+  outline: 2px solid var(--ciano);
+  outline-offset: 2px;
+}
+
+.regia__salva {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--passo);
+}
+
+
+/* =============================================================================
+   9. LA NOTA SU OBS E IL PIEDE
+   ============================================================================= */
+
+.regia__obs {
+  padding: var(--passo-3) var(--passo-2);
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio);
+  background-color: var(--pannello);
+}
+
+.regia__passi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--passo-2);
+  margin-block-start: var(--passo-2);
+  counter-reset: passo;
+  font-size: var(--t-piccolo);
+}
+
+.regia__passi li {
+  position: relative;
+  padding-inline-start: var(--passo-3);
+  counter-increment: passo;
+}
+
+/* Il numero del passo in monospazio ciano: sono tre istruzioni da seguire in
+   ordine mentre si guarda un'altra finestra, e il posto in cui si era
+   rimasti deve saltare all'occhio tornando indietro. */
+.regia__passi li::before {
+  content: counter(passo);
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: 0;
+  color: var(--ciano);
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+}
+
+.regia__obs code {
+  padding: 0.15em 0.4em;
+  border: 1px solid var(--linea);
+  border-radius: var(--raggio-s);
+  background-color: var(--r-campo);
+  color: var(--testo);
+}
+
+.regia__firma {
+  color: var(--testo-tenue);
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--spazio-etichetta);
+}
+
+
+/* =============================================================================
+   10. SCHERMI STRETTI
+   Sotto i 560px la pagina resta la stessa: cambiano solo le cose che a quella
+   larghezza non ci starebbero. Nessun campo sparisce — un configuratore a cui
+   mancano dei comandi produce indirizzi incompleti.
+   ============================================================================= */
+
+@media (max-width: 560px) {
+  .regia { padding-block-start: var(--r-passo-4); }
+
+  .regia__gruppo,
+  .regia__obs { padding-inline: var(--passo); }
+
+  /* Il cursore e la sua casella non stanno in riga a 320px: la casella va
+     sotto, e il cursore si prende tutta la larghezza. */
+  .regia__campo--numero .regia__riga { flex-wrap: wrap; }
+  .regia__cursore { flex-basis: 100%; }
+
+  .regia__btn {
+    flex: 1 1 auto;
+    padding-inline: var(--passo-2);
+  }
+
+  .regia__scena { padding: var(--passo); }
+}
+
+
+/* =============================================================================
+   11. MOVIMENTO RIDOTTO
+   Il grosso lo fanno i token: ogni transizione di questo foglio usa
+   var(--durata*), quindi portarli a 1ms spegne tutto il movimento della
+   pagina in tre righe, senza !important. Quello che non passa dai token —
+   la traslazione dei bottoni, la scala della manopola, lo scorrimento
+   morbido — si spegne a mano qui sotto.
+   ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  :root {
+    --durata-lampo: 1ms;
+    --durata: 1ms;
+    --durata-lunga: 1ms;
+  }
+
+  .regia__btn:hover,
+  .regia__btn:active { translate: none; }
+
+  .regia__cursore:active::-webkit-slider-thumb { transform: none; }
+
+  /* Rete di sicurezza per tutto ciò che non passa dai token, comprese le
+     animazioni che dovesse portarsi dietro un browser. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms;
+    animation-iteration-count: 1;
+    transition-duration: 1ms;
+    scroll-behavior: auto;
+  }
+}

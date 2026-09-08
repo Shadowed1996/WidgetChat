@@ -1,0 +1,31 @@
+# =============================================================================
+# .gitignore — «il pollaio»
+#
+# La regola: nel repository ci va quello che si SCRIVE, non quello che si
+# ottiene. Tutto ciò che compila.cmd sa ricostruire da solo resta fuori, o la
+# storia del progetto si riempie di eseguibili che cambiano a ogni build senza
+# che nessuno abbia cambiato una riga.
+# =============================================================================
+
+# I due eseguibili: li ricostruisce avvio\compila.cmd in dieci secondi, e sono
+# la stessa cosa compilata due volte. Le versioni pronte da usare stanno nelle
+# release, non qui.
+Pollaio.exe
+Regia.exe
+
+# L'icona: la genera l'eseguibile stesso da app\img\favicon.png, al secondo
+# passaggio della compilazione.
+avvio/pollaio.ico
+
+# Le TUE preferenze, non quelle del progetto: misura della finestra, posizione
+# sullo schermo, parametri del widget. Se manca, il launcher lo riscrive al
+# primo avvio con dentro tutte le spiegazioni.
+avvio/pollaio.ini
+
+# Roba di Windows che si infila dappertutto.
+Thumbs.db
+desktop.ini
+
+# NOTA su lib/: le tre librerie di WebView2 ci VANNO. Non sono un risultato
+# della compilazione, sono un ingrediente: senza, il progetto non compila
+# nemmeno. Sono meno di un megabyte e non cambiano mai.

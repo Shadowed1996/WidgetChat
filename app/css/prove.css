@@ -1,0 +1,160 @@
+/* =============================================================================
+   prove.css — «il pollaio» · il banco di prova
+
+   POSSIEDE: il blocco .prove, cioè l'aspetto della pagina che elenca l'esito
+   dei casi. Nient'altro: non tocca .pollaio e non tocca .regia.
+
+   È IL FOGLIO PIÙ POVERO DEL PROGETTO, ED È VOLUTO. Questa pagina si guarda
+   per tre secondi, per sapere se è verde o rossa, e poi si chiude. Ogni
+   minuto speso a farla bella è un minuto tolto a quello che deve provare.
+   Quindi: nessuna animazione, nessuna ombra, nessun gradiente. Solo la
+   palette del canale, perché anche una pagina di servizio deve sembrare
+   della stessa mano (CONTRATTO §1.5: nessun esadecimale fuori da tokens.css).
+
+   Per la stessa ragione qui non c'è il paragrafo finale sul movimento
+   ridotto che hanno gli altri due fogli: non c'è nessuna @keyframes da
+   spegnere. Non è una dimenticanza.
+   ============================================================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.prove {
+  margin: 0;
+  padding: var(--passo-3);
+  background-color: var(--fondo);
+  color: var(--testo);
+  font-family: var(--font-testo);
+  line-height: 1.55;
+}
+
+
+/* ---- La testata ----------------------------------------------------------- */
+
+.prove__testa {
+  max-inline-size: 70ch;
+  margin-block-end: var(--passo-3);
+}
+
+.prove__occhiello {
+  margin: 0;
+  color: var(--ciano);
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--spazio-etichetta);
+}
+
+.prove__titolo {
+  margin-block: var(--passo) 0;
+  font-family: var(--font-titolo);
+  font-size: 1.6rem;
+}
+
+.prove__sottotitolo {
+  margin-block-start: var(--passo-2);
+  color: var(--testo-medio);
+}
+
+/* Il sommario è la sola cosa che si guarda davvero: deve dire verde o rosso
+   da tre metri, senza leggerlo. Per questo è l'unico elemento della pagina
+   con un fondo pieno. */
+.prove__sommario {
+  margin-block-start: var(--passo-3);
+  padding: var(--passo-2);
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio-s);
+  font-family: var(--font-mono);
+  font-size: var(--t-piccolo);
+}
+
+.prove__sommario[data-stato="bene"] {
+  border-color: var(--ok);
+  background-color: color-mix(in srgb, var(--ok) 16%, transparent);
+  color: var(--ok);
+}
+
+.prove__sommario[data-stato="male"] {
+  border-color: var(--allerta);
+  background-color: color-mix(in srgb, var(--allerta) 16%, transparent);
+  color: var(--allerta);
+}
+
+
+/* ---- L'elenco dei casi ---------------------------------------------------- */
+
+.prove__gruppo {
+  margin-block: var(--passo-3) var(--passo);
+  color: var(--testo-tenue);
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--spazio-etichetta);
+}
+
+.prove__elenco {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-inline-size: 90ch;
+}
+
+/* Il caso passato è volutamente smorto. Sono la maggioranza, e se avessero
+   tutti un segno di spunta acceso il rosso dei due che contano si perderebbe
+   in mezzo: un elenco in cui tutto grida non dice più niente. */
+.prove__caso {
+  display: grid;
+  grid-template-columns: 1.5rem 1fr;
+  gap: var(--passo);
+  padding-block: 4px;
+  border-block-end: 1px solid var(--linea);
+  font-size: var(--t-piccolo);
+}
+
+.prove__caso[data-stato="passato"] { color: var(--testo-tenue); }
+.prove__caso[data-stato="fallito"] { color: var(--allerta); }
+
+/* Rotto è peggio di fallito: il modulo si è spaccato in mano invece di dare
+   una risposta sbagliata. Si distingue col magenta, che in questo progetto è
+   già la tinta delle cose che non si possono ignorare. */
+.prove__caso[data-stato="rotto"] { color: var(--magenta); }
+
+.prove__segno {
+  font-family: var(--font-mono);
+  text-align: center;
+}
+
+.prove__titolo-caso,
+.prove__titolo { min-inline-size: 0; }
+
+/* Il dettaglio esiste solo quando qualcosa è andato storto, e allora è la
+   riga più importante della pagina: dice cosa ci si aspettava e cosa è
+   arrivato. Va a capo dove capita, perché ci finisce dentro del JSON. */
+.prove__dettaglio {
+  grid-column: 2;
+  margin: 2px 0 var(--passo);
+  color: var(--testo-medio);
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  overflow-wrap: anywhere;
+}
+
+
+/* ---- Il piede ------------------------------------------------------------- */
+
+.prove__piede {
+  max-inline-size: 70ch;
+  margin-block-start: var(--passo-3);
+  padding-block-start: var(--passo-2);
+  border-block-start: 1px solid var(--linea);
+  color: var(--testo-tenue);
+  font-size: var(--t-piccolo);
+}
+
+.prove__piede code {
+  font-family: var(--font-mono);
+  color: var(--ciano);
+}
