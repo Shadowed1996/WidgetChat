@@ -1075,6 +1075,54 @@
       mandaMisura(LARGHEZZA_FINESTRA, ALTEZZA_FINESTRA);
     });
   }
+  function codaPerLaFinestra() {
+    const copia = {};
+    let chiave;
+
+    for (chiave in valori) {
+      if (Object.prototype.hasOwnProperty.call(valori, chiave)) { copia[chiave] = valori[chiave]; }
+    }
+
+    const scurito = (copia.fondo === 'trasparente');
+    if (scurito) { copia.fondo = 'scuro'; }
+
+    let coda = window.Impostazioni.indirizzo(copia, '');
+    if (coda.charAt(0) === '?') { coda = coda.slice(1); }
+
+    return { coda: coda, scurito: scurito };
+  }
+
+  function ascoltaUso() {
+    const bottone = document.getElementById('usa-finestra');
+    if (!bottone) { return; }
+
+    if (!fin.dentro) {
+      bottone.disabled = true;
+      return;
+    }
+
+    let scurito = false;
+
+    document.addEventListener('pollaio-risposta', function (evento) {
+      if (!evento.detail || evento.detail.comando !== 'parametri') { return; }
+
+      if (evento.detail.coda !== '1') {
+        eco('Non sono riuscito a scrivere avvio\\pollaio.ini: guarda che non sia di sola lettura.', false);
+        return;
+      }
+
+      eco(scurito
+        ? 'Fatto, con una correzione: il fondo trasparente in una finestra vera vuol dire bianco, e su bianco il testo chiaro sparisce. Ho scritto «scuro». Vale dal prossimo avvio di Pollaio.exe.'
+        : 'Fatto: Pollaio.exe apre la chat com’è qui. Vale dal prossimo avvio.', true);
+    });
+
+    bottone.addEventListener('click', function () {
+      const fuori = codaPerLaFinestra();
+      scurito = fuori.scurito;
+      window.Menu.comanda('parametri:' + fuori.coda);
+    });
+  }
+
   function avvia() {
 
     if (!window.Impostazioni || !window.Impostazioni.SCHEMA) { return; }
@@ -1099,6 +1147,7 @@
     ascoltaAzioni();
     ascoltaPreset();
     ascoltaFinestra();
+    ascoltaUso();
 
     ricaricaAnteprima();
 

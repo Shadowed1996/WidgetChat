@@ -12,7 +12,8 @@
 
 # I binari non si toccano: convertire i fine riga dentro un PNG o una DLL
 # significa distruggerli.
-*.png  binary
-*.ico  binary
-*.dll  binary
-*.exe  binary
+*.png   binary
+*.ico   binary
+*.dll   binary
+*.exe   binary
+*.woff2 binary

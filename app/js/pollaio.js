@@ -33,6 +33,9 @@
     var scala = Math.max(60, Math.min(200, valori.scala)) / 100;
     document.documentElement.style.setProperty('--scala-testo', scala.toFixed(3));
 
+    var nome = String(valori.canale || '').replace(/[^a-z0-9_]/gi, '');
+    if (nome) { radice.style.setProperty('--canale', '"' + nome + '"'); }
+
     if (valori.larghezza > 0) {
       document.documentElement.style.setProperty('--larghezza', valori.larghezza + 'px');
     }

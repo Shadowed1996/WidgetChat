@@ -110,14 +110,14 @@ html[data-finestra] .pollaio {
 }
 
 html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
-  content: "Il pollaio è aperto.\A Appena qualcuno scrive, i messaggi compaiono qui.";
+  content: "Il pollaio è aperto, in ascolto su " var(--canale, "Twitch") ".\A Appena qualcuno scrive, i messaggi compaiono qui.";
   white-space: pre-line;
 
   position: absolute;
   inset-block-start: calc(var(--passo) * 5);
   inset-inline: var(--passo-2);
   margin-inline: auto;
-  max-inline-size: 24ch;
+  max-inline-size: 28ch;
 
   text-align: center;
   text-wrap: balance;

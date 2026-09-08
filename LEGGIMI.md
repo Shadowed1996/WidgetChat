@@ -74,6 +74,13 @@ invece di restare quello di una colonna da 400. Nella sorgente browser di OBS
 no — lì comanda la «larghezza della colonna», perché quel numero deve
 combaciare con quello che scrivi in OBS.
 
+**Finché non scrive nessuno la finestra dice su quale canale sta ascoltando.**
+Non è un abbellimento: una spia verde e zero messaggi vuol dire tanto «il
+canale è fermo» quanto «stai ascoltando il canale sbagliato», e queste due cose
+si somigliano troppo per lasciarle indistinguibili a diretta iniziata. In OBS
+quella scritta non compare: là un overlay senza messaggi deve restare
+invisibile.
+
 ---
 
 ## I due modi di metterlo in OBS, e quale scegliere
@@ -191,8 +198,19 @@ dell'anteprima in chiaro, scuro o finto gameplay: serve a controllare che il
 testo si legga sopra a qualsiasi cosa, che è il vero problema di un overlay.
 
 In basso c'è l'indirizzo con il bottone **Copia**. Quello va nel campo **URL** di
-una Sorgente Browser con «File locale» **tolto** (vedi sopra), oppure in
-`avvio\pollaio.ini` dopo `parametri=` — lì incolli solo la parte dopo il `?`.
+una Sorgente Browser con «File locale» **tolto** (vedi sopra).
+
+Accanto c'è **Usala anche in Pollaio.exe**, che è la scorciatoia per l'altra
+metà: la finestra del launcher non legge quell'indirizzo, legge la riga
+`parametri=` di `avvio\pollaio.ini`. Il bottone ce la scrive lui, invece di
+farti aprire il file col blocco note e incollare a mano la coda dopo il `?`.
+Vale dal prossimo avvio di `Pollaio.exe`, e come tutto quello che tocca l'ini
+funziona solo con la regia aperta da `Regia.exe`.
+
+Una correzione la fa da sé: se il fondo è «trasparente» ci scrive «scuro».
+Trasparente ha senso in una sorgente browser, dove sotto c'è il gioco; in una
+finestra vera vuol dire bianco, e su bianco il testo chiaro sparisce. Te lo
+dice, non lo fa di nascosto.
 
 L'anteprima gira sempre in modalità prova, altrimenti a canale spento non ci
 sarebbe niente da guardare.
@@ -444,7 +462,13 @@ chat/
 │  │  ├─ pollaio.css     l'overlay
 │  │  ├─ regia.css       il configuratore
 │  │  ├─ menu.css        il menu del tasto destro, che serve a tutte e due
+│  │  ├─ font.css        i tre caratteri, presi dalla cartella qui accanto
 │  │  └─ prove.css       il banco di prova
+│  ├─ font/           Space Grotesk, Manrope, JetBrains Mono in locale.
+│  │                  Prima arrivavano da Google a ogni apertura: se la rete
+│  │                  tossiva proprio mentre partiva la diretta, l'overlay si
+│  │                  disegnava coi caratteri di ripiego. Sono sotto licenza
+│  │                  SIL Open Font, il testo sta in font\LICENZA.txt
 │  ├─ js/
 │  │  ├─ impostazioni.js legge le impostazioni dall'indirizzo
 │  │  ├─ irc.js          la connessione alla chat di Twitch e il protocollo

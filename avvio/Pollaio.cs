@@ -146,7 +146,7 @@ internal static class Programma
 
     public static string Installato = "";
 
-    public const string VERSIONE = "1.0.5";
+    public const string VERSIONE = "1.0.6";
 }
 
 internal sealed class Preferenze
@@ -324,6 +324,55 @@ internal sealed class Preferenze
             return true;
         }
         catch { return false; }
+    }
+
+    public static bool RiscriviRiga(string percorso, string chiave, string valore)
+    {
+        try
+        {
+            if (!File.Exists(percorso)) { Leggi(percorso); }
+            if (!File.Exists(percorso)) return false;
+
+            string[] righe = File.ReadAllLines(percorso, Encoding.UTF8);
+            string attacco = chiave + "=";
+            bool fatta = false;
+
+            for (int i = 0; i < righe.Length; i++)
+            {
+                string riga = righe[i].TrimStart();
+                if (riga.Length == 0 || riga[0] == '#' || riga[0] == ';') continue;
+
+                if (!fatta && riga.StartsWith(attacco, StringComparison.OrdinalIgnoreCase))
+                {
+                    righe[i] = attacco + valore;
+                    fatta = true;
+                }
+            }
+
+            List<string> fuori = new List<string>(righe);
+            if (!fatta) fuori.Add(attacco + valore);
+
+            File.WriteAllLines(percorso, fuori.ToArray(), new UTF8Encoding(true));
+            return true;
+        }
+        catch { return false; }
+    }
+
+    public static bool ParametriBuoni(string coda)
+    {
+        if (coda == null) return false;
+        if (coda.Length > 1000) return false;
+
+        for (int i = 0; i < coda.Length; i++)
+        {
+            char c = coda[i];
+            bool buono = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+                         c == '=' || c == '&' || c == '%' || c == '.' || c == '_' ||
+                         c == '-' || c == ',' || c == '~' || c == '+';
+            if (!buono) return false;
+        }
+
+        return true;
     }
 
     private static bool Acceso(string testo)
@@ -1701,6 +1750,23 @@ internal static class Ponte
             return;
         }
 
+        if (comando == "parametri")
+        {
+            const string testa = "parametri:";
+            if (gettone.Length < testa.Length) return;
+
+            string coda = gettone.Substring(testa.Length);
+
+            int fine = coda.LastIndexOf(':');
+            coda = fine >= 0 ? coda.Substring(0, fine) : "";
+
+            if (!Preferenze.ParametriBuoni(coda)) return;
+
+            string ini = Path.Combine(Programma.Radice, Path.Combine("avvio", "pollaio.ini"));
+            Preferenze.RiscriviRiga(ini, "parametri", coda);
+            return;
+        }
+
         if (comando == "trascina") Trascina(finestra);
     }
 
@@ -2042,6 +2108,23 @@ internal sealed class Vetrina : Form
 
                 Rispondi("misura:" + quante.ToString(CultureInfo.InvariantCulture));
             }
+            return;
+        }
+
+        if (comando == "parametri")
+        {
+            const string testa = "pollaio:parametri:";
+            if (testo.Length < testa.Length) return;
+
+            string coda = testo.Substring(testa.Length);
+
+            int fine = coda.LastIndexOf(':');
+            coda = fine >= 0 ? coda.Substring(0, fine) : "";
+
+            if (!Preferenze.ParametriBuoni(coda)) { Rispondi("parametri:0"); return; }
+
+            string ini = Path.Combine(Programma.Radice, Path.Combine("avvio", "pollaio.ini"));
+            Rispondi("parametri:" + (Preferenze.RiscriviRiga(ini, "parametri", coda) ? "1" : "0"));
             return;
         }
 
