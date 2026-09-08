@@ -310,6 +310,7 @@ funzionare** e mostrare la chat di slayer_beard.
 | `treno` | sìno | `1` | la fascia dell'Hype Train (§15) |
 | `effetto` | voce | `scivola` | come entra un messaggio: `scivola` · `bagliore` · `sfoca` · `glitch` · `matrix` · `insegna` · `scatto` · `niente` |
 | `velocita` | numero | `100` | velocità dell'animazione d'ingresso, in % da 25 a 300. Moltiplica tutte e otto |
+| `movimento` | voce | `auto` | quando animare: `auto` obbedisce a `prefers-reduced-motion` del sistema · `sempre` anima comunque. Serve dentro OBS, dove la preferenza è di chi trasmette ma l'immagine la guardano gli spettatori (§12) |
 | `moderazione` | voce | `sbarra` | cosa fare a un messaggio cancellato: `sbarra` · `togli` · `tieni` |
 | `pollo` | sìno | `0` | mostra la mascotte accanto alla chat |
 | `barra` | sìno | `1` | la striscia sotto la chat: filtri e pausa (§18). In OBS non compare comunque |
@@ -383,6 +384,37 @@ tetto di tempo ce l'hanno (12 secondi), ma **lì un guasto si dice**, con una
 frase in chiaro nella barra o nella regia. Non è la stessa situazione: là c'è
 un'emote che non arriva, qui c'è qualcuno che ha appena premuto Manda e sta
 aspettando di sapere se il messaggio è partito.
+
+### La cache delle emote — un ricordo parziale non è mai «fresco»
+
+Il catalogo si mette da parte in `localStorage` (`sb-pollaio-emote`, con dentro
+il numero di formato `FORMATO_RICORDO` e un'impronta di canale e manopole),
+perché sei richieste a ogni avvio, per un widget che parte insieme a Windows,
+sono sei richieste sprecate a server che non sono nostri. Il ricordo è **fresco**
+per mezz'ora (`RICORDO_FRESCO`) e **stanco** fino a dodici ore
+(`RICORDO_SCADUTO`), e la differenza è tutta qui: `fresco` **salta del tutto il
+giro di rete**; `stanco` usa il ricordo subito **e** rifà il giro sotto, così la
+chat non parte spoglia e il catalogo si rimette in pari da solo.
+
+**Regola: un giro parziale non diventa mai «fresco».** `ricorda()` salvava anche
+quando una sola sorgente su sei aveva risposto, e `ripescaRicordo` guardava
+soltanto l'età: un avvio con 7TV in timeout congelava per mezz'ora un catalogo di
+poche decine di emote, in silenzio, e ogni riavvio dentro quella finestra si
+riprendeva il catalogo storpio senza nemmeno provare la rete. Il caso non è raro
+— è il pollaio che parte insieme al computer, con la rete ancora fredda.
+
+Come si tiene: `giroDiRete` segna anche **quante sorgenti ha interrogato**
+(`fontiChieste`; non è sempre sei, perché dipende da `id`, da `canale` e dalle
+manopole `sette`, `bttv`, `ffz`), `ricorda()` lo salva come `chieste` accanto a
+`sorgenti`, che è quante ne sono riuscite, e `ripescaRicordo` ritorna `'fresco'`
+**solo se `sorgenti >= chieste`**; altrimenti `'stanco'`. `FORMATO_RICORDO` è
+passato da 1 a 2 apposta, per buttare via le cache monche già scritte sui
+computer che ce l'hanno: alzare il formato è il modo onesto di invalidare dei
+dati salvati con una regola sbagliata.
+
+Il principio, che vale oltre le emote: **una cache può ricordare un risultato
+parziale, non può dichiararlo completo.** Se lo dichiara completo smette di
+essere una cache e diventa un guasto che si ripete da solo.
 
 ## 8. Il protocollo — cosa si chiede e cosa si legge
 
@@ -512,10 +544,78 @@ Regole di misura:
 Accessibilità, anche se è un overlay (la pagina si apre anche in un browser):
 - focus visibile `2px solid var(--ciano)` con `outline-offset: 3px`
 - `prefers-reduced-motion: reduce` spegne **tutte** le animazioni, e ogni foglio
-  spegne a mano le proprie `@keyframes` in un paragrafo finale dedicato
+  spegne a mano le proprie `@keyframes` in un paragrafo finale dedicato — con
+  una sola deroga, dichiarata qui sotto: la manopola `movimento`
 - l'elenco dei messaggi **non** ha `aria-live`: sarebbe uno sproloquio continuo
 - le emote hanno `alt` col loro nome; i badge hanno `alt=""` e il titolo va su
   `title`, perché il nome della persona basta già a identificarla
+
+### Il movimento — l'obbedienza resta il predefinito, ma diventa una manopola
+
+Il paragrafo finale di `app/css/pollaio.css` spegne davvero tutto, e conviene
+scriverlo per esteso, perché «tutte le animazioni» suona più piccolo di quello
+che è: **tutti e sette gli effetti d'ingresso** (`scivola`, `bagliore`, `sfoca`,
+`glitch`, `matrix`, `insegna`, `scatto`, più la variante di `scatto` con
+`verso=giu`), le scie `::after` di `bagliore`, `glitch` e `matrix` e il carattere
+da terminale di `matrix`, la **dissolvenza in uscita** di `svanisci`, il
+**battito della spia**, il **respiro della fascia del treno** col suo lampo
+dorato — transizione del riempimento compresa — e il **dondolio del pollo**.
+
+Non è un caso di laboratorio. Su Windows basta che sia spento Impostazioni →
+Accessibilità → Effetti visivi → **Effetti di animazione** perché Chromium
+riporti `prefers-reduced-motion: reduce`, e da lì l'overlay si muove su una
+macchina e sta fermo sull'altra senza che niente lo dica. Dimostrato con
+`--force-prefers-reduced-motion`: stessa pagina, stesso indirizzo,
+`animation-name` che passa da `entra-glitch` a `none`.
+
+**Il predefinito resta l'obbedienza.** `pollaio.html` si guarda anche con gli
+occhi — nella finestra di `Pollaio.exe`, nell'anteprima della regia, in un
+browser qualunque — e lì chi ha espresso la preferenza è esattamente chi sta
+guardando. È l'impegno preso qui sopra, e non si butta.
+
+**Ma dentro una sorgente browser di OBS il computer non è un lettore: è un
+motore di rendering.** La preferenza è di chi trasmette; l'immagine la guardano
+gli spettatori, che non l'hanno espressa e non hanno modo di esprimerla. Il
+browser sta rispondendo bene alla domanda sbagliata, e rispondere bene alla
+domanda sbagliata resta un guasto.
+
+Quindi l'obbedienza non si butta e non si scavalca di nascosto: **diventa una
+manopola dichiarata**, `movimento` (§6), `auto` oppure `sempre`. È la stessa
+forma che ha già `anima` con le emote animate — una preferenza che il progetto
+rispetta finché nessuno la contraddice, e che chi trasmette può contraddire
+apposta, sapendo perché.
+
+Come è fatto:
+
+- `js/pollaio.js`, dentro `vestiRadice()`, scrive `data-movimento` su `<html>` —
+  sulla radice del documento e non sul blocco `.pollaio`, perché il blocco
+  `@media` deve poter guardare un antenato di tutto;
+- **ogni** selettore dentro `@media (prefers-reduced-motion: reduce)` di
+  `pollaio.css` è prefissato con `html:not([data-movimento="sempre"])`. Il blocco
+  resta uno solo: non nasce una seconda copia delle regole da tenere allineata;
+- `js/resa.js` non tiene più la variabile `menoMovimento`, letta una volta sola
+  al caricamento, ma `sistemaChiedeCalma` più una **funzione** `menoMovimento()`
+  che mette insieme il sistema e la manopola (`Resa.monta` riceve `movimento`).
+  Senza, `matrix` sarebbe uscito a metà: l'animazione CSS riaccesa dalla manopola
+  e lo scombinamento dei caratteri — che è JavaScript, non CSS — ancora spento.
+
+Il blocco `prefers-reduced-motion` di `regia.css` **non** è prefissato, ed è
+giusto così: la regia è un'interfaccia, si guarda con gli occhi e basta, e in una
+scena di OBS non ci finisce mai.
+
+### La riga che usciva invisibile ma ingombrante
+
+Nello stesso blocco c'era un difetto di contorno, ed è il tipo di difetto che
+nasce dallo spegnere un'animazione guardando solo la sua trasparenza. La riga in
+uscita faceva `animation: none; opacity: 0`, ma `@keyframes esce` non fa soltanto
+dissolvenza: porta anche `max-block-size` a 0 e azzera padding, margini e bordo.
+Spenta l'animazione, la riga restava **invisibile ma ingombrante** per tutti i
+400 ms di `DURATA_USCITA`, e poi il buco si richiudeva di colpo — cioè uno scatto
+peggiore dell'animazione che si voleva risparmiare. Adesso la regola porta la
+riga dove le keyframes l'avrebbero lasciata: trasparente **e** collassata.
+
+La regola generale: **chi spegne un'animazione deve arrivare dove l'animazione
+sarebbe arrivata**, non fermarsi alla proprietà che gli era venuta in mente.
 
 ## 13. La modalità prova
 
@@ -526,6 +626,27 @@ canale è spento, che è **sempre** il momento in cui si sistema un overlay.
 
 Deve essere ovvio che è una prova: una spia in alto che dice `PROVA`, che non si
 confonde con la chat vera.
+
+**Le emote devono vedersi davvero**, ed è una regola e non un dettaglio grafico.
+Un overlay si inquadra guardandolo, e una prova fatta di solo testo mente
+esattamente sulle misure per cui la si è accesa: l'altezza di una riga, quanto
+cresce un messaggio pieno di emote, quanta chat entra nel riquadro. Chi aggiunge
+un caso a `js/prova.js` lo scrive con dentro delle emote vere.
+
+Vere vuol dire: nomi che stanno nel catalogo di `Emote`, cioè emote di 7TV, BTTV
+o FFZ — quelle di `FRASI_EMOTE` in `prova.js`, `KEKW`, `Sadge`, `monkaS`,
+`catJAM`. **`Kappa` non va bene**: è un'emote nativa di Twitch, e le native non
+stanno in nessuno dei tre cataloghi. Arrivano messaggio per messaggio dal tag
+`emotes` (§8), che in prova non riempie nessuno, quindi un `Kappa` in prova esce
+testo.
+
+Il difetto stava proprio lì, e vale la pena ricordarlo perché non si vedeva: in
+`prova.js` c'erano **due funzioni `soloEmote` nello stesso scope** dell'IIFE. Per
+hoisting vinceva la seconda — quella dei casi ostili, dodici `Kappa` di fila — e
+`FRASI_EMOTE` era codice morto che non leggeva nessuno, compreso il `COPIONE`
+d'apertura, che chiamava `soloEmote` credendo di chiamare l'altra. Adesso la
+seconda si chiama `muroDiEmote` e resta dov'è giusto, fra i `CASI_OSTILI`; il
+copione chiama `soloEmote`, e le emote si vedono.
 
 ## 14. Il configuratore — `regia.html`
 
@@ -889,6 +1010,56 @@ un danno con una prova.
 La parte pura è `Conto.ripulisci(testo)`, dichiarata per il banco (§16): toglie
 i caratteri di controllo e gli scavalchi di direzione, riduce ogni spazio a uno
 solo, e taglia a 500 **contando i caratteri veri**, non le unità UTF-16.
+
+### Il suggeritore delle emote — i due punti aprono, il nome resta nudo
+
+Nel campo si battono i due punti più almeno una lettera e **sopra** il campo
+compare un elenco — `.pollaio__suggeriti`, un `<ul role="listbox">` con voci
+`role="option"` e `aria-selected` — fino a **otto** emote, ognuna con
+l'anteprima accanto al nome. Le frecce scorrono e girano in tondo, Invio o Tab
+confermano, Esc chiude, il `blur` del campo chiude, il mouse sceglie passandoci
+sopra e conferma al `mousedown`: `mousedown` e non `click`, perché il `click`
+arriverebbe dopo il `blur` che ha già chiuso l'elenco.
+
+Il punto d'innesco lo riconosce `TROVA_CHIAVE` in `barra.js`,
+`/(?:^|\s):([A-Za-z0-9_+-]*)$/`. I due punti contano solo a inizio messaggio o
+dopo uno spazio, e solo in coda a quello che sta prima del cursore: i due punti
+in mezzo a `https://` non aprono niente.
+
+**Nel messaggio finisce il nome nudo, non `:nome:`**, ed è la decisione da
+dichiarare. `:nome:` è la sintassi di **Discord**. Su Twitch i due punti servono
+soltanto ad aprire il suggeritore e non fanno parte del testo: quello che parte,
+e quello che Twitch e 7TV disegnano, è `KEKW`. Il pollaio fa **esattamente
+quello che fa Twitch**.
+
+Per lo stesso motivo **non è stato aggiunto nessun riconoscimento di `:nome:` in
+`Emote.pezzi`**, e non va aggiunto. Vorrebbe dire disegnare un'emote dove Twitch
+e 7TV mostrano testo, cioè far divergere l'overlay da quello che vedono gli
+spettatori: loro leggerebbero `:kekw:` e nell'overlay ci sarebbe una faccina. Un
+overlay che mostra una chat diversa da quella vera è un overlay rotto, anche
+quando è più carino.
+
+L'elenco lo riempie `Emote.cerca`, API pubblica di `js/emote.js` accanto a
+`carica`, `pezzi`, `pezziKick`, `pronto` e `quante`:
+
+```js
+Emote.cerca(prefisso, tetto)
+// → [{nome, url, url2, fonte, animata, sovrapposta, peso}], al più `tetto` (8)
+```
+
+Cerca per **sottostringa**, senza distinzione fra maiuscole e minuscole. Ordina
+prima chi **comincia** col prefisso e poi chi lo contiene; dentro ogni gruppo
+prima il **peso** più alto, poi il nome più **corto**, poi l'alfabeto. Il peso
+non è inventato per l'occasione: è quello che il catalogo usa già per decidere
+chi vince quando due provider hanno la stessa emote, e `PESO_CANALE` vale 100
+contro il 3, 2 e 1 di 7TV, BTTV e FFZ. Quindi **le emote del canale escono prima
+di tutte le globali**, che è l'ordine giusto: sono quelle che questa chat usa
+davvero.
+
+Nel catalogo, e quindi nel suggeritore, ci sono **solo** le emote di 7TV, BTTV e
+FFZ. Le native di Twitch non si possono suggerire: non esiste un elenco da cui
+prenderle senza autenticazione, e arrivano messaggio per messaggio dal tag
+`emotes` (§8). Si scrivono a mano, come si è sempre fatto.
 
 ### `attiva`, il comando del launcher
 

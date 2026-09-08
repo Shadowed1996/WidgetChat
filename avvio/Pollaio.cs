@@ -146,7 +146,7 @@ internal static class Programma
 
     public static string Installato = "";
 
-    public const string VERSIONE = "1.1.1";
+    public const string VERSIONE = "1.1.2";
 }
 
 internal sealed class Preferenze

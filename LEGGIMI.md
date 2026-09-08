@@ -102,7 +102,7 @@ Sono davvero diversi, e la differenza conta.
 ```
 Sorgente → + → Browser
   ☑ File locale
-  File:       C:\Users\Filippo\Desktop\Chat\app\pollaio.html
+  File:       C:\Users\Filippo\AppData\Local\Pollaio\app\pollaio.html
   Larghezza:  400
   Altezza:    600
   ☑ Aggiorna il browser quando la scena diventa attiva
@@ -116,7 +116,7 @@ una sorgente bianca. Quindi:
 ```
 Sorgente → + → Browser
   ☐ File locale        ← TOGLI la spunta
-  URL:  file:///C:/Users/Filippo/Desktop/Chat/app/pollaio.html?tema=nudo&scala=120
+  URL:  file:///C:/Users/Filippo/AppData/Local/Pollaio/app/pollaio.html?tema=nudo&scala=120
 ```
 
 Tre cose da guardare: `file:///` con **tre** barre, le barre **in avanti** e non
@@ -270,6 +270,10 @@ rimprovero, e per rimediare toccava aprire la regia. Adesso il bottone diventa
 posto al campo, col tuo nome dentro. Come funziona il giro sta nella sezione
 «Scrivere in chat, e l'account Twitch», qui sotto.
 
+Le emote non si battono a memoria: **due punti e una lettera** aprono sopra al
+campo l'elenco di quelle che somigliano, e si sceglie da lì. Com'è fatto è
+spiegato nella stessa sezione.
+
 Nell'anteprima della regia il bottone si vede ma non collega niente: là dentro è
 tutto finto, e collegare un account per davvero da un'anteprima sarebbe una
 sorpresa poco gradita.
@@ -400,6 +404,44 @@ manda, Esc svuota il campo, e sopra i quattrocento caratteri compare quanti ne
 restano — Twitch ne accetta cinquecento. In modalità prova non manda niente per
 davvero, e te lo dice invece di far finta.
 
+### Le emote si scelgono da un elenco, e i due punti non partono
+
+Si battono **i due punti e almeno una lettera** — `:kek` — e sopra al campo si
+apre l'elenco: fino a **otto** emote, ognuna con la sua anteprima accanto al
+nome. Si scorre con le **frecce su e giù**, si conferma con **Invio** o con
+**Tab**, si chiude con **Esc**, e volendo si clicca quella che si vuole. Scelta
+l'emote, il nome prende il posto dei due punti e si porta dietro uno spazio:
+attaccata alla parola dopo, un'emote non la disegna nessuno.
+
+**Nel messaggio finisce il nome nudo**: scegliendo KEKW parte `KEKW`, non
+`:KEKW:`. È il punto che confonde chi arriva da Discord, dove `:nome:` è la
+sintassi vera e i due punti fanno parte davvero del messaggio. Su Twitch no: i
+due punti sono soltanto il gesto che apre l'elenco, e quello che Twitch disegna
+è il nome da solo. Se scrivi `:kekw` e mandi senza scegliere niente, dall'altra
+parte arrivano proprio quei caratteri e restano testo — da noi come su Twitch,
+che si comporta uguale.
+
+I due punti contano solo a inizio parola, cioè a capo del messaggio o dopo uno
+spazio: se no ogni `https://` avrebbe aperto un elenco.
+
+Le emote proposte sono le stesse che il pollaio ha già caricato — 7TV,
+BetterTTV, FrankerFaceZ. Vengono prima quelle che **cominciano** per quello che
+hai battuto, poi quelle che ce l'hanno in mezzo; e dentro a ciascuno dei due
+gruppi vengono prima le **emote del canale**, che sono quelle che uno vuole
+quasi sempre, poi le più corte, poi in ordine alfabetico.
+
+Finché l'elenco è aperto, **Invio sceglie invece di mandare** ed **Esc chiude
+l'elenco invece di svuotare il campo**: sono i due tasti che si premono senza
+guardare, e mandare mezzo messaggio per aver confermato un'emote sarebbe stato
+un brutto scherzo. Appena l'elenco si chiude tornano a fare quello di sempre.
+
+Le emote **native di Twitch** — `Kappa`, `PogChamp` — nell'elenco non ci sono:
+quelle non stanno in nessuno dei tre cataloghi, il pollaio le riconosce soltanto
+quando arrivano dentro a un messaggio già scritto. Si battono a mano come prima,
+e in chat si vedono lo stesso.
+
+### Collegare l'account
+
 Il collegamento va fatto **una volta sola**, e si può fare da due posti.
 
 **Dal bottone sotto la chat.** Finché non c'è nessun account collegato, al posto
@@ -489,6 +531,17 @@ Genera traffico finto ma credibile: ventuno persone con badge e colori stabili,
 frasi vere da chat italiana, emote vere del canale, e ogni tanto un abbonamento,
 un raid, dei bits, un messaggio in evidenza, un ban.
 
+**Le emote vere si vedono davvero**, e vale la pena dirlo perché fino a poco fa
+non era così: in prova non ne compariva mai una. Il copione d'apertura chiamava
+un muro di `Kappa`, che è un'emote **nativa di Twitch** — non sta nei cataloghi
+di 7TV, BetterTTV e FrankerFaceZ, e in chat vera arriva dentro al messaggio, per
+una via che in prova non esiste. Quindi usciva testo, e usciva testo proprio nel
+momento in cui uno sta guardando l'overlay per inquadrarlo. Adesso al secondo
+0,6 del copione arrivano tre `KEKW` veri, disegnati come in diretta, e le emote
+continuano a passare per tutto il resto del traffico finto. Servono i cataloghi,
+quindi col cavo staccato restano nomi scritti: è la stessa condizione della chat
+vera.
+
 Serve perché il momento in cui si sistema un overlay è **sempre** quello in cui
 il canale è spento. In alto resta accesa una spia `PROVA`, così non lo si
 confonde con la chat vera.
@@ -528,6 +581,7 @@ serve per quando vuoi ritoccare a mano.
 | `spazio` | `130` | aria fra i messaggi, in percentuale da 40 a 400 |
 | `effetto` | `scivola` | come entra un messaggio: `scivola` · `bagliore` · `sfoca` · `glitch` · `matrix` · `insegna` · `scatto` · `niente` |
 | `velocita` | `100` | quanto va svelto l'effetto, in percentuale da 25 a 300 |
+| `movimento` | `auto` | `auto` dà retta all'interruttore di Windows che chiede meno animazioni · `sempre` anima comunque, ed è quello che serve in una sorgente browser di OBS |
 | `pollo` | `0` | `1` mostra la mascotte accanto alla chat |
 
 ### Contenuto
@@ -672,6 +726,17 @@ quel momento, le prime righe escono senza. Basta ricaricare la sorgente in OBS.
 Le emote native di Twitch invece si vedono sempre, perché arrivano dentro al
 messaggio.
 
+E adesso ricaricare basta davvero. Il pollaio si ricorda il catalogo per non
+richiederlo a ogni apertura, e fino a poco fa se lo teneva buono per mezz'ora
+anche quando aveva risposto **una sorgente su sei**: chi fa partire il pollaio
+insieme al computer, con la rete non ancora in piedi, si portava dietro quel
+catalogo monco per mezz'ora di ricariche, e in quella mezz'ora nessuna ricarica
+riprovava nemmeno a chiedere. Adesso il ricordo si dichiara buono solo se viene
+da un **giro completo**. Un giro parziale si usa lo stesso, subito — meglio due
+emote che nessuna, e la chat non deve partire spoglia per aspettare la rete —
+ma non blocca più il rifornimento: mentre leggi, il catalogo se lo sta già
+richiedendo.
+
 **I badge sono forme colorate semplici invece di quelli veri.**
 Vuol dire che il servizio dei badge non ha risposto e il widget ha usato quelli
 che si disegna da solo. Funziona tutto, sono solo meno belli.
@@ -679,6 +744,30 @@ che si disegna da solo. Funziona tutto, sono solo meno belli.
 **In OBS si vede un rettangolo bianco dov'è il pollo.**
 Non dovrebbe succedere: se succede, avvisami. L'immagine della mascotte ha il
 fondo bianco e viene ritagliata dal foglio di stile.
+
+**L'overlay non anima niente, e non si capisce perché.**
+I messaggi compaiono e basta: niente effetto d'ingresso, niente dissolvenza in
+uscita, la spia non batte, la fascia dell'hype train sta ferma, il pollo non
+dondola. Quasi sempre è Windows: Impostazioni → Accessibilità → Effetti visivi →
+**Effetti di animazione**. Quando quell'interruttore è spento, il computer chiede
+a tutti i programmi di muoversi il meno possibile, e il pollaio gli dà retta —
+in blocco, e senza dirlo. È per questo che sembra un difetto del widget: due
+persone sullo stesso canale, una vede l'effetto glitch e l'altra non lo vede su
+nessun messaggio.
+
+**Il rimedio è uno dei due**: riaccendere gli effetti in Windows, oppure mettere
+`movimento=sempre` fra i parametri dell'indirizzo. Nella regia è la manopola
+**«Quando animare»**, nel gruppo «L'aspetto», da girare su «Anima comunque».
+
+Il predefinito resta `auto`, cioè dare retta al computer, e non per pigrizia:
+quell'interruttore lo accende chi sta male a guardare le cose che si muovono, e
+ignorarlo di nascosto sarebbe sgarbato. Ma dentro una **sorgente browser di
+OBS** quella è la risposta a una domanda mal posta. Lì il computer non sta
+guardando, sta disegnando: la preferenza è di chi trasmette, mentre l'immagine
+la guardano gli spettatori, che quella preferenza non l'hanno mai espressa. Nella
+sorgente browser «anima comunque» ha senso. Sulla macchina che usi per
+**guardare** la chat no: lì chi guarda è chi ha espresso la preferenza, ed è
+giusto rispettarla.
 
 **Il testo non si legge sopra al gioco.**
 Prova `tema=nudo`, che mette un'ombra netta intorno a ogni lettera, oppure alza
@@ -724,7 +813,9 @@ chat/
 │  │  ├─ treno.js        l'hype train
 │  │  ├─ resa.js         l'unico file che tocca la pagina
 │  │  ├─ conto.js        il collegamento con l'account Twitch, e il mandare
-│  │  ├─ barra.js        la striscia sotto la chat: filtri, pausa, campo
+│  │  ├─ barra.js        la striscia sotto la chat: filtri, pausa, campo per
+│  │  │                  scrivere, e l'elenco delle emote che si apre coi due
+│  │  │                  punti
 │  │  ├─ prova.js        il traffico finto
 │  │  ├─ menu.js         il tasto destro e i bordi che si tirano, nella
 │  │  │                  finestra di Pollaio.exe
