@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Prendo il codice
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Controllo che la versione nel codice sia quella del tag
         shell: pwsh
