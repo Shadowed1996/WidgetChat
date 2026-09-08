@@ -42,7 +42,14 @@ jobs:
           & $csc.FullName @opz /out:Pollaio.exe avvio\Pollaio.cs
           if ($LASTEXITCODE -ne 0) { throw "compilazione fallita" }
 
-          & .\Pollaio.exe --crea-icona
+          # Start-Process -Wait e non `& .\Pollaio.exe`: il launcher e' compilato
+          # come applicazione con finestre (/target:winexe) e PowerShell NON
+          # aspetta un processo di quel tipo - riprende subito. Il controllo
+          # sull'icona qui sotto trovava quindi un file che non era ancora stato
+          # scritto, e la ricompilazione con l'icona veniva saltata in silenzio.
+          # (avvio\compila.cmd non ha il problema: cmd.exe aspetta comunque.)
+          Start-Process -FilePath .\Pollaio.exe -ArgumentList '--crea-icona' -Wait
+
           if (Test-Path avvio\pollaio.ico) {
             & $csc.FullName @opz /win32icon:avvio\pollaio.ico /out:Pollaio.exe avvio\Pollaio.cs
             if ($LASTEXITCODE -ne 0) { throw "compilazione con icona fallita" }
