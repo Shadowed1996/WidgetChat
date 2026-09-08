@@ -93,6 +93,24 @@ img {
   justify-content: flex-start;
 }
 
+html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
+  content: "Il pollaio è aperto.\A Appena qualcuno scrive, i messaggi compaiono qui.";
+  white-space: pre-line;
+
+  position: absolute;
+  inset-block-start: calc(var(--passo) * 5);
+  inset-inline: var(--passo-2);
+  margin-inline: auto;
+  max-inline-size: 24ch;
+
+  text-align: center;
+  text-wrap: balance;
+  color: var(--testo-tenue);
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  line-height: 1.8;
+}
+
 .pollaio[data-tema="notte"] .pollaio__riga {
   border: 1px solid var(--linea);
 

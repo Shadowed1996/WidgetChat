@@ -955,6 +955,59 @@
     });
   }
 
+  var MISURA_MIN = 160;
+  var MISURA_MAX = 4000;
+
+  function numeroDalLink(chiave, ripiego) {
+    var q = String(location.search || '');
+    var r = new RegExp('[?&]' + chiave + '=([0-9]{1,5})');
+    var t = r.exec(q);
+    if (!t) { return ripiego; }
+    var n = parseInt(t[1], 10);
+    if (!isFinite(n)) { return ripiego; }
+    return Math.max(MISURA_MIN, Math.min(MISURA_MAX, n));
+  }
+
+  function ritagliaMisura(campo, ripiego) {
+    var n = parseInt(campo.value, 10);
+    if (!isFinite(n)) { return ripiego; }
+    return Math.max(MISURA_MIN, Math.min(MISURA_MAX, n));
+  }
+
+  function ascoltaFinestra() {
+    var l = document.getElementById('fin-larghezza');
+    var a = document.getElementById('fin-altezza');
+    var salva = document.getElementById('fin-salva');
+    var eco = document.getElementById('fin-eco');
+    var nota = document.getElementById('fin-nota');
+    if (!l || !a || !salva || !eco || !nota) { return; }
+
+    l.value = String(numeroDalLink('finw', 400));
+    a.value = String(numeroDalLink('finh', 600));
+
+    var dentro = !!(window.Menu && window.Menu.dentro && window.Menu.dentro());
+
+    if (!dentro) {
+      salva.disabled = true;
+      return;
+    }
+
+    nota.hidden = true;
+
+    salva.addEventListener('click', function () {
+      var larghezza = ritagliaMisura(l, 400);
+      var altezza = ritagliaMisura(a, 600);
+
+      l.value = String(larghezza);
+      a.value = String(altezza);
+
+      window.Menu.comanda('misura:' + larghezza + 'x' + altezza);
+
+      eco.textContent = 'Fatto: ' + larghezza + ' × ' + altezza +
+        '. La finestra nasce così dalla prossima volta che apri il pollaio.';
+      eco.classList.add('is-fatto');
+    });
+  }
   function avvia() {
 
     if (!window.Impostazioni || !window.Impostazioni.SCHEMA) { return; }
@@ -978,6 +1031,7 @@
     ascoltaAnteprima();
     ascoltaAzioni();
     ascoltaPreset();
+    ascoltaFinestra();
 
     ricaricaAnteprima();
 

@@ -277,6 +277,43 @@ internal sealed class Preferenze
         return p;
     }
 
+    public static bool Riscrivi(string percorso, int larghezza, int altezza)
+    {
+        try
+        {
+            if (!File.Exists(percorso)) { Leggi(percorso); }
+            if (!File.Exists(percorso)) return false;
+
+            string[] righe = File.ReadAllLines(percorso, Encoding.UTF8);
+            bool fattaL = false, fattaA = false;
+
+            for (int i = 0; i < righe.Length; i++)
+            {
+                string riga = righe[i].TrimStart();
+                if (riga.Length == 0 || riga[0] == '#' || riga[0] == ';') continue;
+
+                if (!fattaL && riga.StartsWith("larghezza=", StringComparison.OrdinalIgnoreCase))
+                {
+                    righe[i] = "larghezza=" + larghezza.ToString(CultureInfo.InvariantCulture);
+                    fattaL = true;
+                }
+                else if (!fattaA && riga.StartsWith("altezza=", StringComparison.OrdinalIgnoreCase))
+                {
+                    righe[i] = "altezza=" + altezza.ToString(CultureInfo.InvariantCulture);
+                    fattaA = true;
+                }
+            }
+
+            List<string> fuori = new List<string>(righe);
+            if (!fattaL) fuori.Add("larghezza=" + larghezza.ToString(CultureInfo.InvariantCulture));
+            if (!fattaA) fuori.Add("altezza=" + altezza.ToString(CultureInfo.InvariantCulture));
+
+            File.WriteAllLines(percorso, fuori.ToArray(), new UTF8Encoding(true));
+            return true;
+        }
+        catch { return false; }
+    }
+
     private static bool Acceso(string testo)
     {
         string s = (testo == null ? "" : testo.Trim().ToLowerInvariant());
@@ -831,6 +868,7 @@ internal sealed class Splash : Form
         {
 
             string dove = Navigatore.IndirizzoLocale(nomeFile, uso);
+            if (regia) dove += "&finw=" + pref.Larghezza + "&finh=" + pref.Altezza;
             Exception saltata = null;
 
             Invoke((MethodInvoker)delegate ()
@@ -1790,6 +1828,27 @@ internal sealed class Vetrina : Form
                 Process.Start(psi);
             }
             catch {  }
+            return;
+        }
+
+        if (comando == "misura")
+        {
+            string coda = testo.Substring("pollaio:misura".Length).TrimStart(':');
+
+            int fine = coda.IndexOf(':');
+            if (fine >= 0) coda = coda.Substring(0, fine);
+
+            string[] pezzi = coda.Split('x');
+            int l, a;
+            if (pezzi.Length == 2 &&
+                int.TryParse(pezzi[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out l) &&
+                int.TryParse(pezzi[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out a))
+            {
+                l = Math.Max(160, Math.Min(4000, l));
+                a = Math.Max(160, Math.Min(4000, a));
+                string ini = Path.Combine(Programma.Radice, Path.Combine("avvio", "pollaio.ini"));
+                Preferenze.Riscrivi(ini, l, a);
+            }
             return;
         }
 

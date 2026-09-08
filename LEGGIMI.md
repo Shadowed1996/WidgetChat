@@ -168,6 +168,21 @@ una Sorgente Browser con «File locale» **tolto** (vedi sopra), oppure in
 L'anteprima gira sempre in modalità prova, altrimenti a canale spento non ci
 sarebbe niente da guardare.
 
+### La misura della finestra
+
+In fondo alla regia c'è **La misura della finestra**: quanto è grande il
+riquadro che apre `Pollaio.exe`. È un'altra cosa dalla «larghezza della
+colonna» fra le manopole — quella dice quanto sono larghi i messaggi *dentro*,
+questa quanto è grande la finestra che metti in OBS.
+
+Il bottone **Salva la misura** funziona solo se hai aperto la regia con
+`Regia.exe`: una pagina web non può scrivere un file sul disco, e a scriverlo è
+il launcher. Aprendo `regia.html` col doppio clic il bottone è spento e la
+misura si mette a mano in `avvio\pollaio.ini`.
+
+La nuova misura vale dalla prossima apertura del pollaio, non subito: la
+finestra aperta in quel momento resta com'è.
+
 ### Le configurazioni salvate
 
 In fondo alla regia c'è **Salva com'è adesso**: si dà un nome alla

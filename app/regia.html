@@ -166,6 +166,43 @@
     <p class="regia__eco" id="eco" role="status"></p>
   </section>
 
+  <section class="regia__finestra" aria-labelledby="titolo-finestra">
+    <h2 class="regia__sezione-titolo" id="titolo-finestra">La misura della finestra</h2>
+    <p class="regia__sezione-testo">
+      Quanto è grande la finestra che apre <code>Pollaio.exe</code>. È un'altra
+      cosa dalla larghezza della colonna qui sopra: quella dice quanto sono
+      larghi i messaggi <em>dentro</em>, questa quanto è grande il riquadro che
+      metti in OBS. 400 × 600 è la misura di una chat di Twitch.
+    </p>
+
+    <div class="regia__campo regia__campo--riga">
+      <div class="regia__riga">
+        <label class="regia__etichetta" for="fin-larghezza">Larghezza</label>
+        <input class="regia__casella" type="number" id="fin-larghezza"
+               min="160" max="4000" step="10" value="400">
+        <label class="regia__etichetta" for="fin-altezza">Altezza</label>
+        <input class="regia__casella" type="number" id="fin-altezza"
+               min="160" max="4000" step="10" value="600">
+      </div>
+    </div>
+
+    <div class="regia__azioni">
+      <button class="regia__btn regia__btn--vuoto" type="button" id="fin-salva">
+        Salva la misura
+      </button>
+    </div>
+
+    <p class="regia__eco" id="fin-eco" role="status"></p>
+
+    <p class="regia__nota" id="fin-nota">
+      Da qui non posso scriverla: questa è una pagina, e una pagina non tocca i
+      file del disco. Aprendo la regia con <code>Regia.exe</code> il bottone qui
+      sopra funziona, perché a scrivere è il launcher. Altrimenti la misura si
+      mette a mano in <code>avvio\pollaio.ini</code>, righe
+      <code>larghezza</code> e <code>altezza</code>.
+    </p>
+  </section>
+
   <section class="regia__preset" aria-labelledby="titolo-preset">
     <h2 class="regia__sezione-titolo" id="titolo-preset">Le configurazioni salvate</h2>
     <p class="regia__sezione-testo">

@@ -167,7 +167,9 @@
 
   window.Menu = {
     avvia: avvia,
-    aperto: function () { return !!pannello; }
+    aperto: function () { return !!pannello; },
+    comanda: comanda,
+    dentro: function () { return acceso; }
   };
 
   if (document.readyState === 'loading') {
