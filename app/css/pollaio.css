@@ -1240,14 +1240,28 @@ html[data-finestra] .pollaio .pollaio__scrivi-campo {
 
 .pollaio__invito {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: calc(var(--passo) * 0.5);
+  justify-content: center;
 
   margin: 0;
+}
+
+.pollaio__invito-btn {
+  border-color: var(--viola);
+  background-color: color-mix(in srgb, var(--viola) 36%, transparent);
+  color: var(--testo);
+  padding-inline: var(--passo-2);
+}
+
+.pollaio__invito-btn:hover {
+  border-color: var(--viola);
+  background-color: color-mix(in srgb, var(--viola) 54%, transparent);
+}
+
+.pollaio__invito-btn:disabled {
+  border-color: var(--linea);
+  background-color: transparent;
   color: var(--testo-tenue);
-  font-size: 0.72em;
-  line-height: 1.5;
+  cursor: default;
 }
 
 .pollaio__eco {

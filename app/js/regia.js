@@ -1133,6 +1133,8 @@
 
   let sicuroConto = null;
 
+  let attivazioneConto = null;
+
   function ecoConto(messaggio, riuscito) {
     if (!nodiConto.eco) { return; }
     nodiConto.eco.textContent = messaggio || '';
@@ -1140,7 +1142,7 @@
   }
 
   function agganciaConto() {
-    const id = ['cliente', 'detto', 'codice', 'cifre',
+    const id = ['cliente', 'detto', 'codice', 'cifre', 'app',
                 'collega', 'apri', 'copia', 'lascia', 'scollega', 'eco'];
     let i;
 
@@ -1154,7 +1156,7 @@
   function fermaSicuro() {
     clearTimeout(sicuroConto);
     sicuroConto = null;
-    nodiConto.scollega.textContent = 'Scollega';
+    nodiConto.scollega.textContent = 'Revoca account';
     nodiConto.scollega.classList.remove('is-chiede');
   }
 
@@ -1168,13 +1170,18 @@
 
     if (stato === 'attesa') {
       if (!nodiConto.cifre.textContent) { return 'Sto chiedendo il codice a Twitch. Un attimo.'; }
-      return 'Adesso tocca a te: porta il codice su twitch.tv/activate e di’ di sì. ' +
+      return 'Adesso tocca a te: su Twitch, che ti ho appena aperto, di’ di sì. ' +
         'Io resto qui a controllare finché non l’hai fatto.';
     }
 
     if (chi && window.Conto.scaduto()) {
       return 'Eri collegato come ' + (chi.nome || chi.nick) + ', ma il collegamento è scaduto e Twitch non me lo rinnova più. ' +
-        'Si rifà da qui con lo stesso Client ID: sono gli stessi due minuti dell’altra volta.';
+        'Si riconnette da qui, con un clic.';
+    }
+
+    if (window.Conto.serveClientId()) {
+      return 'Non è collegato nessuno. Prima del primo collegamento mi serve il Client ID qui sotto: ' +
+        'è la volta sola in cui questa pagina chiede qualcosa.';
     }
 
     return 'Non è collegato nessuno, e va benissimo così: senza collegamento il pollaio legge la chat e basta, ' +
@@ -1195,26 +1202,46 @@
     nodiConto.cliente.readOnly = !niente;
     if (!attesa) { nodiConto.cliente.value = window.Conto.cliente(); }
 
+    if (niente && window.Conto.serveClientId()) { nodiConto.app.open = true; }
+
     nodiConto.codice.hidden = !(attesa && nodiConto.cifre.textContent);
 
     nodiConto.collega.hidden = !niente;
+    nodiConto.collega.textContent = window.Conto.collegato() ? 'Riconnetti account' : 'Connetti account';
+
     nodiConto.apri.hidden = !attesa;
     nodiConto.copia.hidden = !attesa;
     nodiConto.lascia.hidden = !attesa;
     nodiConto.scollega.hidden = !dentro;
   }
 
+  function apriTwitch() {
+    if (!attivazioneConto) { return false; }
+
+    if (window.Menu && window.Menu.dentro && window.Menu.dentro()) {
+      window.Menu.comanda('attiva:' + attivazioneConto.codice);
+      return true;
+    }
+    return !!window.open(attivazioneConto.indirizzo, '_blank');
+  }
+
   function passoConto(passo) {
     if (!passo) { return; }
 
     if (passo.fase === 'codice') {
+      attivazioneConto = { codice: passo.codice, indirizzo: passo.indirizzo };
       nodiConto.cifre.textContent = passo.codice;
       vestiConto('attesa');
-      ecoConto('Il codice è pronto qui sotto.', true);
+
+      ecoConto(apriTwitch()
+        ? 'Ti ho aperto Twitch con il codice già dentro: lì dentro di’ di sì.'
+        : 'Il browser non me l’ha lasciata aprire. Vai su twitch.tv/activate e scrivi il codice qui sotto.',
+        true);
       return;
     }
 
     if (passo.fase === 'fatto') {
+      attivazioneConto = null;
       nodiConto.cifre.textContent = '';
       vestiConto('dentro');
       ecoConto('Fatto: da adesso posso scrivere in chat a nome tuo.', true);
@@ -1222,6 +1249,7 @@
     }
 
     if (passo.fase === 'errore') {
+      attivazioneConto = null;
       nodiConto.cifre.textContent = '';
       vestiConto('niente');
       ecoConto(passo.detto, false);
@@ -1229,37 +1257,35 @@
   }
 
   function collegaConto() {
-    const id = String(nodiConto.cliente.value || '').trim().toLowerCase();
+    const scritto = String(nodiConto.cliente.value || '').trim().toLowerCase();
 
-    if (!window.Conto.MODELLO_CLIENT.test(id)) {
-      ecoConto('Questo non somiglia a un Client ID: sono una trentina di lettere e numeri minuscoli, senza spazi né trattini. Lo ricopio dalla pagina della mia applicazione su dev.twitch.tv.', false);
+    if (scritto && window.Conto.MODELLO_CLIENT.test(scritto)) {
+      window.Conto.ricorda(scritto);
+      nodiConto.cliente.value = scritto;
+    }
+
+    if (window.Conto.serveClientId()) {
+      nodiConto.app.open = true;
+      ecoConto('Mi manca il Client ID: senza quello Twitch non sa chi gli sta chiedendo il permesso. È la riga qui sotto, e si riempie una volta sola.', false);
       nodiConto.cliente.focus();
       return;
     }
 
-    window.Conto.ricorda(id);
-    nodiConto.cliente.value = id;
     nodiConto.cifre.textContent = '';
+    attivazioneConto = null;
 
     vestiConto('attesa');
     ecoConto('Chiedo il codice a Twitch.', false);
 
-    window.Conto.chiedi(id, passoConto);
+    window.Conto.chiedi('', passoConto);
   }
 
   function apriAttiva() {
-    if (window.Menu && window.Menu.dentro && window.Menu.dentro()) {
-      window.Menu.comanda('attiva');
-      ecoConto('L’ho aperto nel browser, fuori da questa finestra: il codice è quello qui sopra.', true);
+    if (apriTwitch()) {
+      ecoConto('Riaperto: il codice è già dentro l’indirizzo, basta confermare.', true);
       return;
     }
-
-    if (window.open(ATTIVA, '_blank')) {
-      ecoConto('L’ho aperto in un’altra scheda: il codice va scritto lì.', true);
-      return;
-    }
-
-    ecoConto('Il browser ha bloccato la finestra. Vado a mano su twitch.tv/activate, viene uguale.', false);
+    ecoConto('Il browser ha bloccato la finestra. Vado a mano su twitch.tv/activate e scrivo il codice, viene uguale.', false);
   }
 
   function copiaCodice() {
@@ -1280,6 +1306,7 @@
 
   function lasciaConto() {
     window.Conto.ferma();
+    attivazioneConto = null;
     nodiConto.cifre.textContent = '';
     vestiConto('niente');
     ecoConto('Lasciato stare: non ho toccato niente e non è collegato nessuno.', false);
@@ -1287,24 +1314,25 @@
 
   function scollegaConto() {
     if (!sicuroConto) {
-      nodiConto.scollega.textContent = 'Sicuro? Scollego.';
+      nodiConto.scollega.textContent = 'Sicuro? Revoco.';
       nodiConto.scollega.classList.add('is-chiede');
 
       sicuroConto = setTimeout(function () {
         sicuroConto = null;
-        nodiConto.scollega.textContent = 'Scollega';
+        nodiConto.scollega.textContent = 'Revoca account';
         nodiConto.scollega.classList.remove('is-chiede');
         ecoConto('Ho lasciato perdere: sei ancora collegato.', false);
       }, ATTESA_SICURO);
 
-      ecoConto('Un altro clic e scollego davvero. Se aspetto, lascio le cose come stanno.', false);
+      ecoConto('Un altro clic e revoco davvero. Se aspetto, lascio le cose come stanno.', false);
       return;
     }
 
     window.Conto.scollega();
+    attivazioneConto = null;
     nodiConto.cifre.textContent = '';
     vestiConto('niente');
-    ecoConto('Fatto: ho detto a Twitch di dimenticare il gettone e l’ho tolto da qui. Il Client ID te lo tengo da parte, se ti ricolleghi non lo riscrivi.', true);
+    ecoConto('Fatto: ho detto a Twitch di dimenticare il gettone e l’ho tolto da qui. Il Client ID resta, così riconnetterti è un clic.', true);
   }
 
   function ascoltaConto() {

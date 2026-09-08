@@ -1969,6 +1969,22 @@ internal sealed class Vetrina : Form
         base.WndProc(ref m);
     }
 
+    private static bool CodiceBuono(string codice)
+    {
+        if (string.IsNullOrEmpty(codice)) return false;
+        if (codice.Length < 4 || codice.Length > 16) return false;
+
+        for (int i = 0; i < codice.Length; i++)
+        {
+            char c = codice[i];
+            bool buono = (c >= '0' && c <= '9') ||
+                         (c >= 'a' && c <= 'z') ||
+                         (c >= 'A' && c <= 'Z');
+            if (!buono) return false;
+        }
+        return true;
+    }
+
     private static IntPtr ZonaDiBordo(string dove)
     {
         switch (dove)
@@ -2130,9 +2146,17 @@ internal sealed class Vetrina : Form
 
         if (comando == "attiva")
         {
+            string codice = testo.Substring("pollaio:attiva".Length).TrimStart(':');
+
+            int fineCodice = codice.IndexOf(':');
+            if (fineCodice >= 0) codice = codice.Substring(0, fineCodice);
+
+            string dove = ATTIVAZIONE;
+            if (CodiceBuono(codice)) dove = ATTIVAZIONE + "?device-code=" + codice;
+
             try
             {
-                ProcessStartInfo psi = new ProcessStartInfo(ATTIVAZIONE);
+                ProcessStartInfo psi = new ProcessStartInfo(dove);
                 psi.UseShellExecute = true;
                 Process.Start(psi);
                 Rispondi("attiva:1");

@@ -38,6 +38,83 @@
 </header>
 
 <main class="regia__corpo">
+  <section class="regia__conto" aria-labelledby="titolo-conto">
+    <h2 class="regia__sezione-titolo" id="titolo-conto">Il tuo account Twitch</h2>
+    <p class="regia__sezione-testo">
+      Serve a una cosa sola: <strong>scrivere</strong> in chat, dal campo che sta
+      sotto la chat nella finestra di <code>Pollaio.exe</code>. Per
+      <em>leggere</em> non serve e non servirà mai — il pollaio entra in chat in
+      anonimo, e senza collegamento resta esattamente quello di sempre.
+    </p>
+
+    <p class="regia__conto-detto" id="conto-detto">Non è collegato nessuno.</p>
+
+    <div class="regia__conto-codice" id="conto-codice" hidden>
+      <p class="regia__conto-passo">
+        Ti ho aperto Twitch nel browser con questo codice già dentro: lì basta
+        dire di sì. Se la pagina non si è aperta, vai a mano su
+        <code>twitch.tv/activate</code> e scrivilo. Vale mezz’ora, e io intanto
+        resto qui ad aspettare.
+      </p>
+      <code class="regia__conto-cifre" id="conto-cifre" tabindex="0"></code>
+    </div>
+
+    <div class="regia__azioni">
+      <button class="regia__btn regia__btn--pieno" type="button" id="conto-collega">
+        Connetti account
+      </button>
+      <button class="regia__btn regia__btn--vuoto" type="button" id="conto-apri" hidden>
+        Riapri Twitch
+      </button>
+      <button class="regia__btn regia__btn--vuoto" type="button" id="conto-copia" hidden>
+        Copia il codice
+      </button>
+      <button class="regia__btn regia__btn--vuoto" type="button" id="conto-lascia" hidden>
+        Lascia stare
+      </button>
+      <button class="regia__btn regia__btn--vuoto" type="button" id="conto-scollega" hidden>
+        Revoca account
+      </button>
+    </div>
+
+    <p class="regia__eco" id="conto-eco" role="status"></p>
+
+    <details class="regia__conto-app" id="conto-app">
+      <summary class="regia__conto-app-titolo">Con quale applicazione mi presento a Twitch</summary>
+
+      <p class="regia__sezione-testo">
+        Twitch non fa entrare nessuno in modo anonimo quando c’è di mezzo un
+        permesso: vuole sapere <em>quale programma</em> lo sta chiedendo, e quel
+        programma ha un nome pubblico, il <strong>Client ID</strong>. Non è una
+        password: viaggia in chiaro dentro ogni richiesta, e infatti sta qui
+        sotto in bella vista.
+      </p>
+      <p class="regia__sezione-testo">
+        Se il campo è già pieno non devi fare niente, mai più. Se è vuoto si
+        riempie una volta sola: <code>dev.twitch.tv/console/apps</code>,
+        «Register Your Application», un nome qualsiasi,
+        <strong>OAuth Redirect URL</strong> <code>http://localhost</code>,
+        categoria «Chat Bot», tipo <strong>Public</strong>. Il
+        <strong>Client Secret</strong> non serve: non copiarlo da nessuna parte.
+      </p>
+
+      <div class="regia__campo regia__campo--testo">
+        <label class="regia__etichetta" for="conto-cliente">Il Client ID dell’applicazione</label>
+        <input class="regia__testo" type="text" id="conto-cliente" maxlength="40"
+               autocomplete="off" spellcheck="false"
+               placeholder="trenta lettere e numeri" aria-describedby="aiuto-conto">
+        <p class="regia__aiuto" id="aiuto-conto">
+          Il gettone che Twitch mi dà dopo il tuo sì <strong>non finisce
+          nell’indirizzo</strong> che copio più in basso e non arriva mai a OBS:
+          sta solo in questo browser, e la chat lo ritrova perché è la stessa
+          finestra dello stesso programma. Vale <code>user:write:chat</code> e
+          basta — mandare messaggi a nome tuo. Non può leggere i tuoi messaggi
+          privati, non può bannare nessuno, non può toccare il canale.
+        </p>
+      </div>
+    </details>
+  </section>
+
 
   <section class="regia__colonna" id="comandi" aria-labelledby="titolo-comandi">
     <h2 class="regia__sezione-titolo" id="titolo-comandi">I comandi</h2>
@@ -257,71 +334,6 @@
         </span>
       </span>
     </div>
-  </section>
-
-  <section class="regia__conto" aria-labelledby="titolo-conto">
-    <h2 class="regia__sezione-titolo" id="titolo-conto">Il tuo account Twitch</h2>
-    <p class="regia__sezione-testo">
-      Serve a una cosa sola: <strong>scrivere</strong> in chat dal campo che sta
-      sotto la chat, nella finestra di <code>Pollaio.exe</code>. Per
-      <em>leggere</em> non serve e non servirà mai — il pollaio entra in chat in
-      anonimo, e senza collegamento resta esattamente quello di sempre.
-    </p>
-    <p class="regia__sezione-testo">
-      Twitch chiede che sia una tua applicazione, non una mia: vai su
-      <code>dev.twitch.tv/console/apps</code>, «Register Your Application»,
-      un nome qualsiasi, <strong>OAuth Redirect URL</strong>
-      <code>http://localhost</code>, categoria «Chat Bot», tipo
-      <strong>Public</strong>. Ti dà un <strong>Client ID</strong>: è quello che
-      va qui sotto. Non è un segreto — è un nome — e il tuo Client Secret non
-      serve, quindi non copiarlo da nessuna parte.
-    </p>
-
-    <div class="regia__campo regia__campo--testo">
-      <label class="regia__etichetta" for="conto-cliente">Il Client ID della tua applicazione</label>
-      <input class="regia__testo" type="text" id="conto-cliente" maxlength="40"
-             autocomplete="off" spellcheck="false" inputmode="latin"
-             placeholder="trenta lettere e numeri" aria-describedby="aiuto-conto">
-      <p class="regia__aiuto" id="aiuto-conto">
-        Lo tengo da parte in questo browser insieme al collegamento. Il gettone
-        che Twitch mi dà dopo il tuo sì <strong>non finisce nell’indirizzo</strong>
-        che copio qui sopra e non arriva mai a OBS: sta solo qui, e la chat lo
-        ritrova perché è la stessa finestra dello stesso programma. Vale
-        <code>user:write:chat</code> e basta — mandare messaggi a nome tuo. Non
-        può leggere i tuoi messaggi privati, non può bannare nessuno, non può
-        toccare il canale.
-      </p>
-    </div>
-
-    <p class="regia__conto-detto" id="conto-detto">Non è collegato nessuno.</p>
-
-    <div class="regia__conto-codice" id="conto-codice" hidden>
-      <p class="regia__conto-passo">
-        Su Twitch, alla pagina <code>twitch.tv/activate</code>, scrivi questo
-        codice e conferma. Vale mezz’ora, e io intanto resto qui ad aspettare.
-      </p>
-      <code class="regia__conto-cifre" id="conto-cifre" tabindex="0"></code>
-    </div>
-
-    <div class="regia__azioni">
-      <button class="regia__btn regia__btn--pieno" type="button" id="conto-collega">
-        Collega l’account
-      </button>
-      <button class="regia__btn regia__btn--vuoto" type="button" id="conto-apri" hidden>
-        Apri twitch.tv/activate
-      </button>
-      <button class="regia__btn regia__btn--vuoto" type="button" id="conto-copia" hidden>
-        Copia il codice
-      </button>
-      <button class="regia__btn regia__btn--vuoto" type="button" id="conto-lascia" hidden>
-        Lascia stare
-      </button>
-      <button class="regia__btn regia__btn--vuoto" type="button" id="conto-scollega" hidden>
-        Scollega
-      </button>
-    </div>
-
-    <p class="regia__eco" id="conto-eco" role="status"></p>
   </section>
 
   <section class="regia__obs" aria-labelledby="titolo-obs">

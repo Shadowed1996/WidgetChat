@@ -5,6 +5,8 @@
 
   var CHIAVE_CLIENTE = 'sb-pollaio-cliente';
 
+  var CLIENTE_PREDEFINITO = 'az1lnikuqdah3fxa3ee70kakjp5ptz';
+
   var LIMITE = 500;
 
   var SCOPI = 'user:write:chat';
@@ -27,6 +29,12 @@
   var MODELLO_CLIENT = /^[a-z0-9]{20,40}$/;
 
   var MODELLO_CANALE = /^[a-z0-9_]{1,25}$/;
+
+  var ATTIVAZIONE = 'https://www.twitch.tv/activate';
+
+  var MODELLO_CODICE = /^[A-Za-z0-9]{4,16}$/;
+
+  var MODELLO_ATTIVAZIONE = /^https:\/\/www\.twitch\.tv\/activate(\?device-code=[A-Za-z0-9]{4,16})?$/;
 
   var SPORCO = /[\u0000-\u001f\u007f-\u009f\u200e\u200f\u202a-\u202e\u2066-\u2069]/g;
 
@@ -109,8 +117,16 @@
     var c = leggi();
     if (c) { return c.cliente; }
 
-    try { return String(localStorage.getItem(CHIAVE_CLIENTE) || ''); }
-    catch (err) { return ''; }
+    var messo = '';
+    try { messo = String(localStorage.getItem(CHIAVE_CLIENTE) || ''); }
+    catch (err) { messo = ''; }
+
+    if (MODELLO_CLIENT.test(messo)) { return messo; }
+    return MODELLO_CLIENT.test(CLIENTE_PREDEFINITO) ? CLIENTE_PREDEFINITO : '';
+  }
+
+  function serveClientId() {
+    return !MODELLO_CLIENT.test(cliente());
   }
 
   function ricorda(id) {
@@ -213,6 +229,16 @@
     if (typeof su === 'function') { su({ fase: 'errore', detto: detto }); }
   }
 
+  function attivazione(proposto, codice) {
+    var suo = String(proposto || '');
+    if (MODELLO_ATTIVAZIONE.test(suo)) { return suo; }
+
+    if (MODELLO_CODICE.test(codice)) {
+      return ATTIVAZIONE + '?device-code=' + encodeURIComponent(codice);
+    }
+    return ATTIVAZIONE;
+  }
+
   function ferma() {
     if (!attesa) { return; }
     clearTimeout(attesa.timer);
@@ -223,7 +249,7 @@
   function chiedi(clienteGrezzo, su) {
     ferma();
 
-    var id = String(clienteGrezzo || '').trim().toLowerCase();
+    var id = String(clienteGrezzo || cliente() || '').trim().toLowerCase();
     if (!MODELLO_CLIENT.test(id)) {
       inciampo(su, 'Questo non somiglia a un Client ID: sono una trentina di lettere e numeri, senza spazi.');
       return;
@@ -244,11 +270,13 @@
 
       attesa = { vivo: true, timer: null, ritmo: ritmo };
 
+      var codice = String(dati.user_code || '');
+
       if (typeof su === 'function') {
         su({
           fase: 'codice',
-          codice: String(dati.user_code || ''),
-          indirizzo: 'https://www.twitch.tv/activate',
+          codice: codice,
+          indirizzo: attivazione(dati.verification_uri, codice),
           scadenza: scadenza
         });
       }
@@ -487,6 +515,8 @@
     LIMITE: LIMITE,
     SCOPI: SCOPI,
     MODELLO_CLIENT: MODELLO_CLIENT,
+    MODELLO_CODICE: MODELLO_CODICE,
+    serveClientId: serveClientId,
 
     ripulisci: ripulisci,
 

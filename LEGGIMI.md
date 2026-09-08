@@ -10,8 +10,10 @@ notate mentre la chat scorre.
 Per **guardarla** non serve installare niente, non serve un account, non serve
 una password: il pollaio entra in chat in anonimo, come ha sempre fatto. Un
 account Twitch serve **solo** se vuoi anche **scrivere**, dal campo in fondo
-alla chat, e si attacca in due minuti dalla regia. Se non lo attacchi, il widget
-è esattamente quello di prima.
+alla chat, e si attacca da lì: finché non c'è nessuno collegato, al posto del
+campo c'è il bottone che fa tutto. La prima volta si passa dalla regia per
+riempire una riga, dopo è un clic. Se non lo attacchi, il widget è esattamente
+quello di prima.
 
 Non c'è nessun `npm install`: sono file HTML, CSS e JavaScript scritti a mano.
 
@@ -255,11 +257,29 @@ rileggere qualcosa che sta scappando. Ripartire invece è sempre un clic apposta
 Una chat che riparte da sola mentre stai leggendo è esattamente il problema che
 volevi risolvere.
 
+### Il campo per scrivere
+
+Manda i messaggi con il tuo account, e per forza di cose c'è solo se un account
+è collegato. Finché non lo è, al suo posto c'è **un bottone solo, centrato:
+«Connetti account»**, e il collegamento parte da lì.
+
+Prima al suo posto c'era una riga che spiegava cosa mancava. Ma una riga che
+dice «mi manca una cosa» senza darti il modo di dargliela è soltanto un
+rimprovero, e per rimediare toccava aprire la regia. Adesso il bottone diventa
+«Sto aspettando…» mentre Twitch conferma, e appena hai detto di sì lascia il
+posto al campo, col tuo nome dentro. Come funziona il giro sta nella sezione
+«Scrivere in chat, e l'account Twitch», qui sotto.
+
+Nell'anteprima della regia il bottone si vede ma non collega niente: là dentro è
+tutto finto, e collegare un account per davvero da un'anteprima sarebbe una
+sorpresa poco gradita.
+
 ### Le due manopole
 
 Stanno nella regia, gruppo **La barra sotto la chat**, e nascono accese tutte e
 due: `barra` è la striscia coi filtri e la pausa, `scrivi` è il campo per
-scrivere dentro la striscia. Spegnerne una non spegne l'altra.
+scrivere dentro la striscia — e con lui il bottone «Connetti account» che ne fa
+le veci quando non c'è nessun account. Spegnerne una non spegne l'altra.
 
 ---
 
@@ -284,10 +304,15 @@ in quel caso è una normale pagina nel tuo browser, col suo bordo e le sue
 schede, e il menu del tasto destro non compare perché non c'è nessuna finestra
 da comandare.
 
-A sinistra tutte le manopole, a destra l'anteprima dal vivo su uno sfondo a
-scacchi che ti fa vedere cos'è trasparente e cosa no. Puoi cambiare il fondo
-dell'anteprima in chiaro, scuro o finto gameplay: serve a controllare che il
-testo si legga sopra a qualsiasi cosa, che è il vero problema di un overlay.
+**In cima, subito sotto il titolo, c'è «Il tuo account Twitch».** Sta lassù, e
+non in fondo com'era prima, perché è l'unica cosa della regia che si fa una
+volta e poi non si tocca più: cercarla in mezzo alle configurazioni salvate era
+il modo migliore di non trovarla.
+
+Sotto di lei, a sinistra tutte le manopole, a destra l'anteprima dal vivo su uno
+sfondo a scacchi che ti fa vedere cos'è trasparente e cosa no. Puoi cambiare il
+fondo dell'anteprima in chiaro, scuro o finto gameplay: serve a controllare che
+il testo si legga sopra a qualsiasi cosa, che è il vero problema di un overlay.
 
 In basso c'è l'indirizzo con il bottone **Copia**. Quello va nel campo **URL** di
 una Sorgente Browser con «File locale» **tolto** (vedi sopra).
@@ -345,7 +370,7 @@ In fondo alla regia, dopo le istruzioni per OBS, c'è **Ripristina le
 impostazioni**: chiede conferma e poi riporta ogni manopola al valore di
 partenza — l'aspetto, cosa si vede, cosa si accende, la pulizia, la barra sotto
 la chat, l'anteprima e anche la misura della finestra. Le configurazioni salvate
-non le tocca: quelle si tolgono una per una, con la loro ×. E non scollega
+non le tocca: quelle si tolgono una per una, con la loro ×. E non tocca
 l'account: rimette le manopole, non ti butta fuori da Twitch.
 
 ### Le configurazioni salvate
@@ -375,22 +400,55 @@ manda, Esc svuota il campo, e sopra i quattrocento caratteri compare quanti ne
 restano — Twitch ne accetta cinquecento. In modalità prova non manda niente per
 davvero, e te lo dice invece di far finta.
 
-Il collegamento si fa **in fondo alla regia**, sezione «Il tuo account Twitch»,
-e va fatto una volta sola.
+Il collegamento va fatto **una volta sola**, e si può fare da due posti.
 
-1. Su `dev.twitch.tv/console/apps` registri **un'applicazione tua**: nome
-   qualsiasi, **OAuth Redirect URL** `http://localhost`, categoria «Chat Bot»,
-   tipo **Public**. Twitch ti dà un **Client ID**. Il Client Secret **non
-   serve**: non copiarlo da nessuna parte.
-2. Incolli il Client ID nella regia e premi **Collega l'account**.
-3. La regia ti mostra un codice di otto caratteri e il bottone **Apri
-   twitch.tv/activate**, che apre quella pagina nel tuo browser di sistema —
-   quello dove sei già loggato su Twitch. Scrivi il codice, confermi, e la regia
-   se ne accorge da sola: non devi tornare a dirglielo.
+**Dal bottone sotto la chat.** Finché non c'è nessun account collegato, al posto
+del campo per scrivere c'è **Connetti account**. Lo premi, diventa «Sto
+aspettando…», e il pollaio ti apre Twitch alla pagina di conferma — nella
+finestra di `Pollaio.exe` è il tuo browser di sistema, quello dove sei già
+loggato. Dici di sì, e appena Twitch lo conferma il bottone lascia il posto al
+campo per scrivere. Non devi aprire la regia, e non devi tornare a dire a
+nessuno che hai finito: se ne accorge da solo.
 
-**Perché serve un'applicazione tua e non una mia.** Twitch vuole che chi chiede
-il permesso abbia un nome, e quel nome è l'applicazione. Il Client ID **non è un
-segreto** — è un nome, e infatti viaggia in chiaro dentro ogni richiesta.
+**Dalla regia.** Sezione **«Il tuo account Twitch»**, che è la prima cosa della
+pagina, subito sotto il titolo. Il giro è identico e il bottone si chiama
+uguale, **Connetti account**; in più qui c'è una riga di stato che dice sempre a
+che punto siamo, il codice scritto grande, e i bottoni **Riapri Twitch**, **Copia
+il codice** e **Lascia stare**, che servono quando il browser fa i capricci.
+
+**La pagina di Twitch si apre col codice già dentro.** L'indirizzo è
+`twitch.tv/activate?device-code=…`, e me lo dà Twitch stesso insieme al codice:
+in pratica non devi ricopiare niente, trovi solo il bottone di conferma. Il
+codice resta scritto in pagina lo stesso, perché se il browser non si apre — o
+si apre quello sbagliato, dove non sei loggato — devi poterlo battere a mano su
+`twitch.tv/activate`. Vale mezz'ora, e io intanto resto lì ad aspettare.
+
+### La prima volta: il Client ID
+
+C'è una cosa che va messa una volta sola, e quella va messa **dalla regia**: il
+**Client ID**. Sta in fondo alla sezione dell'account, dentro il blocco
+richiudibile **«Con quale applicazione mi presento a Twitch»**. Se il Client ID
+c'è già il blocco è chiuso e non lo vedi nemmeno; se manca si apre da solo, e la
+riga di stato ti dice che è l'unica volta in cui questa pagina ti chiede
+qualcosa. Da lì in poi collegarsi è **un clic e basta**, da tutte e due le
+strade.
+
+Si riempie così: su `dev.twitch.tv/console/apps` registri **un'applicazione
+tua** — «Register Your Application», nome qualsiasi, **OAuth Redirect URL**
+`http://localhost`, categoria «Chat Bot», tipo **Public**. Twitch ti dà il
+**Client ID**: lo incolli nel campo e premi **Connetti account**. Il **Client
+Secret** non serve: non copiarlo da nessuna parte.
+
+Finché quel campo è vuoto il bottone sotto la chat non parte: te lo dice e ti
+manda in regia, perché è l'unico posto dove il campo c'è.
+
+**Perché serve un'applicazione tua e non una mia.** Non è un capriccio del
+pollaio: Twitch non concede permessi a un programma anonimo, vuole sapere *quale*
+programma glieli sta chiedendo, e quel nome pubblico è il Client ID. Non è un
+segreto e non è una password — viaggia in chiaro dentro ogni richiesta, e infatti
+nella regia sta lì in bella vista.
+
+### Il gettone, e come si toglie
 
 Il permesso chiesto è **uno solo**: `user:write:chat`, cioè mandare messaggi a
 nome tuo. Non può leggere i tuoi messaggi privati, non può bannare nessuno, non
@@ -399,17 +457,20 @@ può toccare le impostazioni del canale.
 **Dove finisce il gettone: in questo browser e basta.** Non finisce
 nell'indirizzo che la regia ti fa copiare, non finisce in `avvio\pollaio.ini`, e
 **non arriva mai alla sorgente browser di OBS** — che è un altro browser, con la
-sua memoria separata. La chat lo trova perché `Pollaio.exe` e `Regia.exe` sono
-due finestre dello stesso programma, con lo stesso profilo: colleghi l'account
-nella regia e la finestra della chat se ne accorge subito, senza riavviare
-niente.
+sua memoria separata. Le due finestre invece se lo passano, perché `Pollaio.exe`
+e `Regia.exe` sono due finestre dello stesso programma, con lo stesso profilo:
+colleghi da una parte e l'altra se ne accorge subito, senza riavviare niente.
 
 Il collegamento **si rinnova da solo**. Se un giorno non ci riesce, il campo per
-scrivere lascia il posto alla riga che dice di rifare il collegamento dalla
-regia, e la chat continua a leggersi come sempre.
+scrivere si toglie di mezzo e al suo posto torna il bottone **Connetti account**:
+un clic e sei di nuovo dentro. La chat, intanto, continua a leggersi come sempre.
 
-Il bottone **Scollega** revoca davvero il gettone su Twitch, non si limita a
-dimenticarlo qui.
+Per andarsene c'è **Revoca account**, nella regia. Revoca davvero il gettone su
+Twitch, non si limita a dimenticarlo qui, e proprio perché è una cosa vera chiede
+sempre conferma: il primo clic lo fa diventare **«Sicuro? Revoco.»**, il secondo
+revoca per davvero. Se ci ripensi basta non fare niente: dopo qualche secondo il
+bottone torna com'era. Il Client ID resta al suo posto, così ricollegarsi è di
+nuovo un clic solo.
 
 **Quello che non cambia, ed è il punto**: per *leggere* la chat non serve e non
 servirà mai nessun account. Il pollaio entra in chat in anonimo come ha sempre
@@ -506,7 +567,7 @@ serve per quando vuoi ritoccare a mano.
 | chiave | valore | cosa fa |
 |---|---|---|
 | `barra` | `1` | la striscia coi filtri e la pausa. In una sorgente browser di OBS non compare comunque, qualunque cosa dica questa chiave |
-| `scrivi` | `1` | il campo per scrivere dentro la striscia. Senza account collegato al suo posto c'è la riga che lo dice |
+| `scrivi` | `1` | il campo per scrivere dentro la striscia. Senza account collegato al suo posto c'è il bottone «Connetti account» |
 
 ---
 
@@ -574,14 +635,14 @@ tre false. Vale la pena dirle una per una invece di lasciarle scoprire.
   browser con la sua memoria separata.
 - **C'è qualcosa che scade**: il gettone dura qualche ora e si rinnova da solo,
   senza che tu te ne accorga. Il giorno che il rinnovo non riesce più, il campo
-  per scrivere si toglie di mezzo e al suo posto compare la riga che dice di
-  rifare il collegamento dalla regia. La chat, intanto, continua a leggersi.
+  per scrivere si toglie di mezzo e al suo posto torna il bottone «Connetti
+  account», che rifà il giro in un clic. La chat, intanto, continua a leggersi.
 - **E sì, si può essere bannati.** Chi scrive in chat è il tuo account, con le
   regole di chiunque altro: il widget non ha una corsia preferenziale, manda un
   messaggio come lo manderesti dal sito di Twitch.
 
-Il permesso è `user:write:chat` e soltanto quello, e **Scollega** nella regia lo
-revoca davvero su Twitch invece di limitarsi a dimenticarlo qui.
+Il permesso è `user:write:chat` e soltanto quello, e **Revoca account** nella
+regia lo revoca davvero su Twitch invece di limitarsi a dimenticarlo qui.
 
 **Vede**: tutti i messaggi, emote di Twitch, 7TV, BetterTTV e FrankerFaceZ,
 tutti i badge, i colori dei nomi, i `/me`, le risposte, i bits e i cheermote,

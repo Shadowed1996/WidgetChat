@@ -228,6 +228,8 @@ html[data-finestra] .regia__testa:active { cursor: grabbing; }
     grid-template-columns: minmax(0, var(--r-comandi)) minmax(0, 1fr);
   }
 
+  .regia__conto { grid-column: 1 / -1; }
+
   .regia__colonna--anteprima {
     position: sticky;
     inset-block-start: var(--passo-2);
@@ -655,7 +657,6 @@ label.regia__etichetta { cursor: pointer; }
 
 @media (min-width: 1080px) {
   .regia__piede { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  .regia__conto,
   .regia__azzera,
   .regia__firma { grid-column: 1 / -1; }
 }
@@ -959,6 +960,37 @@ label.regia__etichetta { cursor: pointer; }
 .regia__conto-cifre:focus-visible {
   border-color: var(--ciano);
   box-shadow: var(--bagliore-ciano);
+}
+
+.regia__conto-app {
+  margin-block-start: var(--passo-3);
+  padding: var(--passo-2);
+  border: 1px solid var(--linea);
+  border-radius: var(--raggio-s);
+  background-color: var(--r-campo);
+}
+
+.regia__conto-app-titolo {
+  color: var(--testo-tenue);
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+  letter-spacing: var(--spazio-etichetta);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color var(--durata) var(--curva);
+}
+
+.regia__conto-app-titolo:hover,
+.regia__conto-app[open] .regia__conto-app-titolo {
+  color: var(--testo);
+}
+
+.regia__conto-app[open] .regia__conto-app-titolo {
+  margin-block-end: var(--passo-2);
+}
+
+.regia__conto-app .regia__sezione-testo:first-of-type {
+  margin-block-start: 0;
 }
 
 .regia__obs {

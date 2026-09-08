@@ -22,6 +22,7 @@
 
   var acceso = false;
   var inVolo = false;
+  var inCorso = false;
   var timerEco = null;
 
   function inObs() {
@@ -132,13 +133,54 @@
     nodi.manda.textContent = inVolo ? 'Mando…' : 'Manda';
   }
 
-  function apriLaRegia() {
+  function apriTwitch(passo) {
     if (nelLauncher()) {
-      window.Menu.comanda('regia');
-      eco('Ho aperto la regia: l’account si attacca lì, in fondo alla pagina.');
+      window.Menu.comanda('attiva:' + passo.codice);
+      return true;
+    }
+    return !!window.open(passo.indirizzo, '_blank');
+  }
+
+  function vestiInvito() {
+    nodi.invitoBtn.disabled = inCorso;
+    nodi.invitoBtn.textContent = inCorso ? 'Sto aspettando…' : 'Connetti account';
+  }
+
+  function connetti() {
+    if (inCorso) { return; }
+
+    if (conf.prova) {
+      eco('Sono in prova: qui non collego niente per davvero.');
       return;
     }
-    eco('Apri regia.html e collega l’account in fondo alla pagina.');
+
+    if (window.Conto.serveClientId()) {
+      eco('Prima devo sapere con quale applicazione presentarmi a Twitch: si fa una volta sola, in cima alla regia.', true);
+      return;
+    }
+
+    inCorso = true;
+    vestiInvito();
+    eco('Chiedo il codice a Twitch.');
+
+    window.Conto.chiedi('', function (passo) {
+      if (passo.fase === 'codice') {
+        eco(apriTwitch(passo)
+          ? 'Ti ho aperto Twitch: di’ di sì e torniamo qui. Il codice è ' + passo.codice + '.'
+          : 'Vai su twitch.tv/activate e scrivi ' + passo.codice + '.');
+        return;
+      }
+
+      inCorso = false;
+      vestiInvito();
+
+      if (passo.fase === 'fatto') {
+        vestiConto();
+        eco('Fatto: adesso scrivo a nome tuo.');
+        return;
+      }
+      eco(passo.detto, true);
+    });
   }
 
   function vestiConto() {
@@ -161,9 +203,7 @@
       return;
     }
 
-    nodi.invitoTesto.textContent = chi
-      ? 'Il collegamento con Twitch è scaduto.'
-      : 'Per scrivere in chat devo sapere chi sei.';
+    vestiInvito();
   }
 
   function manda() {
@@ -230,7 +270,7 @@
       }
     });
 
-    nodi.invitoBtn.addEventListener('click', apriLaRegia);
+    nodi.invitoBtn.addEventListener('click', connetti);
   }
 
   function ascoltaRotella() {
@@ -274,14 +314,13 @@
     nodi.resta = nodi.barra.querySelector('.pollaio__scrivi-resta');
 
     nodi.invito = nodi.barra.querySelector('.pollaio__invito');
-    nodi.invitoTesto = nodi.barra.querySelector('.pollaio__invito-testo');
     nodi.invitoBtn = nodi.barra.querySelector('.pollaio__invito-btn');
 
     nodi.eco = nodi.barra.querySelector('.pollaio__eco');
 
     return !!(nodi.filtri.length && nodi.pausa && nodi.pausaTesto && nodi.attesa &&
               nodi.scrivi && nodi.campo && nodi.manda && nodi.resta &&
-              nodi.invito && nodi.invitoTesto && nodi.invitoBtn && nodi.eco);
+              nodi.invito && nodi.invitoBtn && nodi.eco);
   }
 
   function preparaFiltri() {
