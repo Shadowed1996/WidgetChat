@@ -164,6 +164,11 @@ internal static class Programma
         IndirizzoInRete = s.Indirizzo;
     }
 
+    // La coda che Pollaio.exe usa davvero, letta dal .ini. La regia la confronta
+    // con quella che hai sotto gli occhi: sono due cose che possono divergere in
+    // silenzio, e finora divergevano.
+    public static string ParametriDelLauncher = "";
+
     public static IntPtr FinestraChat = IntPtr.Zero;
 
     public static bool ModoRegia = false;
@@ -176,7 +181,7 @@ internal static class Programma
 
     public static string Installato = "";
 
-    public const string VERSIONE = "1.2.4";
+    public const string VERSIONE = "1.2.5";
 }
 
 internal sealed class Preferenze
@@ -490,6 +495,7 @@ internal sealed class Splash : Form
 
         // Prima di qualunque finestra: la Vetrina deve poter passare alla pagina
         // un indirizzo gia' vero, non uno che arriva dopo.
+        Programma.ParametriDelLauncher = pref.Parametri;
         Programma.AccendiLaRete(pref);
 
         using (Graphics g = Graphics.FromHwnd(IntPtr.Zero)) scala = g.DpiX / 96.0;
@@ -2546,7 +2552,8 @@ internal sealed class Vetrina : Form
         {
             motore.AddScriptToExecuteOnDocumentCreatedAsync(
                 "window.POLLAIO_CARTELLA = \"" + PerJs(Programma.CartellaApp) + "\";" +
-                "window.POLLAIO_SERVENTE = \"" + PerJs(Programma.IndirizzoInRete) + "\";");
+                "window.POLLAIO_SERVENTE = \"" + PerJs(Programma.IndirizzoInRete) + "\";" +
+                "window.POLLAIO_PARAMETRI = \"" + PerJs(Programma.ParametriDelLauncher) + "\";");
         }
         catch {  }
 

@@ -1,6 +1,3 @@
-# il pollaio
-
-Widget della chat di [slayer_beard](https://www.twitch.tv/slayer_beard), fatto per
 essere catturato da OBS.
 
 Si collega alla chat vera, disegna emote, badge, moderatori, abbonamenti, raid e
@@ -1194,7 +1191,9 @@ discreto da sembrare nessun effetto.
 - **In `Pollaio.exe`**: la finestra non legge la regia, legge la riga
   `parametri=` di `avvio\pollaio.ini`. Per allinearle c'è un bottone apposta
   nella regia, accanto ad «Apri in una finestra»: **«Usala anche in
-  Pollaio.exe»**. Vale dal riavvio successivo.
+  Pollaio.exe»**. Vale dal riavvio successivo. Dalla 1.2.5 la regia se ne accorge
+  da sola: se le due cose non combaciano, sotto quel bottone compare un riquadro
+  che te lo dice, e sparisce appena lo premi.
 
 Il modo per esserne certi in dieci secondi: apri la regia, guarda l'anteprima. Se
 lì l'effetto si vede e altrove no, non è Windows e non è il widget — è la coda.

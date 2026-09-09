@@ -1005,7 +1005,31 @@ l'unica volta che cambiano è quando li cambiamo noi, e in quel momento
 «ricarica la sorgente» deve rileggere davvero, invece di far credere che una
 correzione non sia arrivata.
 
-### L'unico avviso della regia — `.regia__allarme`
+### I due avvisi della regia — `.regia__allarme`
+
+Erano uno, adesso sono due, e hanno la stessa forma per un motivo: **sono le due
+cose che il pollaio faceva giuste e in silenzio**, e che in silenzio si leggono
+come un guasto suo.
+
+**Il secondo: la finestra di `Pollaio.exe` è rimasta indietro.** Sotto il bottone
+«Usala anche in Pollaio.exe» compare un riquadro quando la coda che hai sotto gli
+occhi non è quella che il launcher userà davvero. La finestra non legge la regia:
+legge `parametri=` del `.ini`, e le due cose divergono appena si gira una
+manopola. Chi non lo sa gira il glitch, guarda l'anteprima che ubbidisce, apre la
+finestra e la vede entrare secca — e conclude che l'effetto è rotto, non che non
+gliel'ha ancora detto. È successo davvero, due volte di fila alla stessa persona,
+ed è il motivo per cui questo paragrafo esiste.
+
+Il confronto passa da `stessaCoda`, che **normalizza le due code prima di
+guardarle** (`Impostazioni.leggi` e poi `indirizzo`): `fondo=scuro&effetto=glitch`
+e `effetto=glitch&fondo=scuro` sono la stessa configurazione, e un avviso che
+suonasse per l'ordine delle chiavi sarebbe peggio di nessun avviso — si
+imparerebbe a ignorarlo. La coda del launcher arriva alla pagina in
+`window.POLLAIO_PARAMETRI`, dalla stessa iniezione di `POLLAIO_CARTELLA` e
+`POLLAIO_SERVENTE`. L'avviso si spegne appena il `.ini` è scritto, senza
+aspettare che qualcuno riapra la regia, e **non compare mai fuori da
+`Pollaio.exe`**: senza una finestra da tenere in pari sarebbe solo rumore.
+
 
 Sotto la manopola **«Quando animare»** compare un riquadro in `--allerta` quando
 il computer chiede `prefers-reduced-motion: reduce` **e** la scelta è ancora

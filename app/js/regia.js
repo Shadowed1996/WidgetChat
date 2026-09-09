@@ -110,7 +110,7 @@
     const id = [
       'gruppi', 'gruppi-vuoto', 'scena', 'telaio', 'misura',
       'altezza', 'altezza-valore', 'indirizzo', 'copia', 'copia-testo',
-      'apri', 'ripristina', 'conferma', 'conferma-si', 'conferma-no', 'eco', 'azzera-eco',
+      'apri', 'ripristina', 'conferma', 'conferma-si', 'conferma-no', 'eco', 'azzera-eco', 'scordata',
       'preset-elenco', 'preset-vuoto', 'preset-salva', 'preset-nome-riga',
       'preset-nome', 'preset-conferma', 'preset-annulla'
     ];
@@ -539,6 +539,7 @@
 
   function disegnaIndirizzo() {
     nodi.indirizzo.textContent = indirizzoDaIncollare();
+    vestiScordata();
   }
 
   function misuraTelaio() {
@@ -1190,6 +1191,44 @@
       mandaMisura(LARGHEZZA_FINESTRA, ALTEZZA_FINESTRA);
     });
   }
+
+  // La finestra di Pollaio.exe non legge la regia: legge la riga `parametri=`
+  // del .ini, e quelle due cose possono divergere in silenzio. Divergevano: si
+  // giravano le manopole, l'anteprima ubbidiva, e la finestra vera restava con
+  // le impostazioni di un'altra volta — che si legge come «l'effetto non
+  // funziona nel .exe», non come «non gliel'ho ancora detto». Il bottone per
+  // dirglielo c'era già; quello che mancava era qualcuno che ricordasse di
+  // premerlo.
+  function stessaCoda(una, altra) {
+    const netta = function (coda) {
+      const testo = String(coda || '').replace(/^[?&]+/, '');
+      try { return window.Impostazioni.indirizzo(window.Impostazioni.leggi(testo), ''); }
+      catch (err) { return testo; }
+    };
+    return netta(una) === netta(altra);
+  }
+
+  function vestiScordata() {
+    if (!nodi.scordata) { return; }
+
+    // Solo dentro Pollaio.exe: altrove non c’è nessuna finestra da tenere in
+    // pari, e un avviso sarebbe rumore.
+    if (typeof window.POLLAIO_PARAMETRI !== 'string' || !fin.dentro) {
+      nodi.scordata.hidden = true;
+      return;
+    }
+
+    const suo = window.POLLAIO_PARAMETRI;
+    const mio = codaPerLaFinestra().coda;
+
+    if (stessaCoda(suo, mio)) { nodi.scordata.hidden = true; return; }
+
+    nodi.scordata.hidden = false;
+    nodi.scordata.textContent = 'La finestra di Pollaio.exe sta ancora usando altre ' +
+      'impostazioni: quelle che vedi qui valgono per l’anteprima e per l’indirizzo ' +
+      'da incollare in OBS, non per lei. Premi «Usala anche in Pollaio.exe», e vale ' +
+      'dal prossimo avvio.';
+  }
   function codaPerLaFinestra() {
     const copia = {};
     let chiave;
@@ -1217,14 +1256,20 @@
     }
 
     let scurito = false;
+    let mandata = '';
 
     document.addEventListener('pollaio-risposta', function (evento) {
       if (!evento.detail || evento.detail.comando !== 'parametri') { return; }
 
       if (evento.detail.coda !== '1') {
-        eco('Non sono riuscito a scrivere avvio\\pollaio.ini: guarda che non sia di sola lettura.', false);
+        eco('Non sono riuscito a scrivere avvio\pollaio.ini: guarda che non sia di sola lettura.', false);
         return;
       }
+
+      // Adesso il .ini dice questo, quindi l’avviso si spegne senza aspettare
+      // che qualcuno riapra la regia.
+      window.POLLAIO_PARAMETRI = mandata;
+      vestiScordata();
 
       eco(scurito
         ? 'Fatto, con una correzione: il fondo trasparente in una finestra vera vuol dire bianco, e su bianco il testo chiaro sparisce. Ho scritto «scuro». Vale dal prossimo avvio di Pollaio.exe.'
@@ -1234,6 +1279,7 @@
     bottone.addEventListener('click', function () {
       const fuori = codaPerLaFinestra();
       scurito = fuori.scurito;
+      mandata = fuori.coda;
       window.Menu.comanda('parametri:' + fuori.coda);
     });
   }
