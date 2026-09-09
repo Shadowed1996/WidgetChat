@@ -1780,6 +1780,7 @@ html[data-finestra] .pollaio .pollaio__scrivi-campo {
   resize: none;
   overflow-y: auto;
   scrollbar-width: thin;
+  scrollbar-color: var(--linea-forte) transparent;
 
   user-select: text;
   -webkit-user-select: text;

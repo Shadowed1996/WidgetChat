@@ -554,7 +554,14 @@
 
   function indirizzoDaIncollare() {
     const rete = serventeVero();
-    if (rete) { return rete + '/' + window.Impostazioni.indirizzo(valori); }
+
+    // Nudo, senza coda: il server la risolve da sé, mandando chi chiede
+    // l’indirizzo corto alla configurazione scritta da Salva. È il punto di
+    // tutto il rimando — con la coda attaccata, ogni volta che si gira una
+    // manopola l’indirizzo cambia e va reincollato in OBS. Così invece si
+    // incolla una volta sola, e da lì in poi si preme Salva e si ricarica la
+    // sorgente.
+    if (rete) { return rete + '/pollaio.html'; }
 
     const cartella = cartellaVera();
     if (!cartella) { return indirizzoQui(); }
@@ -769,7 +776,7 @@
   function copia() {
     agliAppunti(nodi.indirizzo.textContent, function () {
       segnalaCopia('Copiato', inRete()
-        ? 'Copiato. In OBS: sorgente Browser, «File locale» senza spunta, e questo va nel campo URL — anche da un altro computer di casa, se il pollaio resta acceso qui.'
+        ? 'Copiato. In OBS: sorgente Browser, «File locale» senza spunta, e questo va nel campo URL. Le impostazioni non stanno nell’indirizzo: le porta il Salva, e l’indirizzo se le prende da lì — quindi lo incolli una volta sola e non lo tocchi più.'
         : 'Copiato. In OBS: sorgente Browser, «File locale» senza spunta, e questo va nel campo URL.', true);
     }, function () {
       seleziona(nodi.indirizzo);

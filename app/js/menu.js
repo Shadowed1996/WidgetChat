@@ -101,6 +101,14 @@
 
   var COMANDI = 'input, button, select, textarea, a, label, summary, [role="menuitem"]';
 
+  // Nella regia si prendeva soltanto per il cappello. Ma il cappello è largo
+  // `68ch` e scorre via appena si scende di poco: bastava leggere una manopola
+  // per non poter più spostare la finestra, e l'unico punto vuoto rimasto era
+  // quello a destra del titolo. Adesso si prende ovunque, come nella chat,
+  // tranne dove servirebbe altro — i comandi, l'anteprima e l'indirizzo, che si
+  // seleziona per copiarlo a mano quando gli appunti non si lasciano toccare.
+  var NON_SI_AFFERRA_NELLA_REGIA = '.regia__scena, .regia__indirizzo, .regia__conto-cifre';
+
   function afferrabile(bersaglio) {
     if (!bersaglio || typeof bersaglio.closest !== 'function') { return true; }
     if (bersaglio.closest(COMANDI)) { return false; }
@@ -110,7 +118,7 @@
     if (bersaglio.closest('.pollaio__nome')) { return false; }
     if (bersaglio.closest('.pollaio__lista')) { return false; }
 
-    if (dentroLaRegia()) { return !!bersaglio.closest('.regia__testa'); }
+    if (dentroLaRegia()) { return !bersaglio.closest(NON_SI_AFFERRA_NELLA_REGIA); }
     return true;
   }
 

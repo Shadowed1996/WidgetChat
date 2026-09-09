@@ -139,8 +139,32 @@ code {
 
 .regia__salta:focus { transform: none; }
 
-html[data-finestra] .regia__testa { cursor: grab; }
-html[data-finestra] .regia__testa:active { cursor: grabbing; }
+/* La finestra della regia si sposta prendendola da qualunque punto, quindi il
+   cursore lo dice da qualunque punto — tranne dove il gesto è un altro: sui
+   comandi, sull’anteprima e sull’indirizzo, che si seleziona. È la stessa forma
+   che la chat usa già per sé. */
+html[data-finestra] .regia { cursor: grab; }
+html[data-finestra] .regia:active { cursor: grabbing; }
+
+html[data-finestra] .regia input,
+html[data-finestra] .regia button,
+html[data-finestra] .regia select,
+html[data-finestra] .regia textarea,
+html[data-finestra] .regia a,
+html[data-finestra] .regia label,
+html[data-finestra] .regia summary { cursor: pointer; }
+
+html[data-finestra] .regia input[type="text"],
+html[data-finestra] .regia input[type="number"],
+html[data-finestra] .regia textarea { cursor: text; }
+
+html[data-finestra] .regia__scena,
+html[data-finestra] .regia__scena *,
+html[data-finestra] .regia__indirizzo,
+html[data-finestra] .regia__conto-cifre { cursor: default; }
+
+html[data-finestra] .regia__indirizzo,
+html[data-finestra] .regia__conto-cifre { cursor: text; }
 
 .regia__testa {
   max-inline-size: 68ch;

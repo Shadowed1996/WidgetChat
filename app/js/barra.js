@@ -95,14 +95,33 @@
 
     nodi.campo.style.blockSize = 'auto';
 
-    var riga = parseFloat(getComputedStyle(nodi.campo).lineHeight);
+    var stile = getComputedStyle(nodi.campo);
+
+    var riga = parseFloat(stile.lineHeight);
     if (!isFinite(riga) || riga <= 0) { riga = 20; }
 
-    var una = Math.round(riga) + 16;
-    var tetto = Math.round(riga * RIGHE_MAX) + 16;
+    // Il contorno si misura, non si indovina. Qui c'era un `+ 16` fisso, e
+    // andava bene finché il corpo del testo era quello di partenza: ma padding
+    // e bordo sono in `em`, quindi crescono con la finestra, e allargandola il
+    // conto restava corto. Quel poco bastava a far comparire una barra di
+    // scorrimento nel campo per scrivere — sottile, inutile, e vestita dal
+    // browser invece che dal foglio.
+    var imbottitura = parseFloat(stile.paddingBlockStart) + parseFloat(stile.paddingBlockEnd);
+    var bordi = parseFloat(stile.borderBlockStartWidth) + parseFloat(stile.borderBlockEndWidth);
 
+    if (!isFinite(imbottitura) || imbottitura < 0) { imbottitura = 0; }
+    if (!isFinite(bordi) || bordi < 0) { bordi = 0; }
+
+    // I bordi vanno aggiunti a parte: l'altezza che scriviamo è quella del
+    // riquadro intero (`box-sizing: border-box`), mentre `scrollHeight` il
+    // bordo non lo conta. Sono i due pixel che facevano scorrere un campo che
+    // ci stava dentro.
+    var una = Math.ceil(riga + imbottitura + bordi);
+    var tetto = Math.ceil(riga * RIGHE_MAX + imbottitura + bordi);
+
+    // Per eccesso, sempre: arrotondando per difetto si torna al pixel di troppo.
     nodi.campo.style.blockSize =
-      Math.max(una, Math.min(nodi.campo.scrollHeight, tetto)) + 'px';
+      Math.max(una, Math.min(Math.ceil(nodi.campo.scrollHeight) + bordi, tetto)) + 'px';
   }
 
   function vestiResta() {

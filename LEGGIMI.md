@@ -121,13 +121,19 @@ Sorgente → + → Browser
   ☑ Aggiorna il browser quando la scena diventa attiva
 ```
 
-**Dalla 1.2.6 puoi anche incollare l'indirizzo corto**, senza niente dopo
-`pollaio.html`: il server ti manda da solo alla configurazione decisa nella
-regia — quella che scrivi premendo «Salva». Così la
-sorgente di OBS smette di essere una copia scollegata che invecchia: cambi una
-manopola, premi il bottone, ricarichi la sorgente in OBS, ed è allineata. Se
-invece incolli un indirizzo **con** la sua coda, comanda quella: il server non ti
-rimanda da nessuna parte.
+**L'indirizzo si incolla una volta sola.** Non porta le impostazioni con sé, e
+non deve: quelle le scrive **Salva** nel launcher, e l'indirizzo se le prende da
+lì. Giri una manopola, premi Salva, ricarichi la sorgente in OBS — l'indirizzo
+resta quello di sempre. La finestra di `Pollaio.exe`, invece, si rifà subito
+senza ricaricare niente.
+
+È il motivo per cui il **Copia** dà un indirizzo corto e non una riga lunga con
+il `?`: con la coda attaccata dovresti reincollarlo in OBS ogni volta che cambi
+qualcosa, e prima o poi te ne dimenticheresti — ritrovandoti a guardare una
+configurazione vecchia convinto di guardare la tua.
+
+Se in OBS hai ancora una riga vecchia col `?`, comanda quella e le impostazioni
+nuove non le vede: sostituiscila con quella corta, e poi non ci pensi più.
 
 Il fondo trasparente è il caso che rende evidente perché servono due code: nella
 finestra vera «trasparente» vuol dire bianco, e su bianco il testo chiaro

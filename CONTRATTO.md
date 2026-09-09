@@ -1110,6 +1110,25 @@ regia; chi la coda ce l'ha scritta comanda lui, e non viene rimandato da
 nessuna parte. È la sola presa che avevamo sulla terza superficie: OBS va
 ricaricato a mano, e inventare un canale per evitarlo sarebbe sproporzionato.
 
+**E quindi il Copia dà l'indirizzo nudo, non quello con la coda.** Per una
+versione il bottone ha dato la riga lunga anche col server acceso, e questo
+disfaceva il rimando invece di usarlo: ogni volta che si girava una manopola
+l'indirizzo cambiava, e andava reincollato in OBS. Cioè si pagava la scomodità
+del `file:///` pur avendo il server.
+
+Adesso, quando il server c'è, il Copia consegna `http://<ip>:<porta>/pollaio.html`
+e basta. **L'indirizzo si incolla in OBS una volta sola e non si tocca più**: le
+impostazioni non ci viaggiano dentro, le scrive `Salva` nel `.ini` e il rimando
+gliele porta. Cambi una manopola, premi Salva, ricarichi la sorgente. Senza
+server — spento, o regia aperta senza launcher — resta il `file:///` con la
+coda, perché lì non c'è nessuno che possa risolverla.
+
+**La regola generale, che vale oltre questo caso:** un indirizzo che cambia a
+ogni modifica è un indirizzo che qualcuno deve ricordarsi di aggiornare, e prima
+o poi non lo fa — e allora guarda una configurazione vecchia convinto di
+guardare la sua. Meglio un indirizzo stabile e un gesto in più (`Salva`) che un
+indirizzo esatto che invecchia in silenzio.
+
 **Il bottone applica a caldo.** `misura` lo faceva da sempre — scrive il `.ini`
 *e* dice alla finestra sorella di rifarsi — e `parametri` era l'unico comando
 che scriveva senza toccare niente. Adesso ha il suo gemello: `Sorelle.Riconfigura`
@@ -1669,6 +1688,19 @@ La parte pura è `Conto.ripulisci(testo)`, dichiarata per il banco (§16): togli
 i caratteri di controllo e gli scavalchi di direzione, riduce ogni spazio a uno
 solo, e taglia a 500 **contando i caratteri veri**, non le unità UTF-16.
 
+
+**Il campo per scrivere si misura, non si indovina.** `cresci()` in `barra.js`
+aveva un `+ 16` fisso per padding e bordo, e andava bene finché il corpo del
+testo era quello di partenza: ma quelle misure sono in `em` e crescono con la
+finestra, quindi allargandola il conto restava corto. Adesso il contorno si
+legge da `getComputedStyle`, si arrotonda **per eccesso**, e i bordi si sommano
+a parte — l'altezza che si scrive è quella del riquadro intero
+(`box-sizing: border-box`), mentre `scrollHeight` il bordo non lo conta. Erano
+due pixel, e bastavano a far comparire nel campo una barra di scorrimento
+sottile, inutile, e per giunta vestita dal browser invece che dal foglio: da lì
+anche lo `scrollbar-color` che a quel campo mancava, unico fra i riquadri
+scorrevoli del progetto.
+
 ### Il suggeritore delle emote — i due punti aprono, il nome resta nudo
 
 Nel campo si battono i due punti più almeno una lettera e **sopra** il campo
@@ -2021,6 +2053,22 @@ cliccare un nome trascinava la finestra invece di aprire il menù. La regola fin
 qui era rimasta implicita, e conviene scriverla: **dove si clicca non si
 trascina.** Ogni parte cliccabile che nasce fuori dalla barra va aggiunta a
 quell'elenco, o il trascinamento se la mangia.
+
+**Nella regia si prende da qualunque punto, e prima no.** La regola era
+`return !!bersaglio.closest('.regia__testa')`: si poteva spostare la finestra
+solo afferrandola per il cappello. Ma il cappello è largo `68ch` e **scorre via**
+appena si scende di poco — quindi bastava leggere una manopola per non poter più
+muovere la finestra, e l'unico punto vuoto rimasto era quello a destra del
+titolo. Adesso la regola è rovesciata: si prende ovunque, e si elencano le
+eccezioni — `.regia__scena` (l'anteprima), `.regia__indirizzo` e
+`.regia__conto-cifre`, che si selezionano — oltre ai comandi, che erano già
+esclusi. È la stessa forma della chat, ed è quella giusta: **in una finestra
+senza barra del titolo la superficie che si affera è il predefinito, non
+l'eccezione.**
+
+Il cursore lo dice: `grab` su tutta la regia, `pointer` sui comandi, `text` dove
+si seleziona, `default` sull'anteprima. Un cursore che promette una cosa e il
+mousedown che ne fa un'altra è peggio di nessun cursore.
 
 ### Chi c'è in chat
 
