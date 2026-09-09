@@ -238,11 +238,9 @@ messaggi.
 **Eventi** tiene le schede di abbonamento, riabbonamento, regali, raid e
 annunci, più ogni messaggio con dei bits.
 
-In fila con i filtri, ma filtri non sono, compaiono due pastiglie in più:
-**Sondaggio** e **Pronostico**. Aprono il pannellino per farli senza battere il
-comando a mano, e ci sono soltanto se l'account collegato ha il permesso di
-aprirli — se non le vedi è quello il motivo. Le racconto per bene nella sezione
-«I comandi di Twitch, dal campo della chat».
+Qui ci sono solo i filtri, e basta: il sondaggio e il pronostico non stanno in
+questa fila. Si aprono battendo il loro comando nel campo qui sotto, e lo
+racconto nella sezione «I comandi di Twitch, dal campo della chat».
 
 Un dettaglio che vale la pena raccontare: con un filtro acceso il pollaio
 **tiene in pagina più righe** di quante ne dica la manopola «quanti messaggi
@@ -303,7 +301,7 @@ scrivere dentro la striscia — e con lui il bottone «Connetti account» che ne
 le veci quando non c'è nessun account. Spegnerne una non spegne l'altra.
 
 `scrivi` però si porta dietro più di quello che dice il nome: da lì passa il
-riconoscimento dell'account, e dall'account passano le pastiglie del sondaggio,
+riconoscimento dell'account, e dall'account passano il pannello del sondaggio,
 il bottone che conta chi c'è e le emote di Twitch nel suggeritore. Spegnendolo
 restano i filtri e la pausa, cioè la barra com'era prima. Il menù sul nome si
 apre ancora, ma resta a mani vuote: l'id del canale lo scopro insieme
@@ -548,8 +546,8 @@ esattamente questi:
 | `moderator:manage:announcements` | `/announce` |
 | `moderator:manage:shoutouts` | `/shoutout` |
 | `channel:manage:raids` | `/raid` `/unraid` |
-| `channel:manage:polls` | `/poll`, e la pastiglia **Sondaggio** |
-| `channel:manage:predictions` | `/prediction`, e la pastiglia **Pronostico** |
+| `channel:manage:polls` | `/poll`, e il pannello del sondaggio |
+| `channel:manage:predictions` | `/prediction`, e il pannello del pronostico |
 | `channel:manage:broadcast` | `/marker` |
 | `channel:manage:moderators` | `/mod` `/unmod`, e sapere chi è moderatore nella lista |
 | `channel:manage:vips` | `/vip` `/unvip`, e sapere chi è VIP nella lista |
@@ -565,8 +563,8 @@ apposta **Riconnetti account** quando un account c'è già.
 
 Chi non lo fa non rompe niente e non perde niente di quello che aveva: continua
 a scrivere in chat come sempre. Ma ogni comando si ferma prima di partire e dice
-quale permesso manca, nel menù sul nome le voci restano spente, le due pastiglie
-del sondaggio non compaiono e il bottone di chi c'è nemmeno.
+quale permesso manca, nel menù sul nome le voci restano spente, il pannello del
+sondaggio non si apre e il bottone di chi c'è non compare.
 
 Se quindici ti sembrano tanti, la risposta onesta è che sono tanti: Twitch li fa
 vedere tutti sulla pagina di conferma e li dà in blocco, quindi dicendo di sì li
@@ -694,8 +692,13 @@ scelta a venticinque.
 Il comando scritto resta, per chi lo sa a memoria. Ma comporre
 `/poll domanda | scelta | scelta / 120` dentro un campo largo quattrocento pixel
 è scomodo e facile da sbagliare — una barra dimenticata e il sondaggio ha una
-scelta sola — quindi accanto ai filtri ci sono due pastiglie, **Sondaggio** e
-**Pronostico**, che aprono lo stesso pannello in due modi diversi.
+scelta sola — quindi il pannello si apre da sé: **batti `/poll` e basta**, senza
+niente dietro, e compare in sovrimpressione sopra la chat. Uguale con
+`/prediction`. La fila dei filtri resta solo per i filtri, che è il suo mestiere.
+
+Se invece il comando lo scrivi intero — `/poll domanda | scelta | scelta / 120` —
+resta un comando e parte com'è: la scorciatoia per chi la sa a memoria non se
+n'è andata. Il pannello si chiude con la sua crocetta.
 
 Dentro c'è la domanda, le scelte una per riga, **Aggiungi scelta** per farne
 un'altra e la durata in secondi. Si conferma con **Apri il sondaggio** o **Apri
@@ -717,10 +720,10 @@ Sotto è lo stesso motore: il pannello compone la riga del comando e la fa
 eseguire allo stesso pezzo di codice che esegue `/poll` battuto a mano. Non ci
 sono due strade che possono scollarsi, ce n'è una con due porte d'ingresso.
 
-**Le due pastiglie compaiono solo se il collegamento ha il permesso** —
+**Il pannello si apre solo se il collegamento ha il permesso** —
 `channel:manage:polls` per il sondaggio, `channel:manage:predictions` per il
-pronostico — e senza account collegato non si vedono affatto. Un bottone che
-c'è ma non funziona è peggio di un bottone che non c'è. In modalità prova fanno
+pronostico — e senza, invece di aprirsi, ti dice quale permesso manca. Un
+pannello che si apre e poi non conclude sarebbe peggio di uno che non si apre. In modalità prova fanno
 eccezione: si vedono, ma non aprono niente, perché là l'id del canale non lo
 vado nemmeno a cercare.
 
@@ -925,7 +928,7 @@ serve per quando vuoi ritoccare a mano.
 | chiave | valore | cosa fa |
 |---|---|---|
 | `barra` | `1` | la striscia coi filtri e la pausa. In una sorgente browser di OBS non compare comunque, qualunque cosa dica questa chiave |
-| `scrivi` | `1` | il campo per scrivere dentro la striscia, e con lui i comandi, le pastiglie del sondaggio, il bottone di chi c'è e le emote di Twitch nel suggeritore. Senza account collegato al suo posto c'è il bottone «Connetti account» |
+| `scrivi` | `1` | il campo per scrivere dentro la striscia, e con lui i comandi, il pannello del sondaggio, il bottone di chi c'è e le emote di Twitch nel suggeritore. Senza account collegato al suo posto c'è il bottone «Connetti account» |
 
 ---
 
@@ -1053,7 +1056,7 @@ richiedendo.
 Il collegamento è più vecchio dei comandi. Twitch i permessi li dà solo quando
 si collega l'account, quindi a uno già fatto non c'è modo di aggiungerli: apri
 la regia, **Riconnetti account**, un clic, e tornano tutti. È la stessa cosa che
-tiene spente le voci del menù sul nome, che nasconde le pastiglie del sondaggio
+tiene spente le voci del menù sul nome, che spegne il pannello del sondaggio
 e che fa mancare il bottone di chi c'è.
 
 **Un comando dice che Twitch ha detto di no, e parla di moderatore.**

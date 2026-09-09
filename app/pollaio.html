@@ -35,6 +35,31 @@
     <div class="pollaio__lista-scomparti"></div>
   </div>
 
+  <form class="pollaio__sondaggio" id="modulo-sondaggio" hidden>
+    <p class="pollaio__sondaggio-testa">
+      <span class="pollaio__sondaggio-titolo">Sondaggio</span>
+      <button class="pollaio__sondaggio-chiudi" type="button" aria-label="Lascia stare">&times;</button>
+    </p>
+
+    <input class="pollaio__sondaggio-campo pollaio__sondaggio-domanda" type="text"
+           maxlength="60" placeholder="La domanda" aria-label="La domanda"
+           autocomplete="off">
+
+    <div class="pollaio__sondaggio-scelte"></div>
+
+    <div class="pollaio__sondaggio-piede">
+      <button class="pollaio__sondaggio-piu" type="button">Aggiungi scelta</button>
+
+      <label class="pollaio__sondaggio-durata">
+        <span>secondi</span>
+        <input class="pollaio__sondaggio-campo" type="number" min="15" max="1800" step="15"
+               value="120" inputmode="numeric" aria-label="Quanto dura">
+      </label>
+
+      <button class="pollaio__sondaggio-crea" type="submit">Apri il sondaggio</button>
+    </div>
+  </form>
+
   <div class="pollaio__treno" data-fase="niente" hidden>
     <p class="pollaio__treno-testa">
       <span class="pollaio__treno-titolo">Hype Train</span>
@@ -64,37 +89,12 @@
       <button class="pollaio__filtro" type="button" data-filtro="youtube" aria-pressed="false" hidden>YouTube</button>
       <button class="pollaio__filtro" type="button" data-filtro="eventi" aria-pressed="false">Eventi</button>
 
-      <button class="pollaio__sondaggio-apri" type="button" data-modo="poll" aria-expanded="false"
-              aria-controls="modulo-sondaggio" hidden>Sondaggio</button>
-
-      <button class="pollaio__sondaggio-apri" type="button" data-modo="prediction" aria-expanded="false"
-              aria-controls="modulo-sondaggio" hidden>Pronostico</button>
-
       <button class="pollaio__pausa" type="button" aria-pressed="false" title="Ferma la chat: quello che c’è resta lì">
         <span class="pollaio__pausa-segno" aria-hidden="true"></span>
         <span class="pollaio__pausa-testo">Ferma</span>
       </button>
     </div>
 
-    <form class="pollaio__sondaggio" id="modulo-sondaggio" hidden>
-      <input class="pollaio__sondaggio-campo pollaio__sondaggio-domanda" type="text"
-             maxlength="60" placeholder="La domanda" aria-label="La domanda del sondaggio"
-             autocomplete="off">
-
-      <div class="pollaio__sondaggio-scelte"></div>
-
-      <div class="pollaio__sondaggio-piede">
-        <button class="pollaio__sondaggio-piu" type="button">Aggiungi scelta</button>
-
-        <label class="pollaio__sondaggio-durata">
-          <span>secondi</span>
-          <input class="pollaio__sondaggio-campo" type="number" min="15" max="1800" step="15"
-                 value="120" inputmode="numeric" aria-label="Quanto dura il sondaggio">
-        </label>
-
-        <button class="pollaio__sondaggio-crea" type="submit">Apri il sondaggio</button>
-      </div>
-    </form>
 
     <button class="pollaio__attesa" type="button" hidden></button>
 

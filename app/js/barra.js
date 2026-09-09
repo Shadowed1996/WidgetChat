@@ -332,17 +332,19 @@
       comando: 'poll', scopo: 'channel:manage:polls',
       titolo: 60, scelta: 25, min: 2, max: 5,
       durata: 120, durataMin: 15, durataMax: 1800,
-      domanda: 'La domanda', come: 'Scelta', crea: 'Apri il sondaggio',
+      domanda: 'La domanda', come: 'Scelta', crea: 'Apri il sondaggio', titola: 'Sondaggio',
       vuoto: 'Servono almeno due scelte: un sondaggio con una risposta sola non è un sondaggio.'
     },
     prediction: {
       comando: 'prediction', scopo: 'channel:manage:predictions',
       titolo: 45, scelta: 25, min: 2, max: 10,
       durata: 120, durataMin: 1, durataMax: 1800,
-      domanda: 'Su cosa si scommette', come: 'Esito', crea: 'Apri il pronostico',
+      domanda: 'Su cosa si scommette', come: 'Esito', crea: 'Apri il pronostico', titola: 'Pronostico',
       vuoto: 'Servono almeno due esiti: su un esito solo non si scommette.'
     }
   };
+
+  var SOLO_PANNELLO = /^\/(poll|prediction)\s*$/;
 
   var modo = MODI.poll;
 
@@ -386,31 +388,25 @@
     nodi.sondaggioPiu.disabled = false;
   }
 
-  function vestiApri() {
-    var aperto = !nodi.sondaggio.hidden;
-    var i;
-
-    for (i = 0; i < nodi.sondaggioApri.length; i++) {
-      var suo = aperto && nodi.sondaggioApri[i].getAttribute('data-modo') === modo.comando;
-      nodi.sondaggioApri[i].setAttribute('aria-expanded', suo ? 'true' : 'false');
-      nodi.sondaggioApri[i].classList.toggle('is-scelto', suo);
-    }
+  function chiudiSondaggio() {
+    if (nodi.sondaggio.hidden) { return; }
+    nodi.sondaggio.hidden = true;
   }
 
-  function alternaSondaggio(quale) {
-    var voluto = MODI[quale] || modo;
+  function apriSondaggio(quale) {
+    var voluto = MODI[quale];
+    if (!voluto) { return; }
 
-    if (nodi.sondaggio.hidden || voluto !== modo) {
-      modo = voluto;
-      nodi.sondaggio.hidden = false;
-      svuotaSondaggio();
-      vestiApri();
-      nodi.sondaggioDomanda.focus();
+    if (!window.Conto.puo(voluto.scopo)) {
+      eco('Per questo serve un permesso che il collegamento non ha: si rimedia con «Connetti account».', true);
       return;
     }
 
-    nodi.sondaggio.hidden = true;
-    vestiApri();
+    modo = voluto;
+    nodi.sondaggio.hidden = false;
+    svuotaSondaggio();
+    nodi.sondaggioTitolo.textContent = modo.titola;
+    nodi.sondaggioDomanda.focus();
   }
 
   function creaSondaggio(evento) {
@@ -468,7 +464,7 @@
         if (guaio) { eco(guaio, true); return; }
 
         svuotaSondaggio();
-        alternaSondaggio(modo.comando);
+        chiudiSondaggio();
         eco(detto || 'Fatto.');
       });
   }
@@ -609,23 +605,6 @@
     nodi.scrivi.hidden = !dentro;
     nodi.invito.hidden = dentro;
 
-    if (nodi.sondaggioApri && nodi.sondaggioApri.length) {
-      var q;
-      var nessuno = true;
-
-      for (q = 0; q < nodi.sondaggioApri.length; q++) {
-        var quale = nodi.sondaggioApri[q].getAttribute('data-modo');
-        var suo = dentro && window.Conto.puo(MODI[quale].scopo);
-        nodi.sondaggioApri[q].hidden = !suo;
-        if (suo) { nessuno = false; }
-      }
-
-      if (nessuno && !nodi.sondaggio.hidden) {
-        nodi.sondaggio.hidden = true;
-        vestiApri();
-      }
-    }
-
     if (dentro) {
       nodi.campo.placeholder = 'Scrivi come ' + chi.nome;
       avviaGente();
@@ -648,6 +627,11 @@
   }
 
   function esegui(testo) {
+    if (conf.prova) {
+      eco('Sono in prova: il comando lo riconosco, ma non lo eseguo.');
+      return;
+    }
+
     if (!canaleId) {
       eco('Non so ancora l’id del canale: un attimo e riprova.', true);
       return;
@@ -675,17 +659,24 @@
     var testo = window.Conto.ripulisci(nodi.campo.value);
     if (!testo) { return; }
 
-    if (conf.prova) {
-      eco('Sono in prova: qui non mando niente in chat davvero.');
-      return;
-    }
-
     if (testo.charAt(0) === '/') {
+      var solo = SOLO_PANNELLO.exec(testo);
+      if (solo) {
+        svuotaCampo();
+        apriSondaggio(solo[1]);
+        return;
+      }
+
       if (window.Comandi && window.Comandi.e(testo)) { esegui(testo); return; }
 
       eco('Questo comando non lo conosco, e non lo mando: Twitch da questa strada ' +
           'i comandi non li esegue, li scrive, e «' + testo.split(' ')[0] + '» ' +
           'finirebbe in chat in chiaro davanti a tutti.', true);
+      return;
+    }
+
+    if (conf.prova) {
+      eco('Sono in prova: qui non mando niente in chat davvero.');
       return;
     }
 
@@ -789,13 +780,14 @@
     nodi.campo = nodi.barra.querySelector('.pollaio__scrivi-campo');
     nodi.suggeriti = nodi.barra.querySelector('.pollaio__suggeriti');
 
-    nodi.sondaggio = nodi.barra.querySelector('.pollaio__sondaggio');
-    nodi.sondaggioApri = nodi.barra.querySelectorAll('.pollaio__sondaggio-apri');
-    nodi.sondaggioCrea = nodi.barra.querySelector('.pollaio__sondaggio-crea');
-    nodi.sondaggioDomanda = nodi.barra.querySelector('.pollaio__sondaggio-domanda');
-    nodi.sondaggioScelte = nodi.barra.querySelector('.pollaio__sondaggio-scelte');
-    nodi.sondaggioPiu = nodi.barra.querySelector('.pollaio__sondaggio-piu');
-    nodi.sondaggioDurata = nodi.barra.querySelector('.pollaio__sondaggio-durata input');
+    nodi.sondaggio = radice.querySelector('.pollaio__sondaggio');
+    nodi.sondaggioTitolo = radice.querySelector('.pollaio__sondaggio-titolo');
+    nodi.sondaggioChiudi = radice.querySelector('.pollaio__sondaggio-chiudi');
+    nodi.sondaggioCrea = radice.querySelector('.pollaio__sondaggio-crea');
+    nodi.sondaggioDomanda = radice.querySelector('.pollaio__sondaggio-domanda');
+    nodi.sondaggioScelte = radice.querySelector('.pollaio__sondaggio-scelte');
+    nodi.sondaggioPiu = radice.querySelector('.pollaio__sondaggio-piu');
+    nodi.sondaggioDurata = radice.querySelector('.pollaio__sondaggio-durata input');
 
     nodi.gente = radice.querySelector('.pollaio__gente');
     nodi.genteBottone = radice.querySelector('.pollaio__gente-bottone');
@@ -864,16 +856,8 @@
 
     if (nodi.genteBottone) { nodi.genteBottone.addEventListener('click', alternaLista); }
 
-    if (nodi.sondaggioApri.length) {
-      var b;
-      for (b = 0; b < nodi.sondaggioApri.length; b++) {
-        (function (bottone) {
-          bottone.addEventListener('click', function () {
-            alternaSondaggio(bottone.getAttribute('data-modo'));
-          });
-        }(nodi.sondaggioApri[b]));
-      }
-
+    if (nodi.sondaggio) {
+      nodi.sondaggioChiudi.addEventListener('click', chiudiSondaggio);
       nodi.sondaggioPiu.addEventListener('click', aggiungiScelta);
       nodi.sondaggio.addEventListener('submit', creaSondaggio);
       svuotaSondaggio();

@@ -455,8 +455,8 @@ controlla prima di chiamare**, non dopo aver preso un 403 (§19).
 | shoutout | `POST /chat/shoutouts` | `/shoutout` — `moderator:manage:shoutouts` |
 | raid | `POST` e `DELETE /raids` | `/raid` `/unraid` — `channel:manage:raids` |
 | segnalibro | `POST /streams/markers` | `/marker` — `channel:manage:broadcast` |
-| sondaggio | `POST /polls` | `/poll` e la pastiglia **Sondaggio** — `channel:manage:polls` |
-| pronostico | `POST /predictions` | `/prediction` e la pastiglia **Pronostico** — `channel:manage:predictions` |
+| sondaggio | `POST /polls` | `/poll` da solo apre il pannello — `channel:manage:polls` |
+| pronostico | `POST /predictions` | `/prediction` da solo apre il pannello — `channel:manage:predictions` |
 | dare e togliere il mod | `POST` e `DELETE /moderation/moderators` | `/mod` `/unmod` — `channel:manage:moderators` |
 | dare e togliere il VIP | `POST` e `DELETE /channels/vips` | `/vip` `/unvip` — `channel:manage:vips` |
 | sussurro | `POST /whispers` | `/w` — `user:manage:whispers` |
@@ -1398,17 +1398,21 @@ fila è un principio: **le porte compongono righe, la stanza è una sola.**
 
 **Le pastiglie compaiono solo se il gettone ha il permesso**
 (`channel:manage:polls`, `channel:manage:predictions`), controllato in
-`vestiConto` insieme a tutto il resto del conto. È la stessa disciplina delle
-voci spente nel menù sul nome: **non si offre un bottone che non può
-funzionare.** Se il permesso sparisce mentre il pannello è aperto, il pannello
-si chiude.
+`apriSondaggio`, prima di aprire: senza il permesso il pannello **non si apre**
+e l'eco dice quale manca. È la stessa disciplina delle voci spente nel menù sul
+nome: **non si offre una cosa che non può funzionare.**
 
-Che qui la pastiglia **sparisca** e nel menù la voce resti **spenta** non è una
-distrazione: sono due posti diversi. Il menù è un elenco che si apre apposta, e
-la sua forma insegna cosa il pollaio sa fare, quindi una voce spenta col perché
-sopra vale più di un buco; la pastiglia invece sta in una fila che si guarda di
-sfuggita mentre si legge la chat, e una pastiglia spenta lì è solo spazio
-occupato da una cosa che non si può premere.
+**Il pannello non ha un bottone suo in nessuna fila, e non è una dimenticanza.**
+Si apre battendo `/poll` o `/prediction` da soli nel campo per scrivere — è
+`SOLO_PANNELLO` in `barra.js` — e compare in sovrimpressione sopra la chat. La
+fila dei filtri è una cosa che si guarda di sfuggita mentre la chat scorre, e
+ogni bottone che ci si aggiunge ruba attenzione a quelli che ci stanno per
+mestiere; un sondaggio invece si fa apposta, ed è giusto che si chieda.
+
+Il comando scritto per intero resta un comando: `SOLO_PANNELLO` scatta **solo**
+se dopo non c'è niente, quindi chi incolla `/poll domanda | a | b` lo vede
+partire com'è. Digitando si apre il pannello, incollando parte il comando — e
+nessuna delle due strade toglie l'altra.
 
 I limiti sono quelli veri di Twitch, **verificati sulla documentazione e non a
 memoria** (`dev.twitch.tv/docs/api/reference`):

@@ -1216,7 +1216,7 @@ html[data-finestra] .pollaio .pollaio__scrivi-manda,
 html[data-finestra] .pollaio .pollaio__invito-btn,
 html[data-finestra] .pollaio .pollaio__suggerito,
 html[data-finestra] .pollaio .pollaio__gente-bottone,
-html[data-finestra] .pollaio .pollaio__sondaggio-apri,
+html[data-finestra] .pollaio .pollaio__sondaggio-chiudi,
 html[data-finestra] .pollaio .pollaio__sondaggio-piu,
 html[data-finestra] .pollaio .pollaio__sondaggio-crea,
 html[data-finestra] .pollaio .pollaio__lista-nome[data-nick],
@@ -1246,14 +1246,66 @@ html[data-finestra] .pollaio .pollaio__scrivi-campo {
 }
 
 .pollaio__sondaggio {
+  position: absolute;
+  inset-block-start: calc(var(--passo) * 4);
+  inset-inline: var(--passo);
+  z-index: var(--z-menu);
+
   display: flex;
   flex-direction: column;
   gap: calc(var(--passo) * 0.4);
 
-  padding: var(--passo);
+  max-block-size: 80%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--linea-forte) transparent;
+
+  padding: var(--passo-2);
   border: 1px solid var(--linea-viva);
-  border-radius: var(--raggio-s);
-  background-color: var(--pannello);
+  border-radius: var(--raggio);
+  background-color: var(--fondo);
+  box-shadow: var(--ombra);
+}
+
+.pollaio__sondaggio-testa {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--passo);
+
+  margin: 0 0 calc(var(--passo) * 0.4);
+}
+
+.pollaio__sondaggio-titolo {
+  color: var(--viola-chiaro);
+  font-family: var(--font-mono);
+  font-size: 0.66em;
+  letter-spacing: var(--spazio-etichetta);
+  text-transform: uppercase;
+}
+
+.pollaio__sondaggio-chiudi {
+  flex: none;
+
+  inline-size: 1.7em;
+  block-size: 1.7em;
+  padding: 0;
+
+  border: 1px solid var(--linea);
+  border-radius: var(--raggio-pill);
+  background-color: transparent;
+  color: var(--testo-tenue);
+
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.pollaio__sondaggio-chiudi:hover {
+  border-color: var(--live);
+  color: var(--live);
 }
 
 .pollaio__sondaggio-campo {
@@ -1306,11 +1358,22 @@ html[data-finestra] .pollaio .pollaio__scrivi-campo {
 }
 
 .pollaio__sondaggio-durata .pollaio__sondaggio-campo {
-  inline-size: 6ch;
+  inline-size: 5.5em;
+  padding-inline: 0.4em;
+
   font-family: var(--font-mono);
-  font-size: 1em;
+  font-size: 1.1em;
   text-align: end;
   font-variant-numeric: tabular-nums;
+
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.pollaio__sondaggio-durata .pollaio__sondaggio-campo::-webkit-outer-spin-button,
+.pollaio__sondaggio-durata .pollaio__sondaggio-campo::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .pollaio__sondaggio-crea {
@@ -1359,7 +1422,6 @@ html[data-finestra] .pollaio .pollaio__scrivi-campo {
 
 .pollaio__filtro,
 .pollaio__pausa,
-.pollaio__sondaggio-apri,
 .pollaio__invito-btn {
   display: inline-flex;
   align-items: center;
@@ -1391,8 +1453,7 @@ html[data-finestra] .pollaio .pollaio__scrivi-campo {
   color: var(--testo);
 }
 
-.pollaio__filtro.is-scelto,
-.pollaio__sondaggio-apri.is-scelto {
+.pollaio__filtro.is-scelto {
   border-color: var(--viola);
   background-color: color-mix(in srgb, var(--viola) 28%, var(--velo));
   color: var(--testo);
