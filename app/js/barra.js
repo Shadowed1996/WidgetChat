@@ -563,6 +563,7 @@
       if (guaio || !id) { genteAvviata = false; return; }
 
       canaleId = id;
+      prendiDelCanale(id);
       prendiLeMie(id);
       if (window.Azioni && window.Azioni.canale) { window.Azioni.canale(id); }
 
@@ -595,6 +596,34 @@
 
   function nienteMie(perche) {
     if (!mancanoPerche) { mancanoPerche = perche; }
+  }
+
+  // Le emote di un canale non sono di chi lo guarda: sono del canale. Chiederle
+  // soltanto con `/chat/emotes/user` legava l'elenco a chi ha fatto login — con
+  // un bot moderatore collegato uscivano le emote del bot, e quelle dello
+  // streamer no — e il pollaio deve poter stare addosso a qualunque canale,
+  // ognuno con le sue. Questo elenco non dipende da chi sei: `/chat/emotes` non
+  // chiede nessuno scope, gli basta un gettone qualunque e l'id del canale.
+  //
+  // Le due richieste restano due perché rispondono a due domande diverse:
+  // «quali emote ha questo canale» e «quali posso usare io». La seconda serve
+  // ancora, perché ci mette dentro le globali e quelle degli altri canali a cui
+  // sei abbonato, che il canale non conosce.
+  function prendiDelCanale(id) {
+    if (!window.Emote || !window.Emote.aggiungiTwitch) { return; }
+    if (!window.Conto.collegato()) { return; }
+
+    window.Conto.verso('GET',
+      '/chat/emotes?broadcaster_id=' + encodeURIComponent(id),
+      null,
+      function (guaio, dati) {
+        if (guaio || !dati) {
+          nienteMie('Twitch non mi ha dato le emote del canale: ' + (guaio || 'risposta vuota') + '.');
+          return;
+        }
+
+        window.Emote.aggiungiTwitch(dati.data);
+      });
   }
 
   function prendiLeMie(id) {

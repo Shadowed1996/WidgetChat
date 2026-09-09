@@ -1250,13 +1250,32 @@ Fino alla 1.2.1 il bottone **Copia** della regia, se la regia era aperta dentro
 tuo errore. Adesso il Copia dà sempre il `file:///` giusto, in tutte e due le
 strade — regia dentro il launcher e regia aperta in un browser.
 
-**Nel suggeritore delle emote ci sono solo quelle di 7TV, non le mie di Twitch.**
-Le tue emote di Twitch — quelle degli abbonamenti, per intenderci — te le può
-elencare solo Twitch, e per chiederle serve il permesso `user:read:emotes`. Se il
-tuo collegamento è più vecchio di quel permesso non ce l'ha, e le emote non
-arrivano: nell'elenco restano 7TV, BTTV e FFZ, che non hanno bisogno di nessun
-login. Il pollaio adesso te lo dice la prima volta che apri il suggeritore.
-Il rimedio è **Riconnetti account** nella regia, un clic.
+**Nel suggeritore delle emote non ci sono quelle di Twitch, solo le 7TV.**
+Prima di tutto: **le emote di Twitch dentro i messaggi si vedono sempre**, anche
+senza account e anche in OBS. Arrivano dentro il messaggio, non le chiede
+nessuno. Se ti mancano *quelle*, il problema è un altro — guarda più giù.
+
+Nel suggeritore invece è diverso, e l'elenco viene da due richieste:
+
+- **le emote del canale** a cui sei connesso — che dalla 1.2.4 non dipendono più
+  da chi ha fatto login. Se colleghi un bot moderatore, escono comunque le emote
+  dello streamer, che è quello che serve: il pollaio va addosso al canale, non
+  all'account.
+- **le tue**, cioè le globali e quelle degli altri canali a cui sei abbonato.
+  Per queste serve il permesso `user:read:emotes`, e se il tuo collegamento è più
+  vecchio di quel permesso non ce l'ha: si rimedia con **Riconnetti account**.
+
+Servono comunque **un account collegato** e la finestra di `Pollaio.exe`: senza
+gettone non c'è niente da chiedere a Twitch, e in una sorgente browser di OBS il
+gettone non arriva per scelta — quindi lì non c'è né campo per scrivere né
+suggeritore. Dalla 1.2.3 il pollaio ti dice quale dei quattro motivi è, la prima
+volta che apri l'elenco.
+
+**Attenzione all'origine.** Il gettone sta nel browser, legato all'indirizzo da
+cui hai collegato l'account. Se lo colleghi dentro `Pollaio.exe` e poi apri
+`pollaio.html` col doppio clic dal disco, quella è un'altra origine e un altro
+browser: lì l'account non c'è, e il suggeritore mostra solo le 7TV. Non è un
+guasto, è la stessa pagina in due posti diversi.
 
 Se invece ne vedi solo una parte — le prime e non le altre — era un difetto
 sistemato nella 1.2.2: Twitch le consegna a pagine e ne veniva letta solo la

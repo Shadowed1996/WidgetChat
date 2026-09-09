@@ -508,6 +508,7 @@ controlla prima di chiamare**, non dopo aver preso un 403 (§19).
 | chi c'è in chat | `GET /chat/chatters` | `gente.js`, e **solo a pannello aperto** — `moderator:read:chatters` |
 | i moderatori e i VIP del canale | `GET /moderation/moderators`, `GET /channels/vips` | `gente.js`, e solo sul proprio canale: servono a dividere la lista in scomparti. Sono gli stessi due indirizzi di sopra, letti invece che scritti |
 | le tue emote native | `GET /chat/emotes/user?user_id=<tuo>&broadcaster_id=<canale>` | `barra.js`, per il suggeritore — `user:read:emotes`. Risponde con le emote che **quell'utente** può usare **in quel canale** |
+| le emote del canale | `GET /chat/emotes?broadcaster_id=<canale>` | `barra.js`, per il suggeritore. **Nessuno scope**: basta un gettone qualunque. Sono le emote di **quel canale**, e non dipendono da chi ha fatto login |
 | iscrizione a EventSub | `POST /eventsub/subscriptions` | `stormo.js`, tre volte: `channel.shared_chat.begin`, `.update`, `.end` — `user:read:chat`. Serve a sapere **in anticipo** chi partecipa a una live congiunta e **quando finisce**: i messaggi continuano ad arrivare dall'IRC anonimo, questo non li tocca |
 
 E una presa in più, che non è né Helix né IRC:
@@ -1538,6 +1539,24 @@ per scrivere davvero.
 nome che sta in tutti e due esce una volta sola. Il resto dell'ordinamento è
 quello di prima, e resta quello: chi comincia col prefisso davanti a chi lo
 contiene, poi il peso, poi il nome più corto, poi l'alfabeto.
+
+**Le emote di un canale non sono di chi lo guarda: sono del canale.** Per un po'
+qui c'è stata una sola richiesta, `chat/emotes/user`, e legava l'elenco a chi ha
+fatto login: con un bot moderatore collegato uscivano le emote del bot, e quelle
+dello streamer no. Ma il pollaio deve poter stare addosso a **qualunque canale**,
+ognuno con le sue — è il motivo per cui esiste — e quell'elenco non può dipendere
+da quale account ha in mano il gettone.
+
+Quindi le richieste sono **due, e rispondono a due domande diverse**:
+
+- `chat/emotes?broadcaster_id=<canale>` — «quali emote ha questo canale».
+  **Nessuno scope**: le basta un gettone qualunque e l'id del canale.
+- `chat/emotes/user?user_id=<tuo>&broadcaster_id=<canale>` — «quali posso usare
+  io». Serve ancora, e non è un doppione: ci mette dentro le globali e le emote
+  degli altri canali a cui sei abbonato, che il canale non conosce.
+
+Finiscono tutte e due in `Emote.aggiungiTwitch`, cioè nell'elenco separato di
+qui sotto, mai nel `catalogo` — e il perché è la regola che viene subito dopo.
 
 **Le pagine si seguono tutte.** `helix/chat/emotes/user` risponde a pagine, con
 un `pagination.cursor` da rimettere in `after`: leggerne una sola lasciava fuori
