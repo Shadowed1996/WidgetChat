@@ -2109,8 +2109,36 @@ internal sealed class Vetrina : Form
         }
         catch {  }
 
+        // La regia deve poter scrivere l’indirizzo che si incolla in OBS, e
+        // quello è un `file:///` vero. Qui dentro però la pagina vive su
+        // https://pollaio.locale, che esiste solo dentro questa WebView: un
+        // indirizzo costruito su quel nome non lo apre nessun altro programma,
+        // OBS compreso. Quindi la cartella vera gliela si dice una volta sola,
+        // prima che parta qualunque script della pagina.
+        try
+        {
+            motore.AddScriptToExecuteOnDocumentCreatedAsync(
+                "window.POLLAIO_CARTELLA = \"" + PerJs(Programma.CartellaApp) + "\";");
+        }
+        catch {  }
+
         motore.WebMessageReceived += Messaggio;
         vista.Source = new Uri(indirizzo);
+    }
+
+    // Un percorso di Windows è pieno di rovesce, e può avere accenti se ce li ha
+    // il nome dell’utente. Qui diventa un pezzo di sorgente JavaScript, quindi si
+    // scappa tutto: le rovesce, le virgolette, e qualunque cosa non sia ASCII.
+    private static string PerJs(string testo)
+    {
+        StringBuilder b = new StringBuilder();
+        foreach (char c in testo ?? "")
+        {
+            if (c == '\\' || c == '"') { b.Append('\\').Append(c); }
+            else if (c < ' ' || c > '~') { b.Append("\\u").Append(((int)c).ToString("x4")); }
+            else { b.Append(c); }
+        }
+        return b.ToString();
     }
 
     private void Messaggio(object mittente, CoreWebView2WebMessageReceivedEventArgs e)

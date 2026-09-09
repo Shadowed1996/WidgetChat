@@ -765,7 +765,13 @@ Regole di misura:
 - Un messaggio con `svanisci` attivo esce con una dissolvenza di 400ms.
 
 Accessibilità, anche se è un overlay (la pagina si apre anche in un browser):
-- focus visibile `2px solid var(--ciano)` con `outline-offset: 3px`
+- focus visibile `2px solid var(--ciano)` con `outline-offset: 3px`, con una
+  deroga sul solo **offset**: dove i controlli stanno stretti dentro un
+  pannello — le voci del menù sul nome, i campi dei pannelli Sondaggio e
+  Pronostico — l’anello va **all’interno** (`outline-offset: -2px`). Tinta e
+  spessore non cambiano mai. A 3px in fuori l’anello di un campo finisce sopra
+  il campo vicino, e un segno di fuoco che sconfina si legge come un bordo
+  sbagliato invece che come «sono qui».
 - `prefers-reduced-motion: reduce` spegne **tutte** le animazioni, e ogni foglio
   spegne a mano le proprie `@keyframes` in un paragrafo finale dedicato — con
   una sola deroga, dichiarata qui sotto: la manopola `movimento`
@@ -784,12 +790,23 @@ da terminale di `matrix`, la **dissolvenza in uscita** di `svanisci`, il
 **battito della spia**, il **respiro della fascia del treno** col suo lampo
 dorato — transizione del riempimento compresa — e il **dondolio del pollo**.
 
-Non è un caso di laboratorio. Su Windows basta che sia spento Impostazioni →
-Accessibilità → Effetti visivi → **Effetti di animazione** perché Chromium
-riporti `prefers-reduced-motion: reduce`, e da lì l'overlay si muove su una
-macchina e sta fermo sull'altra senza che niente lo dica. Dimostrato con
+Non è un caso di laboratorio, ed è **più facile di così che sembri**, perché
+l'interruttore non sta in un posto solo. Su Windows 11 è Impostazioni →
+Accessibilità → Effetti visivi → **Effetti di animazione**; su Windows 10 è
+Impostazioni → Accessibilità → **Schermo** → **Mostra animazioni in Windows**; e
+lo spegne anche **«Regola per ottenere le prestazioni migliori»** nelle opzioni
+prestazioni di sistema, che è la prima spunta che si tocca su un computer da
+gioco. Chromium li legge tutti e tre allo stesso modo e riporta
+`prefers-reduced-motion: reduce`, e da lì l'overlay si muove su una macchina e
+sta fermo sull'altra senza che niente lo dica. Dimostrato con
 `--force-prefers-reduced-motion`: stessa pagina, stesso indirizzo,
 `animation-name` che passa da `entra-glitch` a `none`.
+
+**I tre posti si nominano tutti e tre, ogni volta che se ne parla** — in
+`DETTO_CALMA` di `regia.js` e nell'aiuto della manopola `movimento`. Nominarne
+uno solo non è una mezza risposta, è una risposta sbagliata: chi sta su Windows
+10 legge il percorso di Windows 11, non lo trova, e conclude che il suo caso è
+un altro — e a quel punto l'avviso ha fatto danno invece di servire.
 
 **Il predefinito resta l'obbedienza.** `pollaio.html` si guarda anche con gli
 occhi — nella finestra di `Pollaio.exe`, nell'anteprima della regia, in un
@@ -897,6 +914,40 @@ un'interfaccia, si guarda in un browser).
 - le scelte si ricordano in `localStorage` (`sb-pollaio-regia`)
 - un bottone **Ripristina** che rimette tutto ai predefiniti
 
+### I due indirizzi della regia — quello che apre qui e quello che si incolla
+
+Non sono lo stesso, e per un po' lo sono stati per sbaglio.
+
+L'anteprima e il bottone **Apri** vogliono un indirizzo che funzioni **nel
+contesto in cui la regia sta girando adesso**: dentro `Pollaio.exe` la pagina
+vive su `https://pollaio.locale`, il nome che `SetVirtualHostNameToFolderMapping`
+mappa sulla cartella dell'app. Lo dà `indirizzoQui()`, che risolve contro
+`location.href` come si è sempre fatto.
+
+Il bottone **Copia** vuole tutt'altro: un indirizzo che apra **in un altro
+programma**, cioè in OBS. E `pollaio.locale` esiste solo dentro quella WebView:
+fuori non lo risolve nessuno. Risolvendo contro `location.href` anche lì, il
+Copia consegnava `https://pollaio.locale/pollaio.html?…` — una riga che in OBS
+dà una sorgente bianca senza dire perché, e che a leggerla sembra giusta.
+
+Quindi il launcher **dice alla pagina dove sta davvero**:
+`AddScriptToExecuteOnDocumentCreatedAsync` scrive `window.POLLAIO_CARTELLA` con
+la cartella dell'app, prima che parta qualunque script della pagina, passata per
+`PerJs` che scappa rovesce, virgolette e tutto ciò che non è ASCII (un percorso
+di Windows è pieno delle prime, e il nome dell'utente può avere le terze). Da lì
+`indirizzoDaIncollare()` scrive il `file:///` vero, con `encodeURI` e non
+`encodeURIComponent`: le barre e i due punti del percorso devono restare quelli
+che sono, uno spazio nel nome dell'utente no.
+
+Aperta in un browser normale la regia sta già su `file:///`, `POLLAIO_CARTELLA`
+non c'è, e allora `indirizzoDaIncollare()` ricade su `indirizzoQui()`, che lì
+dava già la risposta giusta. **La cosa da non rifare è la scorciatoia**: un solo
+indirizzo per due domande diverse — «dove sono» e «dove sarà chi lo aprirà» — ed
+è la seconda quella che conta per il bottone che si chiama Copia.
+
+`apri()` usa `indirizzoQui()` apposta: un `file:///` aperto da una pagina `https`
+lo blocca Chromium, e la finestra resterebbe bianca a raccontare un guasto che
+non c'è.
 ### L'unico avviso della regia — `.regia__allarme`
 
 Sotto la manopola **«Quando animare»** compare un riquadro in `--allerta` quando
@@ -1432,6 +1483,23 @@ nome che sta in tutti e due esce una volta sola. Il resto dell'ordinamento è
 quello di prima, e resta quello: chi comincia col prefisso davanti a chi lo
 contiene, poi il peso, poi il nome più corto, poi l'alfabeto.
 
+**Le pagine si seguono tutte.** `helix/chat/emotes/user` risponde a pagine, con
+un `pagination.cursor` da rimettere in `after`: leggerne una sola lasciava fuori
+tutto il resto proprio a chi di emote ne ha tante, cioè a chi le usa. `barra.js`
+segue il cursore fino a quando finisce, con un tetto di `PAGINE_MIE` giri —
+perché un cursore che non finisce mai è un guasto di Twitch, e non un buon
+motivo per girare a vuoto qui dentro.
+
+**Il permesso che manca si dice, ma non all'avvio.** Un gettone più vecchio
+dello scope non ha `user:read:emotes`, la richiesta non parte, e nel suggeritore
+restano le sole 7TV: sembra un difetto del widget e invece è un collegamento da
+rifare. Lo si dice **la prima volta che il suggeritore si apre**, una volta
+sola, perché è lì che uno guarda l'elenco e non ci trova le sue — e non
+all'avvio, dove nessuno ha chiesto niente e un avviso è solo rumore. È la stessa
+disciplina delle pastiglie Sondaggio e Pronostico, spostata di un momento: **non
+si tace su una cosa che non può funzionare, ma la si dice quando è la risposta a
+una domanda che qualcuno si è appena fatto.**
+
 ### `attiva`, il comando del launcher
 
 Nella finestra del launcher il bottone «Connetti account» — quello della regia e
@@ -1599,6 +1667,14 @@ Il pannello si difende da una cosa sola prima di comporre: **una barra verticale
 dentro la domanda**, che è il carattere con cui la riga separa le scelte. Lì non
 si ritaglia, si dice — perché ritagliare vorrebbe dire cambiare la domanda che
 l'utente ha scritto.
+
+**Il pannello respira come gli altri riquadri, non più stretto.** I campi si
+impilano con `calc(var(--passo) * 0.5)` fra l’uno e l’altro e le parti del
+pannello con `calc(var(--passo) * 0.75)`, che sono i due passi già usati dalla
+fila dei filtri e dal corpo del pollaio: un pannello che si apre in
+sovrimpressione sopra la chat non può essere l’unico posto con una misura sua.
+A `0.4` e `0.35` — le misure di prima — i campi si toccavano, e l’anello di
+fuoco di uno finiva dentro quello accanto.
 
 ### Il menù sul nome
 

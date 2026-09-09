@@ -1138,12 +1138,16 @@ fondo bianco e viene ritagliata dal foglio di stile.
 **L'overlay non anima niente, e non si capisce perché.**
 I messaggi compaiono e basta: niente effetto d'ingresso, niente dissolvenza in
 uscita, la spia non batte, la fascia dell'hype train sta ferma, il pollo non
-dondola. Quasi sempre è Windows: Impostazioni → Accessibilità → Effetti visivi →
-**Effetti di animazione**. Quando quell'interruttore è spento, il computer chiede
-a tutti i programmi di muoversi il meno possibile, e il pollaio gli dà retta —
-in blocco. È per questo che sembra un difetto del widget: due persone sullo
-stesso canale, una vede l'effetto glitch e l'altra non lo vede su nessun
-messaggio.
+dondola. Quasi sempre è Windows, e l'interruttore **non sta in un posto solo**:
+su Windows 11 è Impostazioni → Accessibilità → Effetti visivi → **Effetti di
+animazione**, su Windows 10 è Impostazioni → Accessibilità → **Schermo** →
+**Mostra animazioni in Windows**, e lo spegne anche **«Regola per ottenere le
+prestazioni migliori»** nelle opzioni prestazioni di sistema — che è la prima
+spunta che si tocca su un computer da gioco, ed è quella a cui nessuno pensa.
+Quando è spento, il computer chiede a tutti i programmi di muoversi il meno
+possibile, e il pollaio gli dà retta — in blocco. È per questo che sembra un
+difetto del widget: due persone sullo stesso canale, una vede l'effetto glitch e
+l'altra non lo vede su nessun messaggio.
 
 **Adesso però non lo fa più di nascosto.** Qui c'era scritto «e senza dirlo», ed
 era la parte che faceva perdere il pomeriggio: chi non sa di quell'interruttore
@@ -1167,6 +1171,32 @@ la guardano gli spettatori, che quella preferenza non l'hanno mai espressa. Nell
 sorgente browser «anima comunque» ha senso. Sulla macchina che usi per
 **guardare** la chat no: lì chi guarda è chi ha espresso la preferenza, ed è
 giusto rispettarla.
+
+**In OBS ho incollato `https://pollaio.locale/pollaio.html` e la sorgente resta
+vuota.**
+`pollaio.locale` non è un sito: è un nome finto che esiste **solo dentro la
+finestra di `Pollaio.exe`**, dove il launcher lo fa puntare alla cartella
+dell'app. Fuori da quel programma non lo risolve nessuno, OBS compreso — e OBS
+non lo dice, ti lascia una sorgente bianca. In OBS ci vuole l'indirizzo
+`file:///…`, quello descritto più su: sorgente Browser, spunta **«File locale»
+tolta**, e la riga nel campo URL.
+
+Fino alla 1.2.1 il bottone **Copia** della regia, se la regia era aperta dentro
+`Pollaio.exe`, ti dava proprio l'indirizzo sbagliato: era un difetto suo, non un
+tuo errore. Adesso il Copia dà sempre il `file:///` giusto, in tutte e due le
+strade — regia dentro il launcher e regia aperta in un browser.
+
+**Nel suggeritore delle emote ci sono solo quelle di 7TV, non le mie di Twitch.**
+Le tue emote di Twitch — quelle degli abbonamenti, per intenderci — te le può
+elencare solo Twitch, e per chiederle serve il permesso `user:read:emotes`. Se il
+tuo collegamento è più vecchio di quel permesso non ce l'ha, e le emote non
+arrivano: nell'elenco restano 7TV, BTTV e FFZ, che non hanno bisogno di nessun
+login. Il pollaio adesso te lo dice la prima volta che apri il suggeritore.
+Il rimedio è **Riconnetti account** nella regia, un clic.
+
+Se invece ne vedi solo una parte — le prime e non le altre — era un difetto
+sistemato nella 1.2.1: Twitch le consegna a pagine e ne veniva letta solo la
+prima, quindi chi ne ha tante ne perdeva la maggioranza. Adesso si leggono tutte.
 
 **Il testo non si legge sopra al gioco.**
 Prova `tema=nudo`, che mette un'ombra netta intorno a ogni lettera, oppure alza

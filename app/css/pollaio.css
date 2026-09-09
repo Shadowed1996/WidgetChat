@@ -1281,7 +1281,7 @@ html[data-finestra] .pollaio .pollaio__scrivi-campo {
 
   display: flex;
   flex-direction: column;
-  gap: calc(var(--passo) * 0.4);
+  gap: calc(var(--passo) * 0.75);
 
   max-block-size: 80%;
   overflow-y: auto;
@@ -1302,7 +1302,7 @@ html[data-finestra] .pollaio .pollaio__scrivi-campo {
   justify-content: space-between;
   gap: var(--passo);
 
-  margin: 0 0 calc(var(--passo) * 0.4);
+  margin: 0;
 }
 
 .pollaio__sondaggio-titolo {
@@ -1340,7 +1340,7 @@ html[data-finestra] .pollaio .pollaio__scrivi-campo {
   inline-size: 100%;
   min-inline-size: 0;
 
-  padding: 0.4em 0.6em;
+  padding: 0.5em 0.7em;
   border: 1px solid var(--linea-forte);
   border-radius: 5px;
   background-color: var(--fondo);
@@ -1356,6 +1356,16 @@ html[data-finestra] .pollaio .pollaio__scrivi-campo {
   border-color: var(--linea-viva);
 }
 
+/* Dentro il pannello i campi stanno uno sull’altro a pochi pixel: l’anello di
+   fuoco comune — 2px di ciano a 3px in fuori — finiva sopra il campo vicino, e si
+   leggeva come un bordo che sbava sul box accanto invece che come «sono qui».
+   Stessa tinta e stesso spessore, ma rivolto all’interno: è la stessa deroga già
+   scritta in menu.css, e per lo stesso motivo — controlli stretti in un pannello. */
+.pollaio__sondaggio :focus-visible {
+  outline: 2px solid var(--ciano);
+  outline-offset: -2px;
+}
+
 .pollaio__sondaggio-campo::placeholder {
   color: var(--testo-tenue);
 }
@@ -1363,7 +1373,7 @@ html[data-finestra] .pollaio .pollaio__scrivi-campo {
 .pollaio__sondaggio-scelte {
   display: flex;
   flex-direction: column;
-  gap: calc(var(--passo) * 0.35);
+  gap: calc(var(--passo) * 0.5);
 }
 
 .pollaio__sondaggio-piede {

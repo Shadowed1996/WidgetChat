@@ -298,6 +298,13 @@
 
     suggerite = trovate;
     disegnaSuggeriti(trovate);
+
+    // Qui, e una volta sola: è l’istante in cui uno guarda l’elenco e non ci
+    // trova le sue.
+    if (mieMancano && !dettoDelleMie) {
+      dettoDelleMie = true;
+      eco('Qui ci sono solo le emote di 7TV, BTTV e FFZ. Per le tue di Twitch al collegamento manca il permesso «user:read:emotes»: si rimedia con «Connetti account».', true);
+    }
   }
 
   function tastiSuggeriti(evento) {
@@ -553,21 +560,48 @@
     });
   }
 
+  // Twitch consegna le emote di chi guarda a pagine, non tutte in una volta, e
+  // qui si leggeva solo la prima: chi ne ha tante — cioè esattamente chi le usa —
+  // vedeva sparire tutto quello che stava dalla seconda in poi, e nel
+  // suggeritore restavano le sole 7TV. Si segue il cursore fino in fondo, con un
+  // tetto: un cursore che non finisce mai è un guasto loro, non un buon motivo
+  // per girare a vuoto qui dentro.
+  var PAGINE_MIE = 20;
+
+  var mieMancano = false;
+  var dettoDelleMie = false;
+
   function prendiLeMie(id) {
     if (!window.Emote || !window.Emote.aggiungiTwitch) { return; }
-    if (!window.Conto.puo('user:read:emotes')) { return; }
+
+    // Il permesso può mancare perché il gettone è più vecchio dello scope. Non
+    // c’è niente di rotto da cercare, c’è da rifare «Connetti account» — ma non
+    // si dice adesso, che è l’avvio e non l’ha chiesto nessuno: si dice quando
+    // il suggeritore si apre senza le sue emote dentro, che è il momento in cui
+    // uno se ne accorge e viene a cercare il perché.
+    if (!window.Conto.puo('user:read:emotes')) { mieMancano = true; return; }
 
     var chi = window.Conto.chi();
     if (!chi || !chi.utenteId) { return; }
 
-    window.Conto.verso('GET',
-      '/chat/emotes/user?user_id=' + encodeURIComponent(chi.utenteId) +
-      '&broadcaster_id=' + encodeURIComponent(id),
-      null,
-      function (guaio, dati) {
-        if (guaio || !dati) { return; }
-        window.Emote.aggiungiTwitch(dati.data);
-      });
+    var base = '/chat/emotes/user?user_id=' + encodeURIComponent(chi.utenteId) +
+               '&broadcaster_id=' + encodeURIComponent(id);
+
+    function pagina(dopo, quante) {
+      window.Conto.verso('GET',
+        dopo ? base + '&after=' + encodeURIComponent(dopo) : base,
+        null,
+        function (guaio, dati) {
+          if (guaio || !dati) { return; }
+
+          window.Emote.aggiungiTwitch(dati.data);
+
+          var avanti = dati.pagination && dati.pagination.cursor;
+          if (avanti && quante < PAGINE_MIE) { pagina(avanti, quante + 1); }
+        });
+    }
+
+    pagina('', 1);
   }
 
   function vestiGente(stato) {

@@ -36,10 +36,20 @@
     } catch (err) { return null; }
   }());
 
-  const DETTO_CALMA = 'Il tuo computer chiede meno animazioni — è l’interruttore ' +
-    'di Windows in Impostazioni, Accessibilità, Effetti visivi. Finché resta ' +
-    'così, con «come dice il computer» i messaggi entrano senza nessun effetto. ' +
-    'Metti «anima comunque», oppure riaccendi quell’interruttore.';
+  // L’interruttore c’è su tutte e due le versioni di Windows, ma non nello
+  // stesso posto, e nominarne uno solo manda a cercarlo dove non c’è: chi sta
+  // su Windows 10 legge il percorso di Windows 11, non lo trova, e conclude che
+  // il suo caso è un altro. Poi c’è il terzo posto, quello che nessuno collega
+  // all’overlay: «Regola per ottenere le prestazioni migliori» nelle opzioni
+  // prestazioni spegne la stessa cosa, ed è la prima spunta che si tocca su un
+  // computer da gioco. Chromium li legge tutti e tre allo stesso modo.
+  const DETTO_CALMA = 'Il tuo computer chiede meno animazioni. Su Windows 11 è ' +
+    'Impostazioni → Accessibilità → Effetti visivi → «Effetti di animazione»; su ' +
+    'Windows 10 è Impostazioni → Accessibilità → Schermo → «Mostra animazioni in ' +
+    'Windows». Lo spegne anche «Regola per ottenere le prestazioni migliori», ' +
+    'nelle opzioni prestazioni di sistema. Finché resta così, con «come dice il ' +
+    'computer» i messaggi entrano senza nessun effetto. Metti «anima comunque», ' +
+    'oppure riaccendi quell’interruttore.';
 
   function chiedeCalma() {
     return !!(CALMA && CALMA.matches);
@@ -482,15 +492,37 @@
     }
   }
 
+  // L’indirizzo da incollare in OBS e l’indirizzo che apre qui non sono lo
+  // stesso. Dentro Pollaio.exe la pagina vive su https://pollaio.locale, che è
+  // un nome mappato dentro quella WebView e da nessuna altra parte: risolvendo
+  // lì si otteneva una riga che in OBS non apre niente, e il bottone Copia
+  // dava proprio quella. Il launcher ci passa la cartella vera prima che parta
+  // qualunque script, e da quella si scrive il `file:///` che OBS vuole.
+  // Aperta in un browser normale la regia sta già su `file:///`, POLLAIO_CARTELLA
+  // non c’è, e allora basta risolvere contro sé stessa come si è sempre fatto.
+  function cartellaVera() {
+    const dove = typeof window.POLLAIO_CARTELLA === 'string' ? window.POLLAIO_CARTELLA : '';
+    return dove.split('\\').join('/').replace(/\/+$/, '');
+  }
+
+  function indirizzoQui() {
+    const relativo = window.Impostazioni.indirizzo(valori);
+    try { return new URL(relativo, window.location.href).href; }
+    catch (err) { return relativo; }
+  }
+
+  function indirizzoDaIncollare() {
+    const cartella = cartellaVera();
+    if (!cartella) { return indirizzoQui(); }
+
+    // encodeURI e non encodeURIComponent: le barre e i due punti del percorso
+    // devono restare quelli che sono, ma uno spazio nel nome dell’utente no.
+    return 'file:///' + encodeURI(cartella).replace(/^\/+/, '') +
+           '/' + window.Impostazioni.indirizzo(valori);
+  }
+
   function disegnaIndirizzo() {
-
-    var relativo = window.Impostazioni.indirizzo(valori);
-    var mostrato = relativo;
-    try {
-      mostrato = new URL(relativo, window.location.href).href;
-    } catch (err) {  }
-
-    nodi.indirizzo.textContent = mostrato;
+    nodi.indirizzo.textContent = indirizzoDaIncollare();
   }
 
   function misuraTelaio() {
@@ -903,17 +935,20 @@
 
   function copia() {
     agliAppunti(nodi.indirizzo.textContent, function () {
-      segnalaCopia('Copiato', 'Copiato. In OBS va nel campo del file locale della sorgente browser.', true);
+      segnalaCopia('Copiato', 'Copiato. In OBS: sorgente Browser, «File locale» senza spunta, e questo va nel campo URL.', true);
     }, function () {
       seleziona(nodi.indirizzo);
       segnalaCopia('Seleziona e copia', 'Gli appunti qui non me li lascia toccare. L’indirizzo è già selezionato: Ctrl+C e sei a posto.', false);
     });
   }
 
+  // Si apre l’indirizzo di qui, non quello da incollare: dentro Pollaio.exe un
+  // `file:///` aperto da una pagina https non lo lascia aprire nessuno, e la
+  // finestra resterebbe bianca. È la stessa pagina con gli stessi parametri.
   function apri() {
-    const finestra = window.open(nodi.indirizzo.textContent, '_blank');
+    const finestra = window.open(indirizzoQui(), '_blank');
     if (finestra) {
-      eco('L’ho aperto in un’altra finestra. È l’indirizzo esatto, quello qui sotto: se lì si vede giusto, in OBS si vede giusto.', true);
+      eco('L’ho aperto in un’altra finestra: stessa pagina, stessi parametri. Se lì si vede giusto, in OBS si vede giusto.', true);
     } else {
       eco('Il browser ha bloccato la finestra. Copio l’indirizzo e lo apro a mano, viene uguale.', false);
     }
