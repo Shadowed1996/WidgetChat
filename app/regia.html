@@ -147,55 +147,62 @@
 
   <section class="regia__colonna regia__colonna--anteprima" aria-labelledby="titolo-anteprima">
 
-    <div class="regia__barra">
-      <h2 class="regia__sezione-titolo" id="titolo-anteprima">L’anteprima</h2>
+    <div class="regia__vetrina">
+      <div class="regia__barra">
+        <h2 class="regia__sezione-titolo" id="titolo-anteprima">L’anteprima</h2>
 
-      <fieldset class="regia__fondi">
-        <legend class="regia__fondi-titolo">Cosa ci metto sotto</legend>
-        <div class="regia__segmenti">
-          <input class="regia__radio" type="radio" name="fondo" id="fondo-scacchi" value="scacchi" checked>
-          <label class="regia__segmento" for="fondo-scacchi">Scacchi</label>
+        <fieldset class="regia__fondi">
+          <legend class="regia__fondi-titolo">Cosa ci metto sotto</legend>
+          <div class="regia__segmenti">
+            <input class="regia__radio" type="radio" name="fondo" id="fondo-scacchi" value="scacchi" checked>
+            <label class="regia__segmento" for="fondo-scacchi">Scacchi</label>
 
-          <input class="regia__radio" type="radio" name="fondo" id="fondo-chiaro" value="chiaro">
-          <label class="regia__segmento" for="fondo-chiaro">Chiaro</label>
+            <input class="regia__radio" type="radio" name="fondo" id="fondo-chiaro" value="chiaro">
+            <label class="regia__segmento" for="fondo-chiaro">Chiaro</label>
 
-          <input class="regia__radio" type="radio" name="fondo" id="fondo-scuro" value="scuro">
-          <label class="regia__segmento" for="fondo-scuro">Scuro</label>
+            <input class="regia__radio" type="radio" name="fondo" id="fondo-scuro" value="scuro">
+            <label class="regia__segmento" for="fondo-scuro">Scuro</label>
 
-          <input class="regia__radio" type="radio" name="fondo" id="fondo-gioco" value="gioco">
-          <label class="regia__segmento" for="fondo-gioco">Gioco</label>
-        </div>
-      </fieldset>
-    </div>
+            <input class="regia__radio" type="radio" name="fondo" id="fondo-gioco" value="gioco">
+            <label class="regia__segmento" for="fondo-gioco">Gioco</label>
+          </div>
+        </fieldset>
+      </div>
 
-    <p class="regia__sezione-testo">
-      Gli scacchi non fanno parte dell’overlay: sono il modo di far vedere cosa è
-      trasparente e cosa no. Il fondo chiaro è la prova che conta davvero —
-      è lì che un tema senza ombra sparisce.
-    </p>
-
-    <div class="regia__scena" id="scena" data-fondo="scacchi">
-      <iframe class="regia__telaio" id="telaio" title="Anteprima dell’overlay, con traffico finto" src="about:blank"></iframe>
-    </div>
-
-    <div class="regia__righello">
-      <p class="regia__misura">
-        <output class="regia__misura-valore" id="misura" for="altezza">420 × 640</output>
-        <span class="regia__misura-nota">px — larghezza e altezza da mettere nella sorgente di OBS</span>
+      <p class="regia__sezione-testo">
+        Gli scacchi non fanno parte dell’overlay: sono il modo di far vedere cosa è
+        trasparente e cosa no. Il fondo chiaro è la prova che conta davvero —
+        è lì che un tema senza ombra sparisce.
       </p>
 
-      <div class="regia__campo regia__campo--riga">
-        <label class="regia__etichetta" for="altezza">Altezza dell’anteprima</label>
-        <div class="regia__riga">
-          <input class="regia__cursore" type="range" id="altezza" min="200" max="1080" step="10" value="640"
-                 aria-describedby="aiuto-altezza">
-          <output class="regia__valore" id="altezza-valore" for="altezza">640<span class="regia__unita">px</span></output>
-        </div>
-        <p class="regia__aiuto" id="aiuto-altezza">
-          Questa non è un’impostazione dell’overlay e non finisce nell’indirizzo:
-          è quanto spazio verticale gli lascio in OBS. Serve a vedere quanti
-          messaggi ci stanno prima che i vecchi comincino a uscire.
+      <div class="regia__scena" id="scena" data-fondo="scacchi">
+        <iframe class="regia__telaio" id="telaio" title="Anteprima dell’overlay, con traffico finto" src="about:blank"></iframe>
+      </div>
+
+      <div class="regia__righello">
+        <p class="regia__misura">
+          <output class="regia__misura-valore" id="misura" for="altezza">420 × 640</output>
+          <span class="regia__misura-nota">px — larghezza e altezza da mettere nella sorgente di OBS</span>
         </p>
+
+        <p class="regia__aiuto" id="taglio" hidden>
+          Qui dentro non ci sta tutta: la finestrella scorre, e quello che vedo è
+          la sua testa. I pixel dell’overlay restano quelli scritti qui sopra.
+        </p>
+
+        <div class="regia__campo regia__campo--riga">
+          <label class="regia__etichetta" for="altezza">Altezza dell’anteprima</label>
+          <div class="regia__riga">
+            <input class="regia__cursore" type="range" id="altezza" min="200" max="1080" step="10" value="640"
+                   aria-describedby="aiuto-altezza">
+            <output class="regia__valore" id="altezza-valore" for="altezza">640<span class="regia__unita">px</span></output>
+          </div>
+          <p class="regia__aiuto" id="aiuto-altezza">
+            Questa non è un’impostazione dell’overlay e non finisce nell’indirizzo:
+            è quanto spazio verticale gli lascio in OBS. Serve a vedere quanti
+            messaggi ci stanno prima che i vecchi comincino a uscire.
+          </p>
+        </div>
       </div>
     </div>
 

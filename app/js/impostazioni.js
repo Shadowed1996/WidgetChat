@@ -121,6 +121,20 @@
     },
     {
       gruppo: 'aspetto',
+      chiave: 'tinta',
+      tipo: 'voce',
+      predefinito: 'normale',
+      voci: [
+        { valore: 'normale', etichetta: 'Come il tema' },
+        { valore: 'trasparente', etichetta: 'Trasparente' },
+        { valore: 'viola', etichetta: 'Viola' },
+        { valore: 'ciano', etichetta: 'Ciano' }
+      ],
+      etichetta: 'Il fondo dei messaggi',
+      aiuto: 'Qui tingo la lastrina che sta dietro a ogni singolo messaggio, e non è la manopola qui sopra: quella è il fondo della pagina, copre tutto lo schermo e serve al chroma key, questa è il riquadro di una riga di chat e finisce lì. «Come il tema» lascia decidere al tema, ed è quello che si è sempre visto. «Trasparente» toglie il riempimento e la sfocatura e tiene solo il bordo: la chat diventa scritte sospese sul gioco, e proprio per questo mi porta dietro l’ombra sul testo — senza, la prima scena chiara se le mangia, ed è la stessa ragione per cui ce l’ha il tema «Nudo». «Viola» e «Ciano» sono la tinta della fascia dell’hype train portata giù su ogni riga: la colonna si riconosce a colpo d’occhio come roba del canale, ma copre più gameplay di quanto sembri su uno screenshot fermo. Col tema «Nudo» non succede niente, ed è una conseguenza e non una dimenticanza: là il riquadro non esiste proprio, e una tinta senza riquadro non ha dove andare.'
+    },
+    {
+      gruppo: 'aspetto',
       chiave: 'spazio',
       tipo: 'numero',
       predefinito: 130,

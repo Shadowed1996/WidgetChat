@@ -394,6 +394,7 @@ funzionare** e mostrare la chat di slayer_beard.
 | `svanisci` | numero | `0` | secondi dopo cui il messaggio sparisce. `0` = mai |
 | `verso` | voce | `su` | `su` (i nuovi in basso) · `giu` (i nuovi in alto) |
 | `fondo` | voce | `trasparente` | `trasparente` (sorgente browser OBS) · `scuro` (finestra vera) · `verde` · `magenta` (chroma key) |
+| `tinta` | voce | `normale` | il fondo del singolo messaggio: `normale` (quello del tema) · `trasparente` · `viola` · `ciano`. Col tema `nudo` non fa niente, perché lì il riquadro non c'è |
 | `spazio` | numero | `130` | aria fra i messaggi, in % da 40 a 400. Le vecchie parole `compatto`, `normale` e `arioso` restano leggibili e valgono 60, 115 e 220 |
 | `emote` | sìno | `1` | disegna le emote |
 | `sette` | sìno | `1` | emote 7TV |
@@ -688,6 +689,18 @@ che si legge a schermo.
 
 Vince il livello più alto. A parità, vince il primo della lista.
 
+**La sbarretta del rilievo nel tema `notte` non si è mai vista**, e va scritto
+perché il difetto non stava nella regola del rilievo: stava nella specificità.
+`.pollaio[data-tema="notte"] .pollaio__riga` mette il bordo con la scorciatoia
+`border`, che scrive tutti e quattro i lati, e pesa (0,3,0) contro lo (0,2,0) di
+`.pollaio__riga[data-rilievo="1"]`. Vinceva il tema: la sbarretta restava un filo
+di `--linea` da un pixel, mentre il `padding-inline-start` ritagliato per tre
+pixel restava lì a raccontare l'intenzione. In `insegna` non succedeva, perché
+una riga apposta ci ridichiara il colore del bordo; adesso quella riga c'è anche
+per `notte`, scritta allo stesso modo e nello stesso posto. La regola per chi
+verrà: **un tema che mette `border` di scorciatoia su `.pollaio__riga` si porta
+dietro questo debito**, e deve ridichiarare la sbarretta.
+
 I ruoli (mod, VIP, capo) **non** sono un rilievo: sono un badge e un colore di
 nome. Un moderatore che scrive «ok» non è una cosa importante.
 
@@ -746,6 +759,55 @@ Tre temi, stesso markup: cambia solo l'attributo `data-tema` sulla radice.
   L'ombra è obbligatoria: testo chiaro su fondo chiaro sparirebbe.
 - **`insegna`** — ogni messaggio è una scheda piena col gradiente del marchio.
   Più invadente, per le chat lente.
+
+### La tinta dei messaggi — `tinta`, che non è `fondo`
+
+Il tema decide **com'è fatto** il riquadro di un messaggio; `tinta` decide **di
+che colore è**. Sono due manopole e non una perché rispondono a due domande
+diverse — e la confusione da tenere lontana è un'altra ancora: **`fondo` è il
+fondo della pagina**, trasparente o scuro o verde o magenta, roba da chroma key,
+copre tutto lo schermo; `tinta` è il riempimento della singola riga di chat, e
+finisce lì. Nella regia le due stanno una sotto l'altra, ed è l'`aiuto` a dire
+la differenza, perché è lì che uno la cerca.
+
+Quattro voci. `normale` lascia decidere al tema, ed è quello che si è sempre
+visto. `viola` e `ciano` **sono la ricetta della fascia dell'Hype Train portata
+giù su ogni riga**: bordo a `color-mix(… 42%, transparent)`, riempimento al
+`15%` sopra `--pannello` (`22%` sopra `--pannello-2` in `insegna`) e un alone
+appena accennato. Il gradiente in diagonale della fascia qui **non c'è**, e la
+rinuncia è dichiarata: `background-image` su una riga è già occupato dal
+riquadro di ruolo, che sta apposta su quel livello per non coprire la lastra
+del tema. Una tinta che se lo prendesse cancellerebbe il riquadro di capo, mod
+e VIP proprio sulle righe di chi modera. La somiglianza non è un caso ed è
+tutto il punto: erano proprio quelle le tinte chieste, e riusare i numeri del
+treno vuol dire che una colonna tinta e la fascia del treno restano parenti
+invece di litigare. `trasparente` toglie riempimento e sfocatura e tiene il
+bordo — la chat diventa scritte sospese sul gioco — e **si porta dietro l'ombra
+sul testo**, che non è un abbellimento: è l'obbligo di `nudo` detto una seconda
+volta, perché testo chiaro su fondo chiaro sparisce.
+
+**Col tema `nudo` la tinta non fa niente**, ed è una conseguenza e non una
+dimenticanza: là il riquadro non esiste, e una tinta senza riquadro non ha dove
+andare. I selettori portano `:not([data-tema="nudo"])` apposta, e che tengano è
+stato verificato leggendo gli stili calcolati invece che a occhio: nelle dodici
+combinazioni di tre temi per quattro tinte, le quattro di `nudo` danno quattro
+risultati identici.
+
+Il valore arriva come `data-tinta` sulla radice `.pollaio` (§3), e il colore
+passa da tre custom property — `--orlo-riga`, `--fondo-riga` e `--alone-riga` —
+che i temi scrivono e le tinte riscrivono. **Servono perché tema e tinta non si
+sovrascrivano a vicenda**: `notte` dice «bordo, riquadro, ombretta», `viola`
+dice di che colore, e nessuna delle due ha bisogno di conoscere le regole
+dell'altra. `trasparente` ne riscrive due e in più spegne il vetro
+(`--vetro`, `--vetro-vivo`), che è la stessa manopola con cui `fondo` decide se
+la sfocatura ha qualcosa da sfocare: **una sola porta per accendere e spegnere
+il vetro**, e non due che si contraddicono.
+
+Quello che la tinta **non** tocca sono i tre livelli che le stanno sopra e che
+hanno già il loro posto: il riquadro di ruolo su `background-image`, la
+sbarretta e il gradiente del rilievo, e le schede degli eventi. È la stessa
+disciplina detta qui sopra per il gradiente: la tinta è la lastra, non tutto
+quello che ci sta sopra.
 
 Il fondo della pagina è **sempre trasparente** (`background: transparent` su `html`
 e `body`): lo sfondo lo mette il tema sui singoli messaggi, mai la pagina. In OBS
@@ -1311,6 +1373,40 @@ Nota di confine, per non ricadere nell'errore: `menoMovimento()` in `resa.js`
 sembra codice morto e **non lo è** — la usa l'effetto `matrix`, che scombina le
 lettere da JavaScript e va fermato a mano quando le animazioni sono spente. Il
 resto degli effetti è tutto CSS, e lì basta la media query.
+
+### L'anteprima non si rimpicciolisce: si stringe la scena
+
+Il cursore «Altezza dell'anteprima» dice quanto spazio verticale l'overlay avrà
+in OBS, e il numero lì accanto — «420 × 1080» — è quello che si va a scrivere
+nella sorgente browser. Quindi **il telaio resta grande esattamente i pixel
+dichiarati**: non si ridimensiona per farlo stare dentro, e non gli si mette
+sopra nessuno zoom. Un'anteprima rimpicciolita mentirebbe proprio sulla misura
+per cui esiste.
+
+A stringersi è la **scena**, cioè il riquadro a scacchi: ha un tetto, e il
+telaio ci scorre dentro. Prima non ce l'aveva, e alzando il cursore la scena
+cresceva finché si mangiava tutta la colonna: il righello — cioè **il cursore
+che si stava trascinando** — finiva sotto il bordo della finestra, e per
+rivederlo bisognava scorrere la colonna. Si regolava un comando che scappava
+via, ed è per questo che sembrava rotto.
+
+Il tetto non è un numero fisso. Barra, testo, scena e righello stanno dentro
+`.regia__vetrina`, alta al più quanto la finestra, e lì dentro **la scena è
+l'unico pezzo che si stringe** (`flex: 0 1 auto`): gli altri prendono quello che
+gli serve, alla scena resta il resto e mai un pixel di meno. Le due note in coda
+stanno **fuori** dalla vetrina, dentro la colonna che scorre: sono prosa che si
+legge una volta, e non devono rubare spazio all'unica cosa che serve a guardare.
+Sotto i 1080 px di finestra, dove la colonna non è più appiccicata, vale il
+tetto di `70svh` — la stessa promessa scritta in un modo che non ha bisogno del
+layout a due colonne.
+
+**Quando il telaio non ci sta tutto la regia lo dice**: è `#taglio`, sotto la
+misura, e lo accende `vestiTaglio()` confrontando `scrollHeight` e
+`clientHeight` della scena — nessun numero magico da tenere allineato con
+l'altezza minima, che vive già in tre posti (`min="200"`, `ALTEZZA_MIN`, e la
+manopola). Una scena che tagliasse in silenzio sarebbe il secondo modo di
+mentire sulle misure, dopo lo zoom: si guarderebbe il fondo del riquadro
+credendo che l'overlay finisca lì.
 
 **Perché in cima, e perché il Client ID è piegato via.** Prima la sezione stava
 in fondo alla pagina e il campo del Client ID stava davanti al bottone: l'ordine
@@ -1881,6 +1977,49 @@ dal tag `emotes` (§8) e non chiedono nessun permesso. Il banco adesso copre gli
 id `emotesv2_`, lo stesso id con due intervalli nella stessa riga, e un'emoji
 prima dell'emote — che è il caso in cui contare le unità UTF-16 invece dei
 caratteri farebbe slittare il taglio di uno.
+
+### Freccia su — l'ultima riga torna nel campo
+
+Nel campo per scrivere **freccia su richiama l'ultima riga che se n'è andata**, e
+da lì si continua a risalire: ogni «su» va indietro di una, «giù» torna avanti, e
+l'ultimo «giù» riporta il campo vuoto com'era. È il gesto dei terminali e di
+tutte le chat, e serve alla stessa cosa: rimandare una riga uguale, o
+correggerne una sbagliata di un carattere, senza ribatterla.
+
+**La storia sta in memoria e non su disco**, ed è la parte da dichiarare perché è
+una scelta e non una mancanza. È `storia` dentro `barra.js`: vive quanto la
+finestra, e al riavvio non c'è più. Quello che uno ha scritto in chat non è una
+preferenza da ritrovare — è roba del suo account, e §1.3 tiene fuori dai file
+tutto ciò che riguarda l'account: in `localStorage` ci sta il gettone e basta.
+Una riga di ieri che ricompare nella finestra aperta da qualcun altro sarebbe
+una perdita che nessuno ha chiesto. Il tetto è `STORIA_MAX`, venti righe: non
+c'è nessuna ricerca, si risale premendo, e oltre la ventesima pressione
+ribattere è più veloce che cercare.
+
+**Ci entrano soltanto le righe che se ne sono davvero andate dal campo**: un
+messaggio partito, un comando eseguito, e il `/poll` o `/prediction` che ha
+aperto il pannello (`SOLO_PANNELLO`). Una riga rifiutata — il comando che non
+conosco, il messaggio che Twitch non ha preso — resta nel campo dov'è, e
+richiamare una cosa che si ha già davanti agli occhi non vuol dire niente. Due
+righe uguali di fila occupano un posto solo.
+
+**La storia si apre solo a campo vuoto**, ed è la regola che la fa convivere con
+gli altri due padroni di quei tasti. Il primo è il suggeritore delle emote, che
+con l'elenco aperto usa già su e giù per scorrerlo: **vince lui**, perché nel
+`keydown` `tastiSuggeriti` è chiamata per prima e chi consuma il tasto ritorna
+`true` — la storia non duplica quel meccanismo, ci si appoggia. Il secondo è il
+cursore: il campo è multiriga, e dentro un messaggio di tre righe freccia su
+deve continuare a muoverlo. Rubarlo a chi sta scrivendo sarebbe peggio della
+comodità che si aggiunge, quindi finché nel campo c'è qualcosa che ha battuto
+lui — anche una riga sola — su e giù non sono nostri. A campo vuoto non c'è
+niente da perdere e la storia parte; da lì in poi il testo nel campo l'abbiamo
+messo noi, e su e giù continuano a navigare finché lui non lo **modifica**: al
+primo `input` la bozza torna sua e la navigazione si chiude. Si chiude anche su
+Esc, che continua a svuotare il campo come ha sempre fatto.
+
+La riga richiamata arriva col **cursore in fondo**, non in testa: una riga si
+richiama per aggiungerci o togliere l'ultima parola, non per rileggerla
+dall'inizio.
 
 ### `attiva`, il comando del launcher
 

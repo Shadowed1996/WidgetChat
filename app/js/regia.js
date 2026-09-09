@@ -103,7 +103,7 @@
 
   function agganciaNodi() {
     const id = [
-      'gruppi', 'gruppi-vuoto', 'scena', 'telaio', 'misura',
+      'gruppi', 'gruppi-vuoto', 'scena', 'telaio', 'misura', 'taglio',
       'altezza', 'altezza-valore', 'indirizzo', 'copia', 'copia-testo',
       'apri', 'salva-nota', 'ripristina', 'conferma', 'conferma-si', 'conferma-no',
       'eco', 'azzera-eco', 'scordata'
@@ -575,11 +575,16 @@
     vestiScordata();
   }
 
+  function vestiTaglio() {
+    nodi.taglio.hidden = nodi.scena.scrollHeight <= nodi.scena.clientHeight + 1;
+  }
+
   function misuraTelaio() {
     const larghezza = normalizza('larghezza', valori.larghezza);
     nodi.telaio.style.inlineSize = larghezza + 'px';
     nodi.telaio.style.blockSize = altezza + 'px';
     nodi.misura.textContent = larghezza + ' × ' + altezza;
+    vestiTaglio();
   }
 
   function indirizzoAnteprima() {
@@ -871,6 +876,8 @@
       misuraTelaio();
       programma();
     });
+
+    window.addEventListener('resize', vestiTaglio);
   }
 
   function ascoltaAzioni() {

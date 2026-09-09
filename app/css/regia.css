@@ -263,6 +263,16 @@ html[data-finestra] .regia__conto-cifre { cursor: text; }
     overscroll-behavior: contain;
     padding-inline-end: var(--passo);
   }
+
+  .regia__vetrina {
+    display: flex;
+    flex-direction: column;
+    max-block-size: calc(100svh - var(--passo-3));
+  }
+
+  .regia__vetrina .regia__scena {
+    flex: 0 1 auto;
+  }
 }
 
 .regia__gruppi {
@@ -665,6 +675,10 @@ label.regia__etichetta { cursor: pointer; }
   border-radius: var(--raggio);
   overflow: auto;
   overscroll-behavior-x: contain;
+
+  min-block-size: 0;
+  max-block-size: 70vh;
+  max-block-size: 70svh;
 
   display: flex;
   justify-content: safe center;

@@ -152,6 +152,10 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
 .pollaio {
   --vetro:      none;
   --vetro-vivo: none;
+
+  --orlo-riga:  var(--linea);
+  --fondo-riga: var(--pannello);
+  --alone-riga: 0 0 0 rgb(0 0 0 / 0);
 }
 
 body[data-fondo="scuro"]   .pollaio,
@@ -162,12 +166,14 @@ body[data-fondo="magenta"] .pollaio {
 }
 
 .pollaio[data-tema="notte"] .pollaio__riga {
-  border: 1px solid var(--linea);
+  border: 1px solid var(--orlo-riga);
 
   border-radius: var(--raggio-s);
-  background-color: var(--pannello);
+  background-color: var(--fondo-riga);
 
-  box-shadow: 0 2px 6px color-mix(in srgb, var(--fondo) 55%, transparent);
+  box-shadow:
+    var(--alone-riga),
+    0 2px 6px color-mix(in srgb, var(--fondo) 55%, transparent);
 }
 
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
@@ -194,17 +200,21 @@ body[data-fondo="magenta"] .pollaio {
   gap: calc(var(--passo) * 0.55 * var(--aria));
 }
 
+.pollaio[data-tema="insegna"] { --fondo-riga: var(--pannello-2); }
+
 .pollaio[data-tema="insegna"] .pollaio__riga {
-  border: 1px solid var(--linea);
+  border: 1px solid var(--orlo-riga);
   border-inline-start: 3px solid var(--linea-forte);
   border-radius: var(--raggio-s);
-  background-color: var(--pannello-2);
+  background-color: var(--fondo-riga);
   background-image: linear-gradient(
     168deg,
     color-mix(in srgb, var(--viola-chiaro) 8%, transparent) 0%,
     transparent 60%
   );
-  box-shadow: var(--ombra-morbida);
+  box-shadow:
+    var(--alone-riga),
+    var(--ombra-morbida);
 }
 
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
@@ -212,6 +222,38 @@ body[data-fondo="magenta"] .pollaio {
     -webkit-backdrop-filter: var(--vetro);
             backdrop-filter: var(--vetro);
   }
+}
+
+.pollaio[data-tinta="viola"] { --tinta-riga: var(--viola); }
+.pollaio[data-tinta="ciano"] { --tinta-riga: var(--ciano); }
+
+.pollaio:not([data-tema="nudo"])[data-tinta="viola"],
+.pollaio:not([data-tema="nudo"])[data-tinta="ciano"] {
+  --orlo-riga:  color-mix(in srgb, var(--tinta-riga) 42%, transparent);
+  --fondo-riga: color-mix(in srgb, var(--tinta-riga) 15%, var(--pannello));
+  --alone-riga: 0 0 14px -9px color-mix(in srgb, var(--tinta-riga) 55%, transparent);
+}
+
+.pollaio[data-tema="insegna"][data-tinta="viola"],
+.pollaio[data-tema="insegna"][data-tinta="ciano"] {
+  --fondo-riga: color-mix(in srgb, var(--tinta-riga) 22%, var(--pannello-2));
+}
+
+.pollaio:not([data-tema="nudo"])[data-tinta="trasparente"] {
+  --fondo-riga:     transparent;
+  --vetro:          none;
+  --vetro-vivo:     none;
+  --ombra-corrente: var(--ombra-testo);
+}
+
+.pollaio[data-tinta="trasparente"] .pollaio__riga {
+  text-shadow: var(--ombra-testo);
+}
+
+.pollaio[data-tinta="trasparente"] .pollaio__emote,
+.pollaio[data-tinta="trasparente"] .pollaio__distintivo,
+.pollaio[data-tinta="trasparente"] .pollaio__cheer {
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.9)) drop-shadow(0 0 6px rgb(0 0 0 / 0.7));
 }
 
 .pollaio {
@@ -435,6 +477,13 @@ body[data-fondo="magenta"] .pollaio {
 .pollaio[data-tema="insegna"] .pollaio__riga[data-rilievo="3"] {
   border-inline-start-color: var(--rilievo);
   padding-inline-start: var(--passo);
+}
+
+.pollaio[data-tema="notte"] .pollaio__riga[data-rilievo="1"],
+.pollaio[data-tema="notte"] .pollaio__riga[data-rilievo="2"],
+.pollaio[data-tema="notte"] .pollaio__riga[data-rilievo="3"] {
+  border-inline-start: 3px solid var(--rilievo);
+  padding-inline-start: calc(var(--passo) - 3px);
 }
 
 .pollaio__etichetta {

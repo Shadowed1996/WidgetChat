@@ -323,6 +323,14 @@ Le emote non si battono a memoria: **due punti e una lettera** aprono sopra al
 campo l'elenco di quelle che somigliano, e si sceglie da lì. Com'è fatto è
 spiegato nella stessa sezione.
 
+**Freccia su richiama l'ultima riga che hai mandato**, e da lì si continua a
+risalire: ogni «su» va indietro di una, «giù» torna avanti, e l'ultimo «giù» ti
+ridà il campo vuoto. Serve a rimandare una riga uguale, o a correggerne una
+sbagliata di un carattere, senza ribatterla. Funziona **a campo vuoto**: se stai
+già scrivendo, le frecce restano al cursore, com'è giusto che sia — e se
+l'elenco delle emote è aperto, su e giù scorrono quello. Le ultime venti righe
+se le ricorda finché la finestra resta aperta, e non le scrive da nessuna parte.
+
 Dallo stesso campo partono anche **i comandi di Twitch** — `/ban`, `/timeout`,
 `/poll` e altri ventiquattro — e cliccando un nome si apre il menù che li dà
 senza far ricopiare niente. Sono due sezioni a parte, più sotto: «I comandi di
@@ -397,6 +405,13 @@ dice, non lo fa di nascosto.
 
 L'anteprima gira sempre in modalità prova, altrimenti a canale spento non ci
 sarebbe niente da guardare.
+
+Sotto c'è il cursore **Altezza dell'anteprima**. Non è un'impostazione
+dell'overlay e non finisce nell'indirizzo: è quanto spazio verticale gli lasci
+in OBS, e serve a vedere quanti messaggi ci stanno prima che i vecchi comincino
+a uscire. Se chiedi più di quanto ne stia sullo schermo **l'anteprima non si
+rimpicciolisce** — sarebbe una misura falsa proprio dove serve quella vera: il
+riquadro a scacchi diventa una finestrella che scorre, e te lo scrive.
 
 ### La misura della finestra
 
@@ -978,6 +993,7 @@ serve per quando vuoi ritoccare a mano.
 | `scala` | `100` | grandezza del testo in percentuale, da 60 a 200 |
 | `verso` | `su` | `su` i nuovi in basso · `giu` i nuovi in alto |
 | `fondo` | `trasparente` | `trasparente` per la Sorgente Browser · `scuro` per la finestra · `verde`/`magenta` per il chroma key |
+| `tinta` | `normale` | il fondo dei messaggi: `normale` quello del tema · `trasparente` solo bordo e testo · `viola` e `ciano` la tinta dell'hype train su ogni riga. Col tema `nudo` non fa niente, perché lì il riquadro non c'è |
 | `spazio` | `130` | aria fra i messaggi, in percentuale da 40 a 400 |
 | `effetto` | `scivola` | come entra un messaggio: `scivola` · `bagliore` · `sfoca` · `glitch` · `matrix` · `insegna` · `scatto` · `niente` |
 | `velocita` | `100` | quanto va svelto l'effetto, in percentuale da 25 a 300 |

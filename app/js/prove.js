@@ -126,6 +126,22 @@
     });
   });
 
+  prova('la tinta dei messaggi nasce «normale»', function () {
+    uguale(window.Impostazioni.leggi('').tinta, 'normale', 'senza parametri');
+    uguale(window.Impostazioni.leggi('tinta=arcobaleno').tinta, 'normale', 'una voce inventata');
+  });
+
+  prova('la tinta va e torna, e al predefinito non si scrive', function () {
+    uguale(window.Impostazioni.indirizzo(window.Impostazioni.leggi('tinta=normale'), ''), '',
+      'al predefinito resta fuori dall’indirizzo');
+    uguale(window.Impostazioni.indirizzo(window.Impostazioni.leggi('tinta=ciano'), ''), '?tinta=ciano',
+      'cambiata, ci finisce');
+
+    const tornato = window.Impostazioni.leggi(
+      window.Impostazioni.indirizzo(window.Impostazioni.leggi('tinta=viola'), ''));
+    uguale(tornato.tinta, 'viola', 'andata e ritorno');
+  });
+
   prova('le due manopole della barra nascono accese', function () {
     const v = window.Impostazioni.leggi('');
     uguale(v.barra, true, 'barra');

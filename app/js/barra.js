@@ -9,6 +9,8 @@
 
   var RESTA_DA = 100;
 
+  var STORIA_MAX = 20;
+
   var conf = {
     canale: '',
     prova: false,
@@ -757,7 +759,67 @@
 
   var canaleId = '';
 
+  var storia = [];
+  var passoStoria = -1;
+
+  function chiudiStoria() {
+    passoStoria = -1;
+  }
+
+  function ricorda(testo) {
+    var riga = String(testo || '');
+
+    chiudiStoria();
+    if (!riga || storia[0] === riga) { return; }
+
+    storia.unshift(riga);
+    if (storia.length > STORIA_MAX) { storia.length = STORIA_MAX; }
+  }
+
+  function richiama(testo) {
+    nodi.campo.value = testo;
+    nodi.campo.setSelectionRange(testo.length, testo.length);
+    cresci();
+    vestiResta();
+    vestiManda();
+  }
+
+  function tastiStoria(evento) {
+    if (evento.key !== 'ArrowUp' && evento.key !== 'ArrowDown') { return false; }
+    if (!storia.length) { return false; }
+
+    var su = evento.key === 'ArrowUp';
+
+    if (passoStoria < 0) {
+      if (!su || nodi.campo.value !== '') { return false; }
+
+      evento.preventDefault();
+      passoStoria = 0;
+      richiama(storia[0]);
+      return true;
+    }
+
+    evento.preventDefault();
+
+    if (su) {
+      if (passoStoria < storia.length - 1) { passoStoria++; }
+      richiama(storia[passoStoria]);
+      return true;
+    }
+
+    if (passoStoria === 0) {
+      chiudiStoria();
+      richiama('');
+      return true;
+    }
+
+    passoStoria--;
+    richiama(storia[passoStoria]);
+    return true;
+  }
+
   function svuotaCampo() {
+    chiudiStoria();
     nodi.campo.value = '';
     cresci();
     vestiResta();
@@ -787,6 +849,7 @@
 
         if (guaio) { eco(guaio, true); return; }
 
+        ricorda(testo);
         svuotaCampo();
         eco(detto || 'Fatto.');
       });
@@ -801,6 +864,7 @@
     if (testo.charAt(0) === '/') {
       var solo = SOLO_PANNELLO.exec(testo);
       if (solo) {
+        ricorda(testo);
         svuotaCampo();
         apriSondaggio(solo[1]);
         return;
@@ -833,6 +897,7 @@
         return;
       }
 
+      ricorda(testo);
       nodi.campo.value = '';
       cresci();
       vestiResta();
@@ -852,6 +917,7 @@
     });
 
     nodi.campo.addEventListener('input', function () {
+      chiudiStoria();
       cresci();
       vestiResta();
       vestiManda();
@@ -862,6 +928,7 @@
 
     nodi.campo.addEventListener('keydown', function (evento) {
       if (tastiSuggeriti(evento)) { return; }
+      if (tastiStoria(evento)) { return; }
 
       if (evento.key === 'Enter' && !evento.shiftKey) {
         evento.preventDefault();
@@ -870,6 +937,7 @@
       }
       if (evento.key === 'Escape' && nodi.campo.value !== '') {
         evento.preventDefault();
+        chiudiStoria();
         nodi.campo.value = '';
         cresci();
         vestiResta();
@@ -1052,6 +1120,7 @@
         su: eco,
         scrivi: function (riga) {
           if (nodi.scrivi.hidden) { return; }
+          chiudiStoria();
           nodi.campo.value = riga;
           nodi.campo.setSelectionRange(riga.length, riga.length);
           cresci();

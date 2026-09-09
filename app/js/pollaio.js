@@ -21,6 +21,7 @@
     radice.setAttribute('data-tema', valori.tema);
     radice.setAttribute('data-verso', valori.verso);
     radice.setAttribute('data-effetto', valori.effetto);
+    radice.setAttribute('data-tinta', valori.tinta);
 
     var aria = Math.max(40, Math.min(400, valori.spazio)) / 100;
     radice.style.setProperty('--aria', aria.toFixed(3));
