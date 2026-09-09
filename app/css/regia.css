@@ -312,6 +312,20 @@ label.regia__etichetta { cursor: pointer; }
   max-inline-size: 60ch;
 }
 
+/* Quando il computer ha già risposto per conto suo, e la risposta spegne
+   qualcosa che l'utente crede acceso. */
+.regia__allarme {
+  margin-block-start: var(--passo-3);
+  padding: var(--passo-3) var(--passo-2);
+  border: 1px solid var(--allerta);
+  border-radius: var(--raggio);
+  background-color: color-mix(in srgb, var(--allerta) 12%, transparent);
+  color: var(--allerta);
+  font-size: var(--t-micro);
+  line-height: 1.5;
+  max-inline-size: 60ch;
+}
+
 .regia__riga {
   display: flex;
   align-items: center;

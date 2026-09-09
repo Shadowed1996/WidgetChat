@@ -897,6 +897,34 @@ un'interfaccia, si guarda in un browser).
 - le scelte si ricordano in `localStorage` (`sb-pollaio-regia`)
 - un bottone **Ripristina** che rimette tutto ai predefiniti
 
+### L'unico avviso della regia — `.regia__allarme`
+
+Sotto la manopola **«Quando animare»** compare un riquadro in `--allerta` quando
+il computer chiede `prefers-reduced-motion: reduce` **e** la scelta è ancora
+«come dice il computer». Lo decide `chiedeCalma()` in `regia.js`, che interroga
+`matchMedia` per conto suo: l'anteprima è un `<iframe>`, quindi `resa.js` è in
+un altro contesto e non c'è niente da condividere.
+
+**Perché esiste, e perché sta lì e non altrove.** Rispettare quell'interruttore
+è giusto, ma farlo **in silenzio** produce il peggior tipo di guasto: non si
+rompe niente, semplicemente non succede più niente, e il widget non ha modo di
+scagionarsi. Chi lo subisce dà la colpa al programma e lo reinstalla, che è la
+sola cosa che non può funzionare, visto che la causa è nel sistema operativo.
+La manopola che governa il comportamento è l'unico posto in cui uno andrebbe a
+cercare, quindi è lì che va detto.
+
+**Nell'overlay non ci va.** Un avviso sopra al gameplay è esattamente ciò che
+l'overlay non deve fare: la regia si guarda, l'overlay si trasmette.
+
+L'avviso si aggiorna da solo su `change` del `matchMedia`, perché il gesto
+naturale è andare a girare l'interruttore in Windows e tornare indietro: se
+trovasse ancora il riquadro giallo, direbbe una cosa non più vera.
+
+Nota di confine, per non ricadere nell'errore: `menoMovimento()` in `resa.js`
+sembra codice morto e **non lo è** — la usa l'effetto `matrix`, che scombina le
+lettere da JavaScript e va fermato a mano quando le animazioni sono spente. Il
+resto degli effetti è tutto CSS, e lì basta la media query.
+
 **Perché in cima, e perché il Client ID è piegato via.** Prima la sezione stava
 in fondo alla pagina e il campo del Client ID stava davanti al bottone: l'ordine
 della pagina raccontava che la prima cosa da fare fosse registrare

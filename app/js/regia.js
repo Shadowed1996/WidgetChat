@@ -21,6 +21,30 @@
 
   const ATTESA_SICURO = 5000;
 
+  // Windows ha un interruttore — Accessibilità, Effetti visivi — che chiede a
+  // tutti i programmi di muoversi il meno possibile, e il pollaio lo rispetta:
+  // con «come dice il computer» non parte più nessun effetto d'ingresso. È la
+  // cosa giusta da fare ed è l'unica cosa sbagliata da fare in silenzio: chi
+  // non sa dell'interruttore vede i messaggi entrare secchi, dà la colpa al
+  // widget e lo reinstalla. Qui glielo si dice, sotto al campo che lo governa,
+  // che è l'unico posto dove verrebbe a cercarlo.
+  const CALMA = (function () {
+    try {
+      return window.matchMedia
+        ? window.matchMedia('(prefers-reduced-motion: reduce)')
+        : null;
+    } catch (err) { return null; }
+  }());
+
+  const DETTO_CALMA = 'Il tuo computer chiede meno animazioni — è l’interruttore ' +
+    'di Windows in Impostazioni, Accessibilità, Effetti visivi. Finché resta ' +
+    'così, con «come dice il computer» i messaggi entrano senza nessun effetto. ' +
+    'Metti «anima comunque», oppure riaccendi quell’interruttore.';
+
+  function chiedeCalma() {
+    return !!(CALMA && CALMA.matches);
+  }
+
   const GRUPPI = [
     {
       chiave: 'canale',
@@ -267,6 +291,17 @@
     campo.setAttribute('aria-labelledby', titolo.id);
     campo.setAttribute('aria-describedby', idAiuto(voce));
 
+    // Il solo campo che ha qualcosa da dire quando il computer risponde per
+    // conto suo: si accende da sé e sparisce appena la scelta è «sempre».
+    const allarme = voce.chiave === 'movimento'
+      ? crea('p', 'regia__allarme', DETTO_CALMA)
+      : null;
+
+    function vestiAllarme(valore) {
+      if (!allarme) { return; }
+      allarme.hidden = !(chiedeCalma() && valore !== 'sempre');
+    }
+
     const segmenti = crea('div', 'regia__segmenti');
     const radio = [];
     let i;
@@ -284,7 +319,9 @@
         etichetta.htmlFor = bottone.id;
 
         bottone.addEventListener('change', function () {
-          if (bottone.checked) { cambia(voce.chiave, scelta.valore); }
+          if (!bottone.checked) { return; }
+          vestiAllarme(scelta.valore);
+          cambia(voce.chiave, scelta.valore);
         });
 
         radio.push(bottone);
@@ -298,11 +335,31 @@
       for (k = 0; k < radio.length; k += 1) {
         radio[k].checked = (radio[k].value === valore);
       }
+      vestiAllarme(valore);
     };
 
     campo.appendChild(titolo);
     campo.appendChild(segmenti);
     campo.appendChild(aiutoDi(voce));
+
+    if (allarme) {
+      allarme.hidden = true;
+      campo.appendChild(allarme);
+
+      // Chi va a girare l'interruttore di Windows e torna qui deve trovare
+      // l'avviso già sparito, senza riaprire la regia.
+      if (CALMA && typeof CALMA.addEventListener === 'function') {
+        CALMA.addEventListener('change', function () {
+          let scelto = 'auto';
+          let k;
+          for (k = 0; k < radio.length; k += 1) {
+            if (radio[k].checked) { scelto = radio[k].value; }
+          }
+          vestiAllarme(scelto);
+        });
+      }
+    }
+
     return campo;
   }
 

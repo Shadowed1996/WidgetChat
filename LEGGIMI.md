@@ -1141,9 +1141,18 @@ uscita, la spia non batte, la fascia dell'hype train sta ferma, il pollo non
 dondola. Quasi sempre è Windows: Impostazioni → Accessibilità → Effetti visivi →
 **Effetti di animazione**. Quando quell'interruttore è spento, il computer chiede
 a tutti i programmi di muoversi il meno possibile, e il pollaio gli dà retta —
-in blocco, e senza dirlo. È per questo che sembra un difetto del widget: due
-persone sullo stesso canale, una vede l'effetto glitch e l'altra non lo vede su
-nessun messaggio.
+in blocco. È per questo che sembra un difetto del widget: due persone sullo
+stesso canale, una vede l'effetto glitch e l'altra non lo vede su nessun
+messaggio.
+
+**Adesso però non lo fa più di nascosto.** Qui c'era scritto «e senza dirlo», ed
+era la parte che faceva perdere il pomeriggio: chi non sa di quell'interruttore
+dà la colpa al widget, resetta le impostazioni e reinstalla, e non cambia niente
+perché la causa non è nel programma. Dalla 1.2.1 **la regia se ne accorge da
+sola**: se il computer chiede meno animazioni e la manopola è su «come dice il
+computer», sotto a quella manopola compare un riquadro giallo che dice cosa sta
+succedendo e come si rimedia. Sparisce da sé appena giri la manopola, o appena
+riaccendi l'interruttore in Windows e torni sulla regia.
 
 **Il rimedio è uno dei due**: riaccendere gli effetti in Windows, oppure mettere
 `movimento=sempre` fra i parametri dell'indirizzo. Nella regia è la manopola
