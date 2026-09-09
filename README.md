@@ -4,7 +4,7 @@ Widget della chat di **Twitch**, **Kick** e **YouTube** da mettere in OBS: si
 collega alla chat vera, la disegna con la grafica del canale e si cattura come
 sorgente browser sopra al gameplay.
 
-![Versione](https://img.shields.io/badge/versione-1.2.15-8b2fff)
+![Versione](https://img.shields.io/badge/versione-1.2.16-8b2fff)
 ![Piattaforma](https://img.shields.io/badge/piattaforma-Windows-22e0ff)
 ![Dipendenze](https://img.shields.io/badge/dipendenze-zero-3fb950)
 ![Licenza](https://img.shields.io/badge/licenza-proprietaria-6e7681)

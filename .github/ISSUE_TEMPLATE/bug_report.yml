@@ -66,7 +66,7 @@ body:
     attributes:
       label: Versione del pollaio
       description: La trovi nella regia, oppure è il tag della release che hai scaricato.
-      placeholder: "1.2.15"
+      placeholder: "1.2.16"
     validations:
       required: true
 

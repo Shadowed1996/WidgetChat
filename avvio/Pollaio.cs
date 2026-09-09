@@ -185,7 +185,7 @@ internal static class Programma
 
     public static string Installato = "";
 
-    public const string VERSIONE = "1.2.15";
+    public const string VERSIONE = "1.2.16";
 }
 
 internal sealed class Preferenze

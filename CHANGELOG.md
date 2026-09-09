@@ -12,7 +12,16 @@ coincidere col tag: il workflow di release si ferma se i due non combaciano.
 
 ## [Non rilasciato]
 
+## [1.2.16] — 2026-09-10
+
 ### Aggiunto
+- Manopola **«Il fondo dei messaggi»** (`tinta`): il riquadro di ogni messaggio
+  può restare quello del tema oppure diventare trasparente, viola o ciano — le
+  due tinte sono quelle della fascia dell'Hype Train. Col tema «Nudo» non fa
+  niente, perché lì il riquadro non esiste.
+- Nel campo per scrivere, **freccia su richiama l'ultima riga mandata**, e da lì
+  si risale; giù torna avanti fino al campo vuoto. Le ultime venti righe, tenute
+  solo in memoria e mai scritte su disco.
 - Documentazione standard del repository: `README.md`, `LICENSE`, `SECURITY.md`,
   `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `CHANGELOG.md`.
 - Template per issue e pull request, `CODEOWNERS`, `dependabot.yml` e un
@@ -22,6 +31,14 @@ coincidere col tag: il workflow di release si ferma se i due non combaciano.
 ### Modificato
 - `.gitattributes` e `.gitignore` estesi: `lib/` marcata come libreria di terzi,
   binari dichiarati come tali, esclusi gli artefatti di compilazione mancanti.
+
+### Corretto
+- L'anteprima della regia non si allunga più oltre la finestra quando si alza il
+  cursore dell'altezza: la scena diventa una finestrella che scorre e il righello
+  col cursore resta in vista. L'anteprima non si rimpicciolisce — sarebbe una
+  misura falsa proprio dove serve quella vera — e quando è tagliata lo dice.
+- Nel tema «Notte» la sbarretta colorata del rilievo torna visibile: il bordo del
+  tema le passava sopra, e non si era mai vista.
 
 ## [1.2.15] — 2026-09-09
 
@@ -260,7 +277,8 @@ Prima release pubblica.
 - Il workflow di release che compila il launcher, prepara `pollaio.zip` e
   pubblica il tutto.
 
-[Non rilasciato]: https://github.com/Shadowed1996/WidgetChat/compare/v1.2.15...HEAD
+[Non rilasciato]: https://github.com/Shadowed1996/WidgetChat/compare/v1.2.16...HEAD
+[1.2.16]: https://github.com/Shadowed1996/WidgetChat/compare/v1.2.15...v1.2.16
 [1.2.15]: https://github.com/Shadowed1996/WidgetChat/compare/v1.2.14...v1.2.15
 [1.2.14]: https://github.com/Shadowed1996/WidgetChat/compare/v1.2.13...v1.2.14
 [1.2.13]: https://github.com/Shadowed1996/WidgetChat/compare/v1.2.12...v1.2.13
