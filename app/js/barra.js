@@ -301,9 +301,9 @@
 
     // Qui, e una volta sola: è l’istante in cui uno guarda l’elenco e non ci
     // trova le sue.
-    if (mieMancano && !dettoDelleMie) {
+    if (mancanoPerche && !dettoDelleMie) {
       dettoDelleMie = true;
-      eco('Qui ci sono solo le emote di 7TV, BTTV e FFZ. Per le tue di Twitch al collegamento manca il permesso «user:read:emotes»: si rimedia con «Connetti account».', true);
+      eco('Qui ci sono solo le emote di 7TV, BTTV e FFZ. ' + mancanoPerche, true);
     }
   }
 
@@ -541,8 +541,21 @@
   var genteAvviata = false;
 
   function avviaGente() {
-    if (genteAvviata || conf.prova) { return; }
-    if (!window.Conto.collegato()) { return; }
+    if (genteAvviata) { return; }
+
+    // I due casi in cui le tue emote di Twitch non arrivano e non c’era niente
+    // che lo dicesse: qui si usciva e basta, e nel suggeritore restavano le sole
+    // 7TV. Il motivo si mette da parte adesso e si racconta dopo, quando uno
+    // apre l’elenco e non ci trova le sue.
+    if (conf.prova) {
+      nienteMie('Sono in prova, e in prova non chiedo niente a Twitch.');
+      return;
+    }
+
+    if (!window.Conto.collegato()) {
+      nienteMie('Le tue arrivano solo con l’account collegato: si fa dalla regia, o dal bottone qui sotto.');
+      return;
+    }
 
     genteAvviata = true;
 
@@ -572,8 +585,17 @@
   // per girare a vuoto qui dentro.
   var PAGINE_MIE = 20;
 
-  var mieMancano = false;
+  // Il perché, non un sì o un no: i modi di restare senza le proprie emote sono
+  // quattro — la prova, l’account scollegato, il permesso che manca, la
+  // richiesta che va male — e a chi guarda l’elenco sembrano tutti la stessa
+  // cosa. Il primo che capita se lo tiene: dirne uno giusto vale più che
+  // dirli tutti.
+  var mancanoPerche = '';
   var dettoDelleMie = false;
+
+  function nienteMie(perche) {
+    if (!mancanoPerche) { mancanoPerche = perche; }
+  }
 
   function prendiLeMie(id) {
     if (!window.Emote || !window.Emote.aggiungiTwitch) { return; }
@@ -583,7 +605,10 @@
     // si dice adesso, che è l’avvio e non l’ha chiesto nessuno: si dice quando
     // il suggeritore si apre senza le sue emote dentro, che è il momento in cui
     // uno se ne accorge e viene a cercare il perché.
-    if (!window.Conto.puo('user:read:emotes')) { mieMancano = true; return; }
+    if (!window.Conto.puo('user:read:emotes')) {
+      nienteMie('Al collegamento manca il permesso «user:read:emotes»: si rimedia con «Connetti account».');
+      return;
+    }
 
     var chi = window.Conto.chi();
     if (!chi || !chi.utenteId) { return; }
@@ -596,7 +621,13 @@
         dopo ? base + '&after=' + encodeURIComponent(dopo) : base,
         null,
         function (guaio, dati) {
-          if (guaio || !dati) { return; }
+          if (guaio || !dati) {
+            // Un 401 dopo un rinnovo e un 400 sull’id sono guasti diversi, ma da
+            // qui si vedono uguali. Quello che conta è che non passino per «non
+            // hai emote», che è l’unica lettura sbagliata.
+            if (quante === 1) { nienteMie('Twitch non me le ha date: ' + (guaio || 'risposta vuota') + '.'); }
+            return;
+          }
 
           window.Emote.aggiungiTwitch(dati.data);
 

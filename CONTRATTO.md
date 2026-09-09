@@ -948,6 +948,62 @@ indirizzo per due domande diverse — «dove sono» e «dove sarà chi lo aprir�
 `apri()` usa `indirizzoQui()` apposta: un `file:///` aperto da una pagina `https`
 lo blocca Chromium, e la finestra resterebbe bianca a raccontare un guasto che
 non c'è.
+
+### Il server in casa — `Servente`, e perché ce n'è uno solo
+
+Il `file:///` funziona ma si sbaglia: è lungo, si rompe se sposti la cartella,
+non si può usare da un secondo computer, e quando è sbagliato OBS non lo dice —
+lascia una sorgente bianca. Dalla 1.2.3 il launcher tiene acceso un piccolo
+server e la regia consegna quell'indirizzo: `http://<ip di casa>:4747/pollaio.html?…`.
+
+**Resta dentro il vincolo delle zero dipendenze** (§1.1): un `TcpListener` e
+l'HTTP scritto a mano, quel tanto che serve a rispondere a una `GET` di un file
+sul disco. Non è un server web e non deve diventarlo.
+
+**Il `file://` non va in pensione.** Il vincolo §1.2 resta intatto: la pagina
+deve continuare ad aprirsi dal disco, e continua. Il server è una strada in più,
+non una sostituzione — se è spento (`rete=0`) o se la regia si apre senza un
+pollaio acceso, l'indirizzo torna a essere il `file:///` di prima.
+
+**Tre difese, e sono tre righe.** Un server che consegna file su richiesta è
+esattamente il posto dove si sbaglia:
+- **solo `GET` e `HEAD`**, tutto il resto è 405;
+- **solo le estensioni dell'elenco `TIPI`** — non è una comodità per non
+  scrivere un altro `if`, è ciò che tiene il server incapace di consegnare
+  qualcosa che non sia il widget, anche il giorno che dentro `app/` finisse per
+  sbaglio un file che non c'entra;
+- **il confine si controlla dopo aver risolto il percorso**, non prima. Cercare
+  i due punti dentro la richiesta è una gara che si perde, fra codifiche
+  percentuali e barre doppie: si compone il percorso, si fa `GetFullPath`, e se
+  non comincia per la cartella di `app/` non esce niente. Provato con
+  `..%2f..%2f`, `....//` e `%2e%2e/`: tutti 404.
+
+Fuori da `app/` non si consegna nulla, e `app/` non contiene segreti — il
+gettone sta in `localStorage` e non in un file (§1.3), quindi non c'è niente da
+esporre nemmeno servendo la regia.
+
+**Il server lo accende soltanto la chat, mai la regia.** La regia gira in un
+altro processo (`--regia`): se accendesse un secondo server sarebbero due porte,
+e quella scritta in OBS morirebbe il giorno che chiudi la regia. Quindi
+`AccendiLaRete` si biforca — la chat chiama `Accendi`, la regia chiama
+`CercaInCasa`, che bussa alle porte da `porta` in poi e usa la prima che
+risponde. Se non risponde nessuno l'indirizzo resta vuoto, e la regia scrive il
+`file:///`: **meglio un indirizzo scomodo che uno che non apre niente.**
+
+**La porta si sceglie e sta ferma.** Se è occupata se ne provano dodici, ma non
+è la strada buona: un indirizzo che cambia da un avvio all'altro smetterebbe di
+valere in OBS senza dire perché. Per questo `porta=` sta nel `.ini`.
+
+**L'ip è quello della scheda col gateway**, non il primo dell'elenco: fra schede
+virtuali, VPN e Hyper-V il primo è quasi sempre quello sbagliato, e un ip
+sbagliato qui non si riconosce guardandolo — si scopre in OBS, con una sorgente
+vuota, quando la diretta è già cominciata.
+
+**`Cache-Control: no-store` su tutto.** I file sotto non cambiano mai da soli:
+l'unica volta che cambiano è quando li cambiamo noi, e in quel momento
+«ricarica la sorgente» deve rileggere davvero, invece di far credere che una
+correzione non sia arrivata.
+
 ### L'unico avviso della regia — `.regia__allarme`
 
 Sotto la manopola **«Quando animare»** compare un riquadro in `--allerta` quando
@@ -1490,15 +1546,30 @@ segue il cursore fino a quando finisce, con un tetto di `PAGINE_MIE` giri —
 perché un cursore che non finisce mai è un guasto di Twitch, e non un buon
 motivo per girare a vuoto qui dentro.
 
-**Il permesso che manca si dice, ma non all'avvio.** Un gettone più vecchio
-dello scope non ha `user:read:emotes`, la richiesta non parte, e nel suggeritore
-restano le sole 7TV: sembra un difetto del widget e invece è un collegamento da
-rifare. Lo si dice **la prima volta che il suggeritore si apre**, una volta
-sola, perché è lì che uno guarda l'elenco e non ci trova le sue — e non
-all'avvio, dove nessuno ha chiesto niente e un avviso è solo rumore. È la stessa
-disciplina delle pastiglie Sondaggio e Pronostico, spostata di un momento: **non
-si tace su una cosa che non può funzionare, ma la si dice quando è la risposta a
-una domanda che qualcuno si è appena fatto.**
+**I modi di restare senza le proprie emote sono quattro, e a chi guarda l'elenco
+sembrano tutti la stessa cosa** — l'elenco mostra le 7TV e tace. Sono: la
+modalità prova, l'account scollegato, il permesso `user:read:emotes` che manca
+(un gettone più vecchio dello scope: sembra un difetto del widget ed è un
+collegamento da rifare), e la richiesta che va male, dove un 401 dopo un rinnovo
+e un 400 sull'id da fuori si vedono uguali.
+
+Per questo `barra.js` non tiene un sì o un no ma **il perché**: `nienteMie(perche)`
+lo mette da parte, il primo che capita se lo tiene, e `mancanoPerche` è quello
+che il suggeritore racconta. Dirne uno giusto vale più che dirli tutti.
+
+**Si dice la prima volta che il suggeritore si apre**, una volta sola, perché è
+lì che uno guarda l'elenco e non ci trova le sue — e non all'avvio, dove nessuno
+ha chiesto niente e un avviso è solo rumore. È la stessa disciplina delle
+pastiglie Sondaggio e Pronostico, spostata di un momento: **non si tace su una
+cosa che non può funzionare, ma la si dice quando è la risposta a una domanda
+che qualcuno si è appena fatto.**
+
+**Il percorso dei messaggi è un'altra cosa e non c'entra**, ed è stato messo
+sotto prova apposta perché i due si confondono: le native nei messaggi arrivano
+dal tag `emotes` (§8) e non chiedono nessun permesso. Il banco adesso copre gli
+id `emotesv2_`, lo stesso id con due intervalli nella stessa riga, e un'emoji
+prima dell'emote — che è il caso in cui contare le unità UTF-16 invece dei
+caratteri farebbe slittare il taglio di uno.
 
 ### `attiva`, il comando del launcher
 

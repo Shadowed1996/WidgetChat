@@ -297,6 +297,66 @@
     vero(link.testo.indexOf(',') === -1, 'la virgola non deve starci: ' + mostra(link.testo));
   });
 
+  prova('un’emote nativa con id emotesv2_ esce lo stesso', function () {
+
+    const id = 'emotesv2_' + '0123456789abcdef0123456789abcdef';
+    const p = window.Emote.pezzi('slayer156Hype', id + ':0-12', 0);
+
+    let trovata = null;
+    for (let i = 0; i < p.length; i++) { if (p[i].tipo === 'emote') { trovata = p[i]; } }
+
+    vero(trovata, 'deve esserci un pezzo emote');
+    uguale(trovata.nome, 'slayer156Hype', 'nome');
+    vero(trovata.url.indexOf(id) > 0, 'l’id deve finire nell’indirizzo: ' + mostra(trovata.url));
+  });
+
+  prova('lo stesso id due volte nella riga taglia tutte e due', function () {
+
+    const p = window.Emote.pezzi('Kappa e Kappa', '25:0-4,8-12', 0);
+
+    let quante = 0;
+    for (let i = 0; i < p.length; i++) { if (p[i].tipo === 'emote') { quante++; } }
+
+    uguale(quante, 2, 'le emote tagliate');
+  });
+
+  prova('un’emoji prima dell’emote non sposta il taglio', function () {
+
+    // Twitch conta i caratteri, non i byte: un’emoji fuori dal piano base vale
+    // uno. Se qui si contassero le unità UTF-16 il taglio slitterebbe di uno e
+    // l’emote uscirebbe con un pezzo di testo attaccato.
+    const p = window.Emote.pezzi('😀 Kappa', '25:2-6', 0);
+
+    let trovata = null;
+    for (let i = 0; i < p.length; i++) { if (p[i].tipo === 'emote') { trovata = p[i]; } }
+
+    vero(trovata, 'deve esserci un pezzo emote');
+    uguale(trovata.nome, 'Kappa', 'nome');
+  });
+
+  prova('le mie emote native entrano nel suggeritore', function () {
+
+    const id = 'emotesv2_' + 'abcdef0123456789abcdef0123456789';
+    const prima = window.Emote.quanteMie();
+
+    window.Emote.aggiungiTwitch([{ id: id, name: 'slayer156Hype' }]);
+    vero(window.Emote.quanteMie() > prima, 'ne deve essere entrata almeno una');
+
+    const trovate = window.Emote.cerca('slayer156', 8);
+    vero(trovate.length > 0, 'cercando il prefisso deve uscire qualcosa');
+    uguale(trovate[0].nome, 'slayer156Hype', 'la prima trovata');
+    uguale(trovate[0].fonte, 'twitch', 'la fonte');
+  });
+
+  prova('un’emote nativa con id storto non entra', function () {
+
+    const prima = window.Emote.quanteMie();
+    window.Emote.aggiungiTwitch([{ id: 'non va bene/questo', name: 'MalMessa' }]);
+
+    uguale(window.Emote.quanteMie(), prima, 'il conto non deve muoversi');
+    uguale(window.Emote.cerca('MalMessa', 8).length, 0, 'e non deve nemmeno farsi trovare');
+  });
+
   gruppo('Emote di Kick');
 
   prova('l’emote di Kick esce col nome e l’indirizzo del suo CDN', function () {

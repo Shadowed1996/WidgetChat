@@ -511,7 +511,23 @@
     catch (err) { return relativo; }
   }
 
+  // Il launcher tiene acceso un piccolo server sulla rete di casa e ci passa il
+  // suo indirizzo. Quando c’è, batte il percorso del file per tre motivi buoni:
+  // è corto, non si rompe se sposti la cartella, e funziona anche da un secondo
+  // computer — che col `file:///` non era proprio possibile.
+  function serventeVero() {
+    const dove = typeof window.POLLAIO_SERVENTE === 'string' ? window.POLLAIO_SERVENTE : '';
+    return /^http:\/\/[0-9]{1,3}(?:\.[0-9]{1,3}){3}:[0-9]{2,5}$/.test(dove) ? dove : '';
+  }
+
+  function inRete() {
+    return serventeVero().length > 0;
+  }
+
   function indirizzoDaIncollare() {
+    const rete = serventeVero();
+    if (rete) { return rete + '/' + window.Impostazioni.indirizzo(valori); }
+
     const cartella = cartellaVera();
     if (!cartella) { return indirizzoQui(); }
 
@@ -935,7 +951,9 @@
 
   function copia() {
     agliAppunti(nodi.indirizzo.textContent, function () {
-      segnalaCopia('Copiato', 'Copiato. In OBS: sorgente Browser, «File locale» senza spunta, e questo va nel campo URL.', true);
+      segnalaCopia('Copiato', inRete()
+        ? 'Copiato. In OBS: sorgente Browser, «File locale» senza spunta, e questo va nel campo URL — anche da un altro computer di casa, se il pollaio resta acceso qui.'
+        : 'Copiato. In OBS: sorgente Browser, «File locale» senza spunta, e questo va nel campo URL.', true);
     }, function () {
       seleziona(nodi.indirizzo);
       segnalaCopia('Seleziona e copia', 'Gli appunti qui non me li lascia toccare. L’indirizzo è già selezionato: Ctrl+C e sei a posto.', false);

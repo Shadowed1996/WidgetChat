@@ -104,21 +104,35 @@ Sono davvero diversi, e la differenza conta.
 
 ### A. Sorgente browser — **è questa quella giusta per l'overlay**
 
-**Senza impostazioni**, la via corta:
+**La cosa da capire prima di tutto: la configurazione È la coda dell'indirizzo.**
+Tutto quello che giri nella regia — l'effetto d'ingresso, il tema, la scala —
+finisce dopo il `?`. Dove quella coda manca valgono i predefiniti, e siccome
+l'effetto predefinito è «Scivola», che è discreto, sembra che l'overlay funzioni
+e che l'effetto sia rotto. Non è rotto: non gliel'hai chiesto. **Se incolli in
+OBS solo il percorso fino a `pollaio.html`, hai incollato le impostazioni di
+nessuno.**
+
+Con `Pollaio.exe` acceso, il bottone **Copia** della regia ti dà un indirizzo di
+rete, coda compresa:
 
 ```
 Sorgente → + → Browser
-  ☑ File locale
-  File:       C:\Users\Filippo\AppData\Local\Pollaio\app\pollaio.html
+  ☐ File locale        ← senza spunta
+  URL:        http://192.168.1.20:4747/pollaio.html?effetto=glitch&scala=120
   Larghezza:  400
   Altezza:    600
   ☑ Aggiorna il browser quando la scena diventa attiva
 ```
 
-**Con le impostazioni della regia** — e qui c'è una trappola. Il campo «File»
-vuole un *percorso*, non un indirizzo: se ci incolli dentro qualcosa che finisce
-per `?tema=nudo`, OBS cerca un file chiamato così, non lo trova, e ti ritrovi
-una sorgente bianca. Quindi:
+È corto, non si rompe se sposti la cartella, e **funziona anche da un secondo
+computer** di casa — se OBS gira su un'altra macchina, quello è l'unico modo. Il
+server sta dentro `Pollaio.exe`: finché il pollaio è acceso l'indirizzo risponde,
+quando lo chiudi la sorgente resta vuota. Ascolta solo sulla rete di casa e
+consegna soltanto i file del widget; verso internet non apre niente. Si spegne
+con `rete=0` in `avvio\pollaio.ini`, e la porta si sceglie con `porta=`.
+
+**Senza il server** — spento, oppure il pollaio non è acceso — la regia ti dà il
+percorso del file, che funziona uguale su questo computer:
 
 ```
 Sorgente → + → Browser
@@ -127,11 +141,13 @@ Sorgente → + → Browser
 ```
 
 Tre cose da guardare: `file:///` con **tre** barre, le barre **in avanti** e non
-rovesce, e la spunta «File locale» **tolta**. Il bottone Copia della regia ti dà
-già l'indirizzo in questa forma, pronto da incollare.
+rovesce, e la spunta «File locale» **tolta**. Con la spunta messa, il campo
+«File» vuole un *percorso* e non un indirizzo: se ci incolli qualcosa che finisce
+per `?tema=nudo`, OBS cerca un file chiamato così, non lo trova, e ti ritrovi una
+sorgente bianca.
 
-**La trasparenza funziona**: sotto ai messaggi si vede il gioco. È il modo per
-mettere la chat sopra al gameplay.
+**La trasparenza funziona** in tutti e due i modi: sotto ai messaggi si vede il
+gioco. È il modo per mettere la chat sopra al gameplay.
 
 ### B. `Pollaio.exe` + Cattura finestra
 
@@ -1164,6 +1180,24 @@ che si disegna da solo. Funziona tutto, sono solo meno belli.
 **In OBS si vede un rettangolo bianco dov'è il pollo.**
 Non dovrebbe succedere: se succede, avvisami. L'immagine della mascotte ha il
 fondo bianco e viene ritagliata dal foglio di stile.
+
+**L'effetto d'ingresso si vede nell'anteprima della regia ma non in OBS, o non
+nella finestra di `Pollaio.exe`.**
+Questa è la prima cosa da controllare, prima di dare la colpa a Windows: **manca
+la coda dell'indirizzo.** Le impostazioni stanno tutte dopo il `?`, e dove non
+ci sono valgono i predefiniti — fra cui l'effetto «Scivola», che è talmente
+discreto da sembrare nessun effetto.
+
+- **In OBS**: nel campo URL ci deve essere la riga intera, quella che finisce
+  con `?effetto=glitch&…`. Se c'è solo il percorso fino a `pollaio.html`, hai
+  incollato le impostazioni di nessuno. Premi **Copia** nella regia e reincolla.
+- **In `Pollaio.exe`**: la finestra non legge la regia, legge la riga
+  `parametri=` di `avvio\pollaio.ini`. Per allinearle c'è un bottone apposta
+  nella regia, accanto ad «Apri in una finestra»: **«Usala anche in
+  Pollaio.exe»**. Vale dal riavvio successivo.
+
+Il modo per esserne certi in dieci secondi: apri la regia, guarda l'anteprima. Se
+lì l'effetto si vede e altrove no, non è Windows e non è il widget — è la coda.
 
 **L'overlay non anima niente, e non si capisce perché.**
 I messaggi compaiono e basta: niente effetto d'ingresso, niente dissolvenza in

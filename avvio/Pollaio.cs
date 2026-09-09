@@ -8,6 +8,8 @@ using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
 using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -134,6 +136,34 @@ internal static class Programma
         return 0;
     }
 
+    public static Servente ServenteVivo = null;
+
+    // L'indirizzo in rete locale, vuoto se il server non c'e'. Lo leggono la
+    // Vetrina, per passarlo alla pagina, e da li' la regia per scriverlo.
+    public static string IndirizzoInRete = "";
+
+    // Il server lo accende soltanto la chat. La regia si limita a cercare quello
+    // che c'e' gia': due server sarebbero due porte, e quella scritta in OBS
+    // morirebbe il giorno che chiudi la regia.
+    public static void AccendiLaRete(Preferenze pref)
+    {
+        if (ModoInstalla || pref == null || !pref.Rete) return;
+
+        if (ModoRegia)
+        {
+            IndirizzoInRete = Servente.CercaInCasa(pref.Porta);
+            return;
+        }
+
+        if (ServenteVivo != null) return;
+
+        Servente s = new Servente(CartellaApp);
+        if (!s.Accendi(pref.Porta)) return;
+
+        ServenteVivo = s;
+        IndirizzoInRete = s.Indirizzo;
+    }
+
     public static IntPtr FinestraChat = IntPtr.Zero;
 
     public static bool ModoRegia = false;
@@ -146,7 +176,7 @@ internal static class Programma
 
     public static string Installato = "";
 
-    public const string VERSIONE = "1.2.2";
+    public const string VERSIONE = "1.2.3";
 }
 
 internal sealed class Preferenze
@@ -157,6 +187,14 @@ internal sealed class Preferenze
     public int    Y         = -1;
     public string Parametri = "fondo=scuro&tema=notte&scala=100";
     public string Browser   = "auto";
+
+    // Il piccolo server che consegna il widget in rete locale, e la porta su cui
+    // ascolta. Acceso di predefinito: non apre niente verso internet, ascolta
+    // solo sulla rete di casa, e senza di lui l'unica strada per OBS resta il
+    // percorso del file, che e' quella che si sbaglia.
+    public bool   Rete      = true;
+    public int    Porta     = Servente.PORTA_PREDEFINITA;
+
     public bool   Aggiorna  = true;
     public bool   Cornice   = false;
 
@@ -225,6 +263,24 @@ internal sealed class Preferenze
         "# stesso. Metti 0 per decidere tu quando aggiornare.",
         "aggiorna=1",
         "",
+        "# Il pollaio tiene acceso un piccolo server sulla rete di casa, e la regia",
+        "# ti da' l'indirizzo gia' pronto: e' quello che si incolla nel campo URL di",
+        "# una sorgente browser di OBS, anche da un secondo computer. Batte il",
+        "# percorso del file perche' e' corto, non si rompe se sposti la cartella, e",
+        "# si porta dietro la coda dei parametri, che e' la cosa che si dimentica.",
+        "#",
+        "# Ascolta solo sulla rete locale e consegna soltanto i file della cartella app. Verso",
+        "# internet non apre niente: perche' qualcuno da fuori arrivi qui dovresti",
+        "# aprirgli la porta sul router a mano, e non c'e' motivo di farlo.",
+        "#",
+        "# Metti 0 per spegnerlo: resta il file locale, come prima.",
+        "rete=1",
+        "",
+        "# Su quale porta ascolta. Se e' occupata provo le dodici successive, ma",
+        "# l'indirizzo cambia, quindi meglio scegliere qui una porta libera e",
+        "# lasciarla ferma: cosi' quello scritto in OBS vale anche domani.",
+        "porta=4747",
+        "",
         "# La finestra della REGIA, che è un'altra cosa: un banco di lavoro largo,",
         "# con le manopole a sinistra e l'anteprima a destra. Si apre con Regia.exe,",
         "# oppure dal menu del tasto destro dentro la chat.",
@@ -273,6 +329,9 @@ internal sealed class Preferenze
                         p.Parametri = valore.TrimStart('?', '&').Replace("\"", "").Replace(" ", "");
                         break;
                     case "browser":   p.Browser   = valore.ToLowerInvariant(); break;
+
+                    case "rete":      p.Rete      = Acceso(valore); break;
+                    case "porta":     p.Porta     = Numero(valore, p.Porta, 1024, 65535); break;
 
                     case "cornice":   p.Cornice   = Acceso(valore); break;
                     case "aggiorna":  p.Aggiorna  = Acceso(valore); break;
@@ -428,6 +487,10 @@ internal sealed class Splash : Form
     {
         pref = Preferenze.Leggi(Path.Combine(Programma.Radice,
                                 Path.Combine("avvio", "pollaio.ini")));
+
+        // Prima di qualunque finestra: la Vetrina deve poter passare alla pagina
+        // un indirizzo gia' vero, non uno che arriva dopo.
+        Programma.AccendiLaRete(pref);
 
         using (Graphics g = Graphics.FromHwnd(IntPtr.Zero)) scala = g.DpiX / 96.0;
 
@@ -1877,6 +1940,369 @@ internal static class Diagnosi
     }
 }
 
+// Il file locale in OBS e' scomodo e lo si vede in fretta: un percorso lungo da
+// incollare, che si rompe se sposti la cartella, e che OBS non sa dire quando e'
+// sbagliato - resta bianco e basta. Con un server dentro il launcher l'indirizzo
+// diventa corto, uguale da tutti i computer di casa, e soprattutto porta con se'
+// la coda dei parametri: meta' dei guai di configurazione nascono da una coda
+// dimenticata, perche' la configurazione E' quella coda.
+//
+// Sta in casa e resta piccolo: nessuna libreria, un TcpListener e l'HTTP scritto
+// a mano, che per rispondere a una GET di un file su disco e' poca roba. Non e'
+// un server web e non deve diventarlo: consegna i file di `app/` e nient'altro.
+internal sealed class Servente
+{
+    // Le sole estensioni che escono da qui. Non e' una comodita' per non
+    // scrivere un altro `if`: e' l'elenco che tiene il server incapace di
+    // consegnare qualcosa che non sia il widget, anche il giorno che dentro
+    // `app/` finisse per sbaglio un file che non c'entra niente.
+    private static readonly string[,] TIPI = new string[,]
+    {
+        { ".html",  "text/html; charset=utf-8" },
+        { ".css",   "text/css; charset=utf-8" },
+        { ".js",    "text/javascript; charset=utf-8" },
+        { ".json",  "application/json; charset=utf-8" },
+        { ".txt",   "text/plain; charset=utf-8" },
+        { ".png",   "image/png" },
+        { ".jpg",   "image/jpeg" },
+        { ".jpeg",  "image/jpeg" },
+        { ".gif",   "image/gif" },
+        { ".webp",  "image/webp" },
+        { ".svg",   "image/svg+xml" },
+        { ".ico",   "image/x-icon" },
+        { ".woff2", "font/woff2" },
+        { ".woff",  "font/woff" }
+    };
+
+    public const int PORTA_PREDEFINITA = 4747;
+
+    private const int QUANTE_PORTE = 12;
+    private const int LIMITE_RICHIESTA = 8 * 1024;
+
+    private TcpListener orecchio;
+    private Thread guardia;
+    private volatile bool acceso;
+
+    private readonly string cartella;
+
+    private int numero;
+    private string indirizzo = "";
+
+    public int Numero { get { return numero; } }
+
+    // L'indirizzo da dare in pasto a OBS: gia' con l'ip di questa macchina sulla
+    // rete di casa, perche' `localhost` scritto su un altro computer non vuol
+    // dire niente. Resta vuoto finche' il server non e' in piedi davvero, cosi'
+    // chi lo legge non ha bisogno di chiedere anche se e' acceso.
+    public string Indirizzo { get { return indirizzo; } }
+
+    public Servente(string cartellaDaServire)
+    {
+        cartella = cartellaDaServire;
+    }
+
+    public bool Accendi(int portaVoluta)
+    {
+        int prima = portaVoluta > 0 && portaVoluta < 65536 ? portaVoluta : PORTA_PREDEFINITA;
+
+        // Se la porta e' occupata non ci si arrende, ma non se ne sceglie una a
+        // caso: si prova la successiva, poche volte. Una porta che balla a ogni
+        // avvio sarebbe peggio del problema, perche' l'indirizzo scritto in OBS
+        // smetterebbe di valere da un giorno all'altro senza dire perche'.
+        for (int i = 0; i < QUANTE_PORTE; i++)
+        {
+            int prova = prima + i;
+            if (prova > 65535) break;
+
+            try
+            {
+                TcpListener l = new TcpListener(IPAddress.Any, prova);
+                l.Start();
+
+                orecchio = l;
+                numero = prova;
+                indirizzo = "http://" + IpDiCasa() + ":" + prova;
+
+                acceso = true;
+                guardia = new Thread(Ciclo);
+                guardia.IsBackground = true;
+                guardia.Start();
+
+                Diagnosi.Scrivi("servente acceso su " + indirizzo);
+                return true;
+            }
+            catch (SocketException) {  }
+            catch (Exception e)
+            {
+                Diagnosi.Scrivi("servente: " + e.Message);
+                return false;
+            }
+        }
+
+        Diagnosi.Scrivi("servente: nessuna porta libera da " + prima);
+        return false;
+    }
+
+    // La regia gira in un altro processo e un secondo server non lo puo'
+    // accendere: sarebbero due porte, e quella scritta in OBS morirebbe il
+    // giorno che chiudi la regia. Quindi lei non accende niente, guarda solo se
+    // quello della chat c'e' gia' e da che porta risponde.
+    public static string CercaInCasa(int porta)
+    {
+        int prima = porta > 0 && porta < 65536 ? porta : PORTA_PREDEFINITA;
+
+        for (int i = 0; i < QUANTE_PORTE; i++)
+        {
+            int prova = prima + i;
+            if (prova > 65535) break;
+            if (Risponde(prova)) return "http://" + IpDiCasa() + ":" + prova;
+        }
+
+        return "";
+    }
+
+    private static bool Risponde(int porta)
+    {
+        try
+        {
+            using (TcpClient c = new TcpClient())
+            {
+                IAsyncResult a = c.BeginConnect(IPAddress.Loopback, porta, null, null);
+                if (!a.AsyncWaitHandle.WaitOne(120)) return false;
+                c.EndConnect(a);
+                return true;
+            }
+        }
+        catch { return false; }
+    }
+    public void Spegni()
+    {
+        acceso = false;
+        try { if (orecchio != null) orecchio.Stop(); } catch {  }
+        orecchio = null;
+    }
+
+    private void Ciclo()
+    {
+        while (acceso)
+        {
+            TcpClient chi = null;
+            try { chi = orecchio.AcceptTcpClient(); }
+            catch { if (!acceso) return; continue; }
+
+            // Una richiesta per thread del pool: sono quattro file in croce e
+            // due o tre browser, non c'e' niente da ottimizzare. Quello che
+            // conta e' che una richiesta storta non fermi le altre.
+            TcpClient suo = chi;
+            ThreadPool.QueueUserWorkItem(delegate { Servi(suo); });
+        }
+    }
+
+    private void Servi(TcpClient chi)
+    {
+        try
+        {
+            chi.ReceiveTimeout = 5000;
+            chi.SendTimeout = 15000;
+
+            using (chi)
+            using (NetworkStream flusso = chi.GetStream())
+            {
+                string richiesta = LeggiTesta(flusso);
+                if (richiesta == null) return;
+
+                string[] pezzi = richiesta.Split(' ');
+                if (pezzi.Length < 2)
+                {
+                    Rispondi(flusso, 400, "richiesta storta", false);
+                    return;
+                }
+
+                string metodo = pezzi[0].ToUpperInvariant();
+                if (metodo != "GET" && metodo != "HEAD")
+                {
+                    Rispondi(flusso, 405, "qui si legge soltanto", false);
+                    return;
+                }
+
+                string file = Percorso(pezzi[1]);
+                if (file == null || !File.Exists(file))
+                {
+                    Rispondi(flusso, 404, "non c'e'", false);
+                    return;
+                }
+
+                byte[] roba = File.ReadAllBytes(file);
+                Manda(flusso, 200, "OK", Tipo(Path.GetExtension(file)), roba, metodo == "HEAD");
+            }
+        }
+        catch {  }
+    }
+
+    // Della richiesta serve la prima riga e nient'altro. Si legge comunque fino
+    // alla riga vuota per non lasciare byte nel tubo, ma non oltre un tetto: un
+    // client che spinge all'infinito non deve poterci tenere occupati.
+    private static string LeggiTesta(NetworkStream flusso)
+    {
+        StringBuilder tutto = new StringBuilder();
+        byte[] uno = new byte[1];
+        string prima = null;
+
+        while (tutto.Length < LIMITE_RICHIESTA)
+        {
+            int letti = flusso.Read(uno, 0, 1);
+            if (letti <= 0) break;
+
+            tutto.Append((char)uno[0]);
+            string s = tutto.ToString();
+
+            if (prima == null)
+            {
+                int fine = s.IndexOf((char)10);
+                if (fine >= 0) prima = s.Substring(0, fine).TrimEnd((char)13);
+            }
+
+            if (Finita(s)) break;
+        }
+
+        return prima;
+    }
+
+    private static bool Finita(string s)
+    {
+        string duePerA = new string(new char[] { (char)13, (char)10, (char)13, (char)10 });
+        string dueACapo = new string(new char[] { (char)10, (char)10 });
+        return s.EndsWith(duePerA) || s.EndsWith(dueACapo);
+    }
+
+    private string Percorso(string chiesto)
+    {
+        try
+        {
+            string via = chiesto;
+
+            int coda = via.IndexOf('?');
+            if (coda >= 0) via = via.Substring(0, coda);
+
+            coda = via.IndexOf('#');
+            if (coda >= 0) via = via.Substring(0, coda);
+
+            via = Uri.UnescapeDataString(via);
+            if (via.Length == 0 || via == "/") via = "/pollaio.html";
+
+            via = via.Replace('/', Path.DirectorySeparatorChar).TrimStart(Path.DirectorySeparatorChar);
+            if (via.Length == 0) return null;
+
+            if (!Ammesso(Path.GetExtension(via))) return null;
+
+            string radice = Path.GetFullPath(cartella);
+            string pieno = Path.GetFullPath(Path.Combine(radice, via));
+
+            // La difesa vera non e' cercare i due punti nella richiesta, che e'
+            // una gara che si perde: e' guardare dove si e' finiti dopo aver
+            // risolto tutto. Fuori dalla cartella `app/` non esce niente,
+            // comunque sia scritta la richiesta.
+            if (!pieno.StartsWith(radice + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) return null;
+
+            return pieno;
+        }
+        catch { return null; }
+    }
+
+    private static bool Ammesso(string estensione)
+    {
+        string e = (estensione == null ? "" : estensione).ToLowerInvariant();
+        for (int i = 0; i < TIPI.GetLength(0); i++)
+        {
+            if (TIPI[i, 0] == e) return true;
+        }
+        return false;
+    }
+
+    private static string Tipo(string estensione)
+    {
+        string e = (estensione == null ? "" : estensione).ToLowerInvariant();
+        for (int i = 0; i < TIPI.GetLength(0); i++)
+        {
+            if (TIPI[i, 0] == e) return TIPI[i, 1];
+        }
+        return "application/octet-stream";
+    }
+
+    private static void Rispondi(NetworkStream flusso, int codice, string detto, bool soloTesta)
+    {
+        string frase = codice == 404 ? "Not Found" : codice == 405 ? "Method Not Allowed" : "Bad Request";
+        Manda(flusso, codice, frase, "text/plain; charset=utf-8", Encoding.UTF8.GetBytes(detto), soloTesta);
+    }
+
+    private static void Manda(NetworkStream flusso, int codice, string frase, string tipo, byte[] corpo, bool soloTesta)
+    {
+        string aCapo = new string(new char[] { (char)13, (char)10 });
+
+        StringBuilder t = new StringBuilder();
+        t.Append("HTTP/1.1 ").Append(codice).Append(' ').Append(frase).Append(aCapo);
+        t.Append("Content-Type: ").Append(tipo).Append(aCapo);
+        t.Append("Content-Length: ").Append(corpo.Length).Append(aCapo);
+
+        // La chat sta accesa otto ore e i file sotto non cambiano mai da soli:
+        // l'unica volta che cambiano e' quando li cambiamo noi. Nessuna cache,
+        // cosi' ricaricare la sorgente in OBS rilegge davvero tutto invece di
+        // far credere che una correzione non sia arrivata.
+        t.Append("Cache-Control: no-store").Append(aCapo);
+        t.Append("Connection: close").Append(aCapo).Append(aCapo);
+
+        byte[] testa = Encoding.UTF8.GetBytes(t.ToString());
+        flusso.Write(testa, 0, testa.Length);
+
+        if (!soloTesta && corpo.Length > 0) flusso.Write(corpo, 0, corpo.Length);
+        flusso.Flush();
+    }
+
+    // L'ip con cui questa macchina si fa vedere in casa. Si prende quello della
+    // scheda che sta davvero parlando - quella con un gateway - e non il primo
+    // dell'elenco: fra schede virtuali, VPN e Hyper-V il primo dell'elenco e'
+    // quasi sempre quello sbagliato, e un ip sbagliato qui non si riconosce
+    // guardandolo, si scopre in OBS con una sorgente vuota.
+    public static string IpDiCasa()
+    {
+        try
+        {
+            NetworkInterface[] schede = NetworkInterface.GetAllNetworkInterfaces();
+            string ripiego = "";
+
+            for (int i = 0; i < schede.Length; i++)
+            {
+                NetworkInterface s = schede[i];
+                if (s.OperationalStatus != OperationalStatus.Up) continue;
+                if (s.NetworkInterfaceType == NetworkInterfaceType.Loopback) continue;
+                if (s.NetworkInterfaceType == NetworkInterfaceType.Tunnel) continue;
+
+                IPInterfaceProperties p = s.GetIPProperties();
+                bool conGateway = p.GatewayAddresses != null && p.GatewayAddresses.Count > 0;
+
+                UnicastIPAddressInformationCollection indirizzi = p.UnicastAddresses;
+                for (int j = 0; j < indirizzi.Count; j++)
+                {
+                    IPAddress a = indirizzi[j].Address;
+                    if (a.AddressFamily != AddressFamily.InterNetwork) continue;
+                    if (IPAddress.IsLoopback(a)) continue;
+
+                    string testo = a.ToString();
+                    if (testo.StartsWith("169.254.")) continue;
+
+                    if (conGateway) return testo;
+                    if (ripiego.Length == 0) ripiego = testo;
+                }
+            }
+
+            if (ripiego.Length > 0) return ripiego;
+        }
+        catch {  }
+
+        return "127.0.0.1";
+    }
+}
+
 internal sealed class Vetrina : Form
 {
     private const string ATTIVAZIONE = "https://www.twitch.tv/activate";
@@ -2109,16 +2535,18 @@ internal sealed class Vetrina : Form
         }
         catch {  }
 
-        // La regia deve poter scrivere l’indirizzo che si incolla in OBS, e
-        // quello è un `file:///` vero. Qui dentro però la pagina vive su
-        // https://pollaio.locale, che esiste solo dentro questa WebView: un
-        // indirizzo costruito su quel nome non lo apre nessun altro programma,
-        // OBS compreso. Quindi la cartella vera gliela si dice una volta sola,
-        // prima che parta qualunque script della pagina.
+        // Due cose che la pagina non può sapere da sola e che le servono per
+        // scrivere l'indirizzo da incollare in OBS: dove sta davvero la cartella
+        // dell'app, e se c'è un server in rete a cui puntare. Qui dentro la
+        // pagina vive su https://pollaio.locale, che esiste solo dentro questa
+        // WebView: un indirizzo costruito su quel nome non lo apre nessun altro
+        // programma, OBS compreso. Si dicono una volta sola, prima che parta
+        // qualunque script.
         try
         {
             motore.AddScriptToExecuteOnDocumentCreatedAsync(
-                "window.POLLAIO_CARTELLA = \"" + PerJs(Programma.CartellaApp) + "\";");
+                "window.POLLAIO_CARTELLA = \"" + PerJs(Programma.CartellaApp) + "\";" +
+                "window.POLLAIO_SERVENTE = \"" + PerJs(Programma.IndirizzoInRete) + "\";");
         }
         catch {  }
 
