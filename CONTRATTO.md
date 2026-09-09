@@ -1005,6 +1005,46 @@ l'unica volta che cambiano è quando li cambiamo noi, e in quel momento
 «ricarica la sorgente» deve rileggere davvero, invece di far credere che una
 correzione non sia arrivata.
 
+
+### Due code, e il rimando del server
+
+La configurazione è la coda dell'indirizzo, e le superfici che la portano sono
+tre: l'anteprima della regia, la finestra di `Pollaio.exe`, la sorgente browser
+di OBS. Delle tre, due sono nostre.
+
+**`parametri=` e `sorgente=` non sono la stessa riga, e non possono esserlo.**
+Nella finestra vera `fondo=trasparente` vuol dire bianco, e su bianco il testo
+chiaro sparisce: `codaPerLaFinestra()` lo corregge in `scuro`. In OBS quel
+trasparente è invece esattamente il punto — è il modo di vedere il gioco sotto
+ai messaggi. Con una riga sola bisognava scegliere quale delle due rovinare, e
+si rovinava OBS senza dirlo. Quindi il bottone «Usala anche in Pollaio.exe»
+manda **due comandi**: `parametri:` con la coda corretta, `sorgente:` con quella
+vera.
+
+**Il server rimanda chi chiede l'indirizzo nudo.** Una `GET /pollaio.html` senza
+`?` risponde `302` verso `/pollaio.html?<sorgente>`. Chi in OBS ha incollato
+l'indirizzo corto smette di avere una copia scollegata e legge quella della
+regia; chi la coda ce l'ha scritta comanda lui, e non viene rimandato da
+nessuna parte. È la sola presa che avevamo sulla terza superficie: OBS va
+ricaricato a mano, e inventare un canale per evitarlo sarebbe sproporzionato.
+
+**Il bottone applica a caldo.** `misura` lo faceva da sempre — scrive il `.ini`
+*e* dice alla finestra sorella di rifarsi — e `parametri` era l'unico comando
+che scriveva senza toccare niente. Adesso ha il suo gemello: `Sorelle.Riconfigura`
+posta `WM_PARAMETRI`, la finestra chiama `Riparametra`, rilegge il `.ini` e
+rinaviga. **Non viaggia nessuna stringa fra i processi**: si bussa e basta, e la
+coda resta scritta in un posto solo.
+
+La risposta ha **tre stati** e non due, perché sono tre cose diverse da dire:
+`0` non ho potuto scrivere, `1` ho scritto ma la finestra non c'era — e allora
+«vale dalla prossima volta» è vero — `2` ho scritto e la finestra si è già
+rifatta. Il terzo è quello che mancava, ed è il solo che toglie di mezzo una
+frase che era falsa nel caso normale.
+
+**La ricarica è a comando, mai automatica.** Rifare la finestra la svuota e la
+ricollega all'IRC: in diretta si nota. Si fa quando qualcuno preme il bottone,
+che è un gesto, non mentre gira una manopola.
+
 ### I due avvisi della regia — `.regia__allarme`
 
 Erano uno, adesso sono due, e hanno la stessa forma per un motivo: **sono le due

@@ -1111,6 +1111,15 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
   padding-block-start: 10px;
 }
 
+/* Le voci del menù sul nome si toccano — colonna senza gap, 4px di padding
+   attorno — e l’anello comune a 3px in fuori finisce sopra la voce accanto e
+   oltre il bordo del pannello. È la stessa deroga già scritta in menu.css e nel
+   pannello Sondaggio: tinta e spessore non cambiano, cambia solo il verso. */
+.pollaio__azioni :focus-visible {
+  outline: 2px solid var(--ciano);
+  outline-offset: -2px;
+}
+
 .pollaio__azione.is-pericolosa { color: var(--live); }
 
 .pollaio__azione.is-pericolosa:hover:not(:disabled) {
@@ -1128,12 +1137,22 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
   flex: none;
   display: flex;
   justify-content: center;
+  min-inline-size: 0;
 }
 
 .pollaio__gente-bottone {
   display: inline-flex;
   align-items: center;
   gap: calc(var(--passo) * 0.5);
+
+  /* «130 in chat · 42 guardano» sono venticinque caratteri in monospazio
+     maiuscolo: a colonna stretta e testo ingrandito la pastiglia usciva dai
+     bordi e `overflow: hidden` la tosava in silenzio. Meglio che vada a capo
+     dentro sé stessa. */
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  text-align: center;
+  overflow-wrap: anywhere;
 
   padding: 0.28em 0.8em;
   border: 1px solid var(--linea-forte);
@@ -1161,7 +1180,12 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
 
 .pollaio__lista {
   position: absolute;
-  inset-block-start: calc(var(--passo) * 4);
+
+  /* Sotto la spia e la pastiglia, non sopra: la pastiglia è l’unico modo di
+     richiudere l’elenco, e coprirla con un pannello opaco lo incastrava. La
+     misura è in em perché spia e pastiglia crescono con --scala-testo mentre
+     --passo resta fermo. */
+  inset-block-start: calc(var(--passo) * 2 + 3em);
   inset-inline: var(--passo);
   z-index: var(--z-menu);
 
@@ -1169,6 +1193,7 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
+  scrollbar-color: var(--linea-forte) transparent;
 
   padding: var(--passo-2);
   border: 1px solid var(--linea-forte);
@@ -1178,7 +1203,10 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
 }
 
 .pollaio__lista-eco {
-  margin: 0;
+  /* Il margine sta qui e non sullo scomparto: `:empty` lo fa sparire da sé
+     quando non c’è niente da dire, e quando c’è la frase non resta incollata
+     al primo titolo. */
+  margin: 0 0 var(--passo-2);
   color: var(--testo-tenue);
   font-family: var(--font-mono);
   font-size: 0.62em;
@@ -1218,6 +1246,9 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
 }
 
 .pollaio__lista-nome {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+
   color: var(--testo-medio);
   font-size: 0.72em;
   line-height: 1.5;
@@ -1229,7 +1260,9 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
   flex-direction: column;
   gap: calc(var(--passo) * 0.6);
 
-  margin-block-start: var(--passo);
+  /* Due passi invece di uno: la fila dei filtri stava appiccicata all’ultimo
+     messaggio, e la riga di separazione non bastava a staccarli. */
+  margin-block-start: var(--passo-2);
   padding-block-start: var(--passo-2);
   border-block-start: 1px solid var(--linea);
 }

@@ -115,13 +115,27 @@ rete, coda compresa:
 ```
 Sorgente → + → Browser
   ☐ File locale        ← senza spunta
-  URL:        http://192.168.1.20:4747/pollaio.html?effetto=glitch&scala=120
+  URL:        http://192.168.1.20:4747/pollaio.html
   Larghezza:  400
   Altezza:    600
   ☑ Aggiorna il browser quando la scena diventa attiva
 ```
 
-È corto, non si rompe se sposti la cartella, e **funziona anche da un secondo
+**Dalla 1.2.6 puoi anche incollare l'indirizzo corto**, senza niente dopo
+`pollaio.html`: il server ti manda da solo alla configurazione decisa nella
+regia — quella che scrivi premendo «Usala anche in Pollaio.exe». Così la
+sorgente di OBS smette di essere una copia scollegata che invecchia: cambi una
+manopola, premi il bottone, ricarichi la sorgente in OBS, ed è allineata. Se
+invece incolli un indirizzo **con** la sua coda, comanda quella: il server non ti
+rimanda da nessuna parte.
+
+Il fondo trasparente è il caso che rende evidente perché servono due code: nella
+finestra vera «trasparente» vuol dire bianco, e su bianco il testo chiaro
+sparisce, quindi lì scrivo «scuro»; in OBS il trasparente è esattamente quello
+che serve per vedere il gioco sotto ai messaggi, e resta trasparente. Il bottone
+scrive tutte e due le righe nel `.ini`, `parametri=` e `sorgente=`.
+
+L’indirizzo è corto, non si rompe se sposti la cartella, e **funziona anche da un secondo
 computer** di casa — se OBS gira su un'altra macchina, quello è l'unico modo. Il
 server sta dentro `Pollaio.exe`: finché il pollaio è acceso l'indirizzo risponde,
 quando lo chiudi la sorgente resta vuota. Ascolta solo sulla rete di casa e

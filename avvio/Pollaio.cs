@@ -169,6 +169,10 @@ internal static class Programma
     // silenzio, e finora divergevano.
     public static string ParametriDelLauncher = "";
 
+    // La coda che il server consegna a chi chiede l'indirizzo nudo: quella per
+    // OBS, col fondo trasparente intatto.
+    public static string SorgenteDelLauncher = "";
+
     public static IntPtr FinestraChat = IntPtr.Zero;
 
     public static bool ModoRegia = false;
@@ -181,7 +185,7 @@ internal static class Programma
 
     public static string Installato = "";
 
-    public const string VERSIONE = "1.2.5";
+    public const string VERSIONE = "1.2.6";
 }
 
 internal sealed class Preferenze
@@ -199,6 +203,13 @@ internal sealed class Preferenze
     // percorso del file, che e' quella che si sbaglia.
     public bool   Rete      = true;
     public int    Porta     = Servente.PORTA_PREDEFINITA;
+
+    // Due code e non una, perche' rispondono a due domande diverse. `Parametri`
+    // e' quella della finestra vera, dove `fondo=trasparente` vuol dire bianco e
+    // va corretto in `scuro`. `Sorgente` e' quella per OBS, dove il trasparente
+    // e' esattamente il punto. Tenerne una sola costringeva a scegliere quale
+    // delle due rovinare.
+    public string Sorgente  = "";
 
     public bool   Aggiorna  = true;
     public bool   Cornice   = false;
@@ -286,6 +297,16 @@ internal sealed class Preferenze
         "# lasciarla ferma: cosi' quello scritto in OBS vale anche domani.",
         "porta=4747",
         "",
+        "# La coda che il server consegna a chi chiede l'indirizzo nudo, cioe' a",
+        "# OBS. E' un'altra cosa da `parametri` qui sopra: quella e' della finestra",
+        "# vera, dove un fondo trasparente vuol dire bianco e il testo chiaro ci",
+        "# sparisce; questa e' della sorgente browser, dove il trasparente e'",
+        "# proprio quello che serve per vedere il gioco sotto ai messaggi.",
+        "#",
+        "# La scrive il bottone «Usala anche in Pollaio.exe» della regia, insieme",
+        "# all'altra. Se e' vuota, l'indirizzo nudo apre il widget coi predefiniti.",
+        "sorgente=",
+        "",
         "# La finestra della REGIA, che è un'altra cosa: un banco di lavoro largo,",
         "# con le manopole a sinistra e l'anteprima a destra. Si apre con Regia.exe,",
         "# oppure dal menu del tasto destro dentro la chat.",
@@ -337,6 +358,10 @@ internal sealed class Preferenze
 
                     case "rete":      p.Rete      = Acceso(valore); break;
                     case "porta":     p.Porta     = Numero(valore, p.Porta, 1024, 65535); break;
+
+                    case "sorgente":
+                        p.Sorgente = valore.TrimStart('?', '&').Replace("\"", "").Replace(" ", "");
+                        break;
 
                     case "cornice":   p.Cornice   = Acceso(valore); break;
                     case "aggiorna":  p.Aggiorna  = Acceso(valore); break;
@@ -496,6 +521,7 @@ internal sealed class Splash : Form
         // Prima di qualunque finestra: la Vetrina deve poter passare alla pagina
         // un indirizzo gia' vero, non uno che arriva dopo.
         Programma.ParametriDelLauncher = pref.Parametri;
+        Programma.SorgenteDelLauncher = pref.Sorgente;
         Programma.AccendiLaRete(pref);
 
         using (Graphics g = Graphics.FromHwnd(IntPtr.Zero)) scala = g.DpiX / 96.0;
@@ -1930,6 +1956,53 @@ internal static class Sorelle
 
         return quante;
     }
+
+    // Il gemello di `Ridimensiona`, e nasce per lo stesso motivo: scrivere il
+    // .ini non basta se la finestra non lo rilegge. `misura` lo faceva gia' da
+    // sempre, `parametri` no — ed e' l'unica differenza fra i due, quella che
+    // faceva dire "l'effetto non funziona nel .exe" a chi aveva appena premuto
+    // il bottone per farlo funzionare.
+    //
+    // Non viaggia nessuna stringa fra i processi: si bussa e basta, e la
+    // finestra rilegge il .ini da se'. Cosi' la coda resta scritta in un posto
+    // solo, che e' il punto di tutta la faccenda.
+    public static int Riconfigura()
+    {
+        uint mio;
+        try { mio = (uint)Process.GetCurrentProcess().Id; }
+        catch { return 0; }
+
+        int quante = 0;
+
+        try
+        {
+            Nativo.EnumWindows(delegate (IntPtr finestra, IntPtr dato)
+            {
+                try
+                {
+                    if (!Nativo.IsWindowVisible(finestra)) return true;
+
+                    uint suo;
+                    Nativo.GetWindowThreadProcessId(finestra, out suo);
+                    if (suo == mio) return true;
+
+                    // Solo la finestra vera: il ripiego nel browser esterno non
+                    // ha niente da ricaricare a comando, e contarlo direbbe
+                    // "fatto" per una cosa che non e' successa.
+                    if (Nativo.Titolo(finestra) != TITOLO_CHAT) return true;
+
+                    Nativo.PostMessage(finestra, (uint)Nativo.WM_PARAMETRI, IntPtr.Zero, IntPtr.Zero);
+                    quante++;
+                }
+                catch {  }
+
+                return true;
+            }, IntPtr.Zero);
+        }
+        catch {  }
+
+        return quante;
+    }
 }
 
 internal static class Diagnosi
@@ -2131,6 +2204,20 @@ internal sealed class Servente
                     return;
                 }
 
+                // Chi chiede l'indirizzo nudo — cioe' chi in OBS ha incollato
+                // `http://ip:porta/pollaio.html` e basta — non ha una
+                // configurazione sua, e finora si beccava i predefiniti: fondo
+                // trasparente ma anche effetto d'ingresso di serie, e nessun modo
+                // di accorgersene. Qui lo si manda alla coda decisa nella regia,
+                // cosi' la sorgente browser segue le manopole invece di una copia
+                // vecchia incollata chissa' quando. Chi la coda ce l'ha scritta
+                // comanda lui: non si rimanda nessuno che abbia gia' un `?`.
+                if (Nuda(pezzi[1]) && Programma.SorgenteDelLauncher.Length > 0)
+                {
+                    Rimanda(flusso, "/pollaio.html?" + Programma.SorgenteDelLauncher);
+                    return;
+                }
+
                 string file = Percorso(pezzi[1]);
                 if (file == null || !File.Exists(file))
                 {
@@ -2179,6 +2266,34 @@ internal sealed class Servente
         string duePerA = new string(new char[] { (char)13, (char)10, (char)13, (char)10 });
         string dueACapo = new string(new char[] { (char)10, (char)10 });
         return s.EndsWith(duePerA) || s.EndsWith(dueACapo);
+    }
+
+
+    private static bool Nuda(string chiesto)
+    {
+        string via = chiesto == null ? "" : chiesto;
+        if (via.IndexOf('?') >= 0) return false;
+
+        int cancelletto = via.IndexOf('#');
+        if (cancelletto >= 0) via = via.Substring(0, cancelletto);
+
+        return via == "/" || via == "/pollaio.html";
+    }
+
+    private static void Rimanda(NetworkStream flusso, string dove)
+    {
+        string aCapo = new string(new char[] { (char)13, (char)10 });
+
+        StringBuilder t = new StringBuilder();
+        t.Append("HTTP/1.1 302 Found").Append(aCapo);
+        t.Append("Location: ").Append(dove).Append(aCapo);
+        t.Append("Content-Length: 0").Append(aCapo);
+        t.Append("Cache-Control: no-store").Append(aCapo);
+        t.Append("Connection: close").Append(aCapo).Append(aCapo);
+
+        byte[] testa = Encoding.UTF8.GetBytes(t.ToString());
+        flusso.Write(testa, 0, testa.Length);
+        flusso.Flush();
     }
 
     private string Percorso(string chiesto)
@@ -2389,6 +2504,13 @@ internal sealed class Vetrina : Form
             return;
         }
 
+        if (m.Msg == Nativo.WM_PARAMETRI)
+        {
+            Riparametra();
+            m.Result = IntPtr.Zero;
+            return;
+        }
+
         if (m.Msg == Nativo.WM_MISURA)
         {
             Misura(m.WParam.ToInt32(), m.LParam.ToInt32());
@@ -2455,6 +2577,30 @@ internal sealed class Vetrina : Form
             }
 
             Preferenze.Riscrivi(ini, l, a);
+        }
+        catch {  }
+    }
+
+    // Rilegge il .ini e, se la coda e' cambiata, rinaviga. `Navigate` e non
+    // `vista.Source =`: a indirizzo identico l'assegnazione di Source non
+    // rinaviga, e qui l'indirizzo cambia quasi sempre in un pezzo solo.
+    //
+    // La chat si svuota e si ricollega: si nota, in diretta. Per questo si fa
+    // solo quando qualcuno preme il bottone, mai da sola.
+    private void Riparametra()
+    {
+        if (Programma.ModoRegia) return;
+
+        try
+        {
+            Preferenze p = Preferenze.Leggi(Path.Combine(Programma.Radice,
+                                            Path.Combine("avvio", "pollaio.ini")));
+
+            Programma.SorgenteDelLauncher = p.Sorgente;
+            if (p.Parametri == Programma.ParametriDelLauncher) return;
+
+            Programma.ParametriDelLauncher = p.Parametri;
+            vista.CoreWebView2.Navigate(Navigatore.IndirizzoLocale("pollaio.html", p));
         }
         catch {  }
     }
@@ -2672,7 +2818,39 @@ internal sealed class Vetrina : Form
             if (!Preferenze.ParametriBuoni(coda)) { Rispondi("parametri:0"); return; }
 
             string ini = Path.Combine(Programma.Radice, Path.Combine("avvio", "pollaio.ini"));
-            Rispondi("parametri:" + (Preferenze.RiscriviRiga(ini, "parametri", coda) ? "1" : "0"));
+            if (!Preferenze.RiscriviRiga(ini, "parametri", coda)) { Rispondi("parametri:0"); return; }
+
+            // Tre stati e non due, perche' sono tre cose diverse da dire: non ho
+            // potuto scrivere, ho scritto e basta, ho scritto e la finestra si e'
+            // gia' rifatta. La terza e' quella che mancava, ed e' la sola che
+            // toglie di mezzo il «vale dal prossimo avvio» quando non e' vero.
+            int quante = Sorelle.Riconfigura();
+            if (!Programma.ModoRegia) { Riparametra(); quante++; }
+
+            Rispondi("parametri:" + (quante > 0 ? "2" : "1"));
+            return;
+        }
+
+        // La coda per OBS: si scrive nel .ini e basta. Non c'e' nessuna finestra
+        // da rifare — la sorgente browser sta in un altro programma, e quella la
+        // ricarica l'utente quando vuole.
+        if (comando == "sorgente")
+        {
+            const string testaS = "pollaio:sorgente:";
+            if (testo.Length < testaS.Length) return;
+
+            string codaS = testo.Substring(testaS.Length);
+
+            int fineS = codaS.LastIndexOf(':');
+            codaS = fineS >= 0 ? codaS.Substring(0, fineS) : "";
+
+            if (!Preferenze.ParametriBuoni(codaS)) { Rispondi("sorgente:0"); return; }
+
+            string iniS = Path.Combine(Programma.Radice, Path.Combine("avvio", "pollaio.ini"));
+            bool okS = Preferenze.RiscriviRiga(iniS, "sorgente", codaS);
+            if (okS) { Programma.SorgenteDelLauncher = codaS; }
+
+            Rispondi("sorgente:" + (okS ? "1" : "0"));
             return;
         }
 
@@ -3153,7 +3331,8 @@ internal static class Nativo
 
     public const uint WM_CLOSE = 0x0010;
 
-    public const int WM_MISURA = 0x8000 + 7;
+    public const int WM_MISURA    = 0x8000 + 7;
+    public const int WM_PARAMETRI = 0x8000 + 8;
 
     public const uint WM_NCLBUTTONDOWN = 0x00A1;
     public static readonly IntPtr HTCAPTION = new IntPtr(2);

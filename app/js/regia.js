@@ -1224,11 +1224,13 @@
     if (stessaCoda(suo, mio)) { nodi.scordata.hidden = true; return; }
 
     nodi.scordata.hidden = false;
-    nodi.scordata.textContent = 'La finestra di Pollaio.exe sta ancora usando altre ' +
-      'impostazioni: quelle che vedi qui valgono per l’anteprima e per l’indirizzo ' +
-      'da incollare in OBS, non per lei. Premi «Usala anche in Pollaio.exe», e vale ' +
-      'dal prossimo avvio.';
+    nodi.scordata.textContent = 'La finestra di Pollaio.exe e la sorgente di OBS ' +
+      'stanno ancora usando altre impostazioni: quelle che vedi qui valgono per ' +
+      'l’anteprima e per l’indirizzo da copiare, non per loro. Premi «Usala anche ' +
+      'in Pollaio.exe»: la finestra si rifà subito, e la sorgente browser al ' +
+      'prossimo ricarica.';
   }
+
   function codaPerLaFinestra() {
     const copia = {};
     let chiave;
@@ -1246,6 +1248,14 @@
     return { coda: coda, scurito: scurito };
   }
 
+  // La coda vera, quella senza la correzione del fondo: e' questa che va alla
+  // sorgente browser di OBS, dove il trasparente e' esattamente il punto.
+  function codaPerLaSorgente() {
+    let coda = window.Impostazioni.indirizzo(valori, '');
+    if (coda.charAt(0) === '?') { coda = coda.slice(1); }
+    return coda;
+  }
+
   function ascoltaUso() {
     const bottone = document.getElementById('usa-finestra');
     if (!bottone) { return; }
@@ -1261,8 +1271,8 @@
     document.addEventListener('pollaio-risposta', function (evento) {
       if (!evento.detail || evento.detail.comando !== 'parametri') { return; }
 
-      if (evento.detail.coda !== '1') {
-        eco('Non sono riuscito a scrivere avvio\pollaio.ini: guarda che non sia di sola lettura.', false);
+      if (evento.detail.coda === '0') {
+        eco('Non sono riuscito a scrivere avvio\\pollaio.ini: guarda che non sia di sola lettura.', false);
         return;
       }
 
@@ -1271,16 +1281,28 @@
       window.POLLAIO_PARAMETRI = mandata;
       vestiScordata();
 
-      eco(scurito
-        ? 'Fatto, con una correzione: il fondo trasparente in una finestra vera vuol dire bianco, e su bianco il testo chiaro sparisce. Ho scritto «scuro». Vale dal prossimo avvio di Pollaio.exe.'
-        : 'Fatto: Pollaio.exe apre la chat com’è qui. Vale dal prossimo avvio.', true);
+      // Tre stati, e il terzo e' quello che mancava: la finestra si e' gia'
+      // rifatta, quindi «vale dal prossimo avvio» sarebbe una bugia. Si dice
+      // solo quando e' vero, cioe' quando la finestra non c'era.
+      const subito = evento.detail.coda === '2';
+
+      const nota = scurito
+        ? ' Il fondo trasparente in una finestra vera vuol dire bianco, e su bianco il testo chiaro sparisce: lì ho scritto «scuro». In OBS resta trasparente.'
+        : '';
+
+      eco((subito
+        ? 'Fatto: la finestra di Pollaio.exe si è già rifatta così — si è ricollegata alla chat, quindi per un attimo è vuota.'
+        : 'Fatto. La finestra non è aperta: vale dalla prossima volta che la apri.') + nota, true);
     });
 
     bottone.addEventListener('click', function () {
       const fuori = codaPerLaFinestra();
       scurito = fuori.scurito;
       mandata = fuori.coda;
+
+      // Due code, due comandi: quella della finestra e quella della sorgente.
       window.Menu.comanda('parametri:' + fuori.coda);
+      window.Menu.comanda('sorgente:' + codaPerLaSorgente());
     });
   }
 

@@ -888,7 +888,7 @@ label.regia__etichetta { cursor: pointer; }
 
 .regia__nome:focus-visible {
   outline: 2px solid var(--ciano);
-  outline-offset: 2px;
+  outline-offset: -2px;
 }
 
 .regia__salva {
@@ -1097,7 +1097,13 @@ label.regia__etichetta { cursor: pointer; }
 .regia__numero--misura:hover,
 .regia__numero--misura:focus { background-color: transparent; }
 
-.regia__numero--misura:focus-visible { outline: none; }
+/* Un campo stretto dentro un contenitore: l’anello va all’interno, com’è già
+   per il menù sul nome e per i pannelli Sondaggio e Pronostico. Prima qui non
+   c’era anello affatto, e «niente anello» non è una deroga prevista. */
+.regia__numero--misura:focus-visible {
+  outline: 2px solid var(--ciano);
+  outline-offset: -2px;
+}
 
 .regia__conta .regia__unita-etichetta {
   display: flex;
