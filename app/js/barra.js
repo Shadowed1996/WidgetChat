@@ -361,6 +361,13 @@
       return;
     }
 
+    if (testo.charAt(0) === '/') {
+      eco('Questo non lo mando: Twitch i comandi da questa strada non li esegue, ' +
+          'li scrive. «' + testo.split(' ')[0] + '» finirebbe in chat in chiaro, ' +
+          'davanti a tutti. I comandi per adesso si danno dalla chat di Twitch.', true);
+      return;
+    }
+
     inVolo = true;
     vestiManda();
     eco('');
