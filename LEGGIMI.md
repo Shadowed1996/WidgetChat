@@ -870,11 +870,12 @@ in diretta lo so solo chiedendolo a Twitch, e senza collegamento non ho niente
 con cui chiederlo. Meglio non dire niente che dire «OFFLINE» a un canale che sta
 trasmettendo.
 
-Cliccando il bottone si apre un pannello diviso in quattro scomparti: **streamer,
-moderatori, VIP, utenti**. Dentro c'è chi è in chat **adesso** — non l'elenco dei
-moderatori del canale, non l'anagrafe dei VIP: gli scomparti servono a mettere
-in ordine le persone che ci sono, non a fare la lista di quelle che potrebbero
-esserci.
+Cliccando il bottone si apre un pannello diviso in cinque scomparti: **streamer,
+moderatori, VIP, bot, utenti**. Dentro c'è chi è in chat **adesso** — non
+l'elenco dei moderatori del canale, non l'anagrafe dei VIP: gli scomparti
+servono a mettere in ordine le persone che ci sono, non a fare la lista di
+quelle che potrebbero esserci. Ogni nome è una pastiglia, e il bordo prende la
+tinta del ruolo.
 
 **Il bottone compare solo con l'account collegato**, perché quei numeri li
 chiedo all'API e senza collegamento non ho niente con cui chiederli.
@@ -1247,15 +1248,16 @@ la coda dell'indirizzo.** Le impostazioni stanno tutte dopo il `?`, e dove non
 ci sono valgono i predefiniti — fra cui l'effetto «Scivola», che è talmente
 discreto da sembrare nessun effetto.
 
-- **In OBS**: nel campo URL ci deve essere la riga intera, quella che finisce
-  con `?effetto=glitch&…`. Se c'è solo il percorso fino a `pollaio.html`, hai
-  incollato le impostazioni di nessuno. Premi **Copia** nella regia e reincolla.
+- **In OBS**: se hai incollato l'indirizzo corto — quello che finisce con
+  `pollaio.html` e basta — il server ti manda da solo alla configurazione della
+  regia, e basta premere **Salva** e ricaricare la sorgente. Se invece nel campo
+  URL c'è una riga lunga con il `?`, comanda quella: la si rifà con **Copia** e
+  la si reincolla.
 - **In `Pollaio.exe`**: la finestra non legge la regia, legge la riga
-  `parametri=` di `avvio\pollaio.ini`. Per allinearle c'è un bottone apposta
-  nella regia, accanto ad «Apri in una finestra»: **«Usala anche in
-  Pollaio.exe»**. Vale dal riavvio successivo. Dalla 1.2.5 la regia se ne accorge
-  da sola: se le due cose non combaciano, sotto quel bottone compare un riquadro
-  che te lo dice, e sparisce appena lo premi.
+  `parametri=` di `avvio\pollaio.ini`. La scrive **Salva**, e dalla 1.2.8 la
+  finestra si rifà subito, senza riavviare. Se le manopole che hai sotto gli
+  occhi non sono quelle salvate, sotto il bottone compare un riquadro che te lo
+  dice, e sparisce appena premi.
 
 Il modo per esserne certi in dieci secondi: apri la regia, guarda l'anteprima. Se
 lì l'effetto si vede e altrove no, non è Windows e non è il widget — è la coda.

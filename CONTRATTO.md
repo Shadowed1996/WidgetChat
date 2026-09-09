@@ -830,6 +830,13 @@ Regole di misura:
   `overflow-wrap: anywhere` sul corpo, `min-inline-size: 0` su ogni figlio flex.
 - Le emote sono alte `1.6em` e allineate al testo con `vertical-align: middle`.
 - Un messaggio con `svanisci` attivo esce con una dissolvenza di 400ms.
+- **La striscia dei filtri sta staccata dalla chat di tre passi**, non di uno:
+  `margin-block-start: var(--passo-3)` più la riga di separazione. Con meno, i
+  bottoni si leggono come attaccati all'ultimo messaggio — come una parte della
+  chat invece che come una cosa a parte — e la riga da sola non basta a
+  dividerli. Le pastiglie fra loro stanno a `0.75` di passo: a mezzo si toccano
+  quasi, e con sei o sette filtri (uno per ogni canale di una live congiunta) la
+  fila diventa un blocco unico invece di sette bottoni.
 - **Le righe di moderazione non fanno il glitch.** `.pollaio__moderazione` — «la
   chat è stata svuotata», «un messaggio è stato cancellato» — entra con la
   scivolata anche quando l'effetto scelto è `glitch`, e non prende le righe di

@@ -1419,11 +1419,14 @@ body[data-fondo="magenta"] .pollaio {
   flex: none;
   display: flex;
   flex-direction: column;
-  gap: calc(var(--passo) * 0.6);
 
-  /* Due passi invece di uno: la fila dei filtri stava appiccicata all’ultimo
-     messaggio, e la riga di separazione non bastava a staccarli. */
-  margin-block-start: var(--passo-2);
+  /* Fra la fila dei filtri e quella del campo per scrivere. */
+  gap: var(--passo);
+
+  /* La striscia sta staccata dall’ultimo messaggio di tre passi, non di due:
+     con due, e con la riga di separazione in mezzo, i bottoni si leggevano
+     ancora come attaccati alla chat invece che come una cosa a parte. */
+  margin-block-start: var(--passo-3);
   padding-block-start: var(--passo-2);
   border-block-start: 1px solid var(--linea);
 }
@@ -1471,7 +1474,11 @@ html[data-finestra] .pollaio .pollaio__scrivi-campo {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: calc(var(--passo) * 0.5);
+
+  /* Le pastiglie respirano: a mezzo passo si toccavano quasi, e con sei o sette
+     filtri — una per ogni canale di una live congiunta — la fila diventava un
+     blocco unico invece di sette bottoni. */
+  gap: calc(var(--passo) * 0.75);
 }
 
 .pollaio__sondaggio {
