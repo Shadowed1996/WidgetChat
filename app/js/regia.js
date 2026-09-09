@@ -3,11 +3,6 @@
 
   const CHIAVE_SALVA = 'sb-pollaio-regia';
 
-  const CHIAVE_PRESET = 'sb-pollaio-preset';
-
-  const MAX_PRESET = 12;
-  const MAX_NOME_PRESET = 24;
-
   const FRENO = 300;
 
   const DURATA_FATTO = 2000;
@@ -110,9 +105,8 @@
     const id = [
       'gruppi', 'gruppi-vuoto', 'scena', 'telaio', 'misura',
       'altezza', 'altezza-valore', 'indirizzo', 'copia', 'copia-testo',
-      'apri', 'ripristina', 'conferma', 'conferma-si', 'conferma-no', 'eco', 'azzera-eco', 'scordata',
-      'preset-elenco', 'preset-vuoto', 'preset-salva', 'preset-nome-riga',
-      'preset-nome', 'preset-conferma', 'preset-annulla'
+      'apri', 'salva-nota', 'ripristina', 'conferma', 'conferma-si', 'conferma-no',
+      'eco', 'azzera-eco', 'scordata'
     ];
     let i;
     let nome;
@@ -435,23 +429,40 @@
     return ordine;
   }
 
+  // Sette gruppi e trentasette manopole in colonna: il problema non è scorrere,
+  // è che una manopola utile non si trova più. Chiusi, i gruppi sono sette righe.
+  //
+  // `<details>` e non `<button aria-expanded>`: l'elemento è già nell'idioma
+  // della pagina (`.regia__conto-app`), e il browser regala da sé lo stato
+  // esposto agli assistenti vocali, Invio e Spazio, e l'apertura automatica
+  // quando si cerca dentro la pagina. Scriverselo a mano vorrebbe dire quaranta
+  // righe di JS e i loro difetti.
+  //
+  // Niente attributo `name`: farebbe una fisarmonica esclusiva, che chiude un
+  // gruppo sotto le dita di chi ci sta dentro col Tab e lascia il fuoco orfano.
+  const APERTI_PREDEFINITI = ['aspetto'];
+
+  let aperti = {};
+
+  function apertoDiPartenza(chiave) {
+    if (Object.prototype.hasOwnProperty.call(aperti, chiave)) { return !!aperti[chiave]; }
+    return APERTI_PREDEFINITI.indexOf(chiave) !== -1;
+  }
+
   function costruisciComandi() {
     const schema = window.Impostazioni.SCHEMA;
     const ordine = ordineGruppi(schema);
     let i;
     let k;
     let gruppo;
-    let sezione;
     let contenitore;
     let quanti;
 
     for (i = 0; i < ordine.length; i += 1) {
       gruppo = ordine[i];
 
-      sezione = crea('section', 'regia__gruppo');
-      sezione.appendChild(crea('h3', 'regia__gruppo-titolo', gruppo.titolo));
-      if (gruppo.nota) { sezione.appendChild(crea('p', 'regia__gruppo-nota', gruppo.nota)); }
-
+      // Prima i campi, perché il conteggio va nel sommario: da chiuso è l'unica
+      // cosa che dice che dietro il titolo c'è roba, e quanta.
       contenitore = crea('div', 'regia__campi');
       quanti = 0;
 
@@ -465,8 +476,26 @@
 
       if (quanti === 0) { continue; }
 
-      sezione.appendChild(contenitore);
-      nodi.gruppi.appendChild(sezione);
+      (function (chiave, dentro, nota) {
+        const sezione = crea('details', 'regia__gruppo');
+        sezione.open = apertoDiPartenza(chiave);
+
+        const cappello = crea('summary', 'regia__gruppo-titolo');
+        cappello.appendChild(crea('h3', 'regia__gruppo-nome', gruppo.titolo));
+        cappello.appendChild(crea('span', 'regia__gruppo-quanti', String(quanti)));
+
+        // Diretto e non `programma()`: aprire un cassetto non è girare una
+        // manopola, e non deve rientrare nel freno né sfiorare l'anteprima.
+        sezione.addEventListener('toggle', function () {
+          aperti[chiave] = sezione.open;
+          salva();
+        });
+
+        sezione.appendChild(cappello);
+        if (nota) { sezione.appendChild(crea('p', 'regia__gruppo-nota', nota)); }
+        sezione.appendChild(dentro);
+        nodi.gruppi.appendChild(sezione);
+      }(gruppo.chiave, contenitore, gruppo.nota));
     }
 
     if (nodi.gruppiVuoto && nodi.gruppiVuoto.parentNode) {
@@ -478,7 +507,6 @@
     valori[chiave] = valore;
     disegnaIndirizzo();
     misuraTelaio();
-    aggiornaAttuale();
     programma();
   }
 
@@ -585,7 +613,8 @@
       localStorage.setItem(CHIAVE_SALVA, JSON.stringify({
         q: window.Impostazioni.indirizzo(valori, ''),
         fondo: fondo,
-        altezza: altezza
+        altezza: altezza,
+        aperti: aperti
       }));
     } catch (err) {  }
   }
@@ -641,6 +670,17 @@
     return trovate;
   }
 
+  function leggiAperti(dato) {
+    aperti = {};
+    if (!dato || typeof dato !== 'object') { return; }
+
+    let i;
+    for (i = 0; i < GRUPPI.length; i += 1) {
+      const chiave = GRUPPI[i].chiave;
+      if (typeof dato[chiave] === 'boolean') { aperti[chiave] = dato[chiave]; }
+    }
+  }
+
   function valoriDiPartenza() {
     const salvato = ripesca();
     const dalLink = chiaviDelLink(location.search);
@@ -655,6 +695,11 @@
       if (isFinite(salvato.altezza)) {
         altezza = Math.min(ALTEZZA_MAX, Math.max(ALTEZZA_MIN, Math.round(salvato.altezza)));
       }
+
+      // Da `localStorage` può arrivare qualunque cosa, e questo oggetto finisce
+      // dritto in `sezione.open`: si tiene solo ciò che è un booleano su una
+      // chiave di gruppo che esiste davvero.
+      leggiAperti(salvato.aperti);
     }
 
     if (dalLink.length) {
@@ -665,235 +710,6 @@
     }
 
     return { valori: partenza, dalLink: dalLink.length, dalSalvato: !!salvato };
-  }
-
-  let preset = [];
-
-  function presetAttuale() {
-    return window.Impostazioni.indirizzo(valori, '');
-  }
-
-  function leggiPreset() {
-    let dato;
-
-    try {
-      const grezzo = localStorage.getItem(CHIAVE_PRESET);
-      if (!grezzo) { return []; }
-      dato = JSON.parse(grezzo);
-    } catch (err) {
-
-      return [];
-    }
-
-    if (!Array.isArray(dato)) { return []; }
-
-    const buoni = [];
-    for (let i = 0; i < dato.length && buoni.length < MAX_PRESET; i += 1) {
-      const voce = dato[i];
-      if (!voce || typeof voce !== 'object') { continue; }
-      if (typeof voce.nome !== 'string' || !voce.nome) { continue; }
-      if (typeof voce.q !== 'string') { continue; }
-
-      buoni.push({
-        nome: voce.nome.slice(0, MAX_NOME_PRESET),
-        q: voce.q,
-        fondo: FONDI.indexOf(voce.fondo) !== -1 ? voce.fondo : FONDO_PREDEFINITO,
-        altezza: isFinite(voce.altezza)
-          ? Math.min(ALTEZZA_MAX, Math.max(ALTEZZA_MIN, Math.round(voce.altezza)))
-          : ALTEZZA_PREDEFINITA
-      });
-    }
-
-    return buoni;
-  }
-
-  function scriviPreset() {
-    try {
-      localStorage.setItem(CHIAVE_PRESET, JSON.stringify(preset));
-      return true;
-    } catch (err) {
-      return false;
-    }
-  }
-
-  function disegnaPreset() {
-    const attuale = presetAttuale();
-
-    while (nodi.presetElenco.firstChild) {
-      nodi.presetElenco.removeChild(nodi.presetElenco.firstChild);
-    }
-
-    nodi.presetVuoto.hidden = preset.length > 0;
-
-    for (let i = 0; i < preset.length; i += 1) {
-      nodi.presetElenco.appendChild(voceDiPreset(preset[i], i, attuale));
-    }
-  }
-
-  function aggiornaAttuale() {
-    const attuale = presetAttuale();
-    const voci = nodi.presetElenco.children;
-    for (let i = 0; i < voci.length; i += 1) {
-      voci[i].classList.toggle('is-attuale', !!(preset[i] && preset[i].q === attuale));
-    }
-  }
-
-  function voceDiPreset(voce, indice, attuale) {
-    const li = crea('li', 'regia__preset-voce');
-    if (voce.q === attuale) { li.classList.add('is-attuale'); }
-
-    const carica = crea('button', 'regia__preset-carica', voce.nome);
-    carica.type = 'button';
-    carica.addEventListener('click', function () { applicaPreset(indice); });
-
-    const togli = crea('button', 'regia__preset-togli', '×');
-    togli.type = 'button';
-    togli.title = 'Dimentica «' + voce.nome + '»';
-    togli.setAttribute('aria-label', 'Dimentica «' + voce.nome + '»');
-    togli.addEventListener('click', function () { chiediSeTogliere(li, indice); });
-
-    li.appendChild(carica);
-    li.appendChild(togli);
-    return li;
-  }
-
-  function chiediSeTogliere(li, indice) {
-    if (li.classList.contains('is-chiede')) { return; }
-    li.classList.add('is-chiede');
-
-    const chiesta = crea('span', 'regia__preset-chiesta');
-    chiesta.appendChild(crea('span', null, 'Dimentico?'));
-
-    const si = crea('button', 'regia__btn regia__btn--mini', 'Sì');
-    si.type = 'button';
-    si.addEventListener('click', function () { togliPreset(indice); });
-
-    const no = crea('button', 'regia__btn regia__btn--mini', 'No');
-    no.type = 'button';
-    no.addEventListener('click', function () {
-      li.classList.remove('is-chiede');
-      if (chiesta.parentNode) { chiesta.parentNode.removeChild(chiesta); }
-    });
-
-    chiesta.appendChild(si);
-    chiesta.appendChild(no);
-    li.appendChild(chiesta);
-    si.focus();
-  }
-
-  function togliPreset(indice) {
-    const nome = preset[indice] ? preset[indice].nome : '';
-    preset.splice(indice, 1);
-    scriviPreset();
-    disegnaPreset();
-    eco('Fatto: «' + nome + '» non ce l’ho più.', true);
-  }
-
-  function applicaPreset(indice) {
-    const voce = preset[indice];
-    if (!voce) { return; }
-
-    valori = window.Impostazioni.leggi(voce.q);
-    fondo = voce.fondo;
-    altezza = voce.altezza;
-
-    clearTimeout(freno);
-    freno = null;
-
-    scriviTuttiICampi();
-    scriviFondo();
-    scriviAltezza();
-    disegnaIndirizzo();
-    misuraTelaio();
-    ricaricaAnteprima();
-    salva();
-    disegnaPreset();
-
-    eco('Ecco «' + voce.nome + '».', true);
-  }
-
-  function mostraNome(aperta) {
-    nodi.presetNomeRiga.hidden = !aperta;
-    nodi.presetSalva.setAttribute('aria-expanded', aperta ? 'true' : 'false');
-
-    if (aperta) {
-
-      const attuale = presetAttuale();
-      let proposta = '';
-      for (let i = 0; i < preset.length; i += 1) {
-        if (preset[i].q === attuale) { proposta = preset[i].nome; break; }
-      }
-      nodi.presetNome.value = proposta;
-      nodi.presetNome.focus();
-      nodi.presetNome.select();
-    } else {
-      nodi.presetSalva.focus();
-    }
-  }
-
-  function salvaPreset() {
-    const nome = String(nodi.presetNome.value || '')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .slice(0, MAX_NOME_PRESET);
-
-    if (!nome) {
-      eco('Mi serve un nome, se no non la ritrovo più.', false);
-      nodi.presetNome.focus();
-      return;
-    }
-
-    const voce = { nome: nome, q: presetAttuale(), fondo: fondo, altezza: altezza };
-
-    let trovata = -1;
-    for (let i = 0; i < preset.length; i += 1) {
-      if (preset[i].nome.toLowerCase() === nome.toLowerCase()) { trovata = i; break; }
-    }
-
-    if (trovata !== -1) {
-      preset[trovata] = voce;
-    } else {
-      if (preset.length >= MAX_PRESET) {
-        eco('Ne ho già ' + MAX_PRESET + '. Ne dimentico una e riprovo.', false);
-        return;
-      }
-      preset.push(voce);
-    }
-
-    const riuscito = scriviPreset();
-    mostraNome(false);
-    disegnaPreset();
-
-    if (riuscito) {
-      eco(trovata !== -1
-        ? 'Fatto: «' + nome + '» adesso è com’è qui.'
-        : 'Fatto: me la ricordo come «' + nome + '».', true);
-    } else {
-
-      eco('Non sono riuscito a salvarla: questo browser non me lo lascia fare.', false);
-    }
-  }
-
-  function ascoltaPreset() {
-    nodi.presetSalva.addEventListener('click', function () {
-      mostraNome(nodi.presetNomeRiga.hidden);
-    });
-
-    nodi.presetConferma.addEventListener('click', salvaPreset);
-
-    nodi.presetAnnulla.addEventListener('click', function () {
-      mostraNome(false);
-    });
-
-    nodi.presetNome.addEventListener('keydown', function (evento) {
-      if (evento.key === 'Enter') {
-        evento.preventDefault();
-        salvaPreset();
-      } else if (evento.key === 'Escape') {
-        evento.preventDefault();
-        mostraNome(false);
-      }
-    });
   }
 
   function seleziona(elemento) {
@@ -1002,11 +818,10 @@
     disegnaIndirizzo();
     misuraTelaio();
     ricaricaAnteprima();
-    aggiornaAttuale();
 
     mandaMisura(LARGHEZZA_FINESTRA, ALTEZZA_FINESTRA);
 
-    const detto = 'Fatto: tutto com’era all’inizio, misura della finestra compresa. Le configurazioni salvate restano dove sono.';
+    const detto = 'Fatto: tutto com’era all’inizio, misura della finestra compresa.';
 
     eco(detto, true);
 
@@ -1256,12 +1071,27 @@
     return coda;
   }
 
+  // Non basta `fin.dentro`, che dice solo «mi ha aperto il launcher»: qui
+  // servono due comandi di fila, e fuori dalla WebView il ripiego passa dal
+  // titolo del documento, che ne tiene uno solo — il primo si perderebbe in
+  // silenzio. Dove i due non arrivano tutti e due, il bottone non si accende.
+  function nellaVetrina() {
+    return !!(window.Menu && window.Menu.nellaVetrina && window.Menu.nellaVetrina());
+  }
+
   function ascoltaUso() {
     const bottone = document.getElementById('usa-finestra');
     if (!bottone) { return; }
 
-    if (!fin.dentro) {
+    if (!nellaVetrina()) {
       bottone.disabled = true;
+      if (nodi.salvaNota) {
+        nodi.salvaNota.hidden = false;
+        nodi.salvaNota.textContent = 'Da qui non posso salvarla: questa è una pagina, ' +
+          'e una pagina non tocca i file del disco. Aprendo la regia dal menù del tasto ' +
+          'destro dentro la chat, o con Regia.exe, questo bottone funziona. Intanto c’è ' +
+          'Copia, che dà l’indirizzo completo da incollare in OBS.';
+      }
       return;
     }
 
@@ -1290,19 +1120,23 @@
         ? ' Il fondo trasparente in una finestra vera vuol dire bianco, e su bianco il testo chiaro sparisce: lì ho scritto «scuro». In OBS resta trasparente.'
         : '';
 
-      eco((subito
-        ? 'Fatto: la finestra di Pollaio.exe si è già rifatta così — si è ricollegata alla chat, quindi per un attimo è vuota.'
-        : 'Fatto. La finestra non è aperta: vale dalla prossima volta che la apri.') + nota, true);
+      eco('Fatto: l’ho salvata per tutti e due. ' + (subito
+        ? 'La finestra di Pollaio.exe si è già rifatta così — si è ricollegata alla chat, quindi per un attimo è vuota.'
+        : 'La finestra adesso non è aperta: nascerà così.') +
+        ' La sorgente di OBS la prende al prossimo ricarica.' + nota, true);
     });
 
     bottone.addEventListener('click', function () {
       const fuori = codaPerLaFinestra();
       scurito = fuori.scurito;
       mandata = fuori.coda;
-
-      // Due code, due comandi: quella della finestra e quella della sorgente.
-      window.Menu.comanda('parametri:' + fuori.coda);
+      // Prima la sorgente, poi i parametri, e l’ordine non è un dettaglio: è il
+      // secondo comando che fa bussare alla finestra della chat, la quale
+      // rilegge il .ini per intero. Nell’ordine opposto rileggeva un file in cui
+      // `sorgente=` non era ancora stata scritta, e il server continuava a
+      // rimandare OBS alla coda di prima — una pressione di ritardo, sempre.
       window.Menu.comanda('sorgente:' + codaPerLaSorgente());
+      window.Menu.comanda('parametri:' + fuori.coda);
     });
   }
 
@@ -1542,12 +1376,8 @@
 
     nodi.misura.setAttribute('for', 'campo-larghezza altezza');
 
-    preset = leggiPreset();
-    disegnaPreset();
-
     ascoltaAnteprima();
     ascoltaAzioni();
-    ascoltaPreset();
     ascoltaFinestra();
     ascoltaUso();
     ascoltaConto();

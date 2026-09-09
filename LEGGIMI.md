@@ -123,7 +123,7 @@ Sorgente → + → Browser
 
 **Dalla 1.2.6 puoi anche incollare l'indirizzo corto**, senza niente dopo
 `pollaio.html`: il server ti manda da solo alla configurazione decisa nella
-regia — quella che scrivi premendo «Usala anche in Pollaio.exe». Così la
+regia — quella che scrivi premendo «Salva». Così la
 sorgente di OBS smette di essere una copia scollegata che invecchia: cambi una
 manopola, premi il bottone, ricarichi la sorgente in OBS, ed è allineata. Se
 invece incolli un indirizzo **con** la sua coda, comanda quella: il server non ti
@@ -365,23 +365,24 @@ da comandare.
 
 **In cima, subito sotto il titolo, c'è «Il tuo account Twitch».** Sta lassù, e
 non in fondo com'era prima, perché è l'unica cosa della regia che si fa una
-volta e poi non si tocca più: cercarla in mezzo alle configurazioni salvate era
-il modo migliore di non trovarla.
+volta e poi non si tocca più: cercarla in mezzo a tutto il resto era il modo
+migliore di non trovarla.
 
 Sotto di lei, a sinistra tutte le manopole, a destra l'anteprima dal vivo su uno
 sfondo a scacchi che ti fa vedere cos'è trasparente e cosa no. Puoi cambiare il
 fondo dell'anteprima in chiaro, scuro o finto gameplay: serve a controllare che
 il testo si legga sopra a qualsiasi cosa, che è il vero problema di un overlay.
 
-In basso c'è l'indirizzo con il bottone **Copia**. Quello va nel campo **URL** di
-una Sorgente Browser con «File locale» **tolto** (vedi sopra).
+In fondo c'è **Salva**, e accanto l'indirizzo con **Copia** — quello va nel campo
+**URL** di una Sorgente Browser con «File locale» **tolto** (vedi sopra).
 
-Accanto c'è **Usala anche in Pollaio.exe**, che è la scorciatoia per l'altra
-metà: la finestra del launcher non legge quell'indirizzo, legge la riga
-`parametri=` di `avvio\pollaio.ini`. Il bottone ce la scrive lui, invece di
-farti aprire il file col blocco note e incollare a mano la coda dopo il `?`.
-Vale dal prossimo avvio di `Pollaio.exe`, e come tutto quello che tocca l'ini
-funziona solo con la regia aperta da `Regia.exe`.
+**Salva** scrive la configurazione in tutti e due i posti che non leggono
+l'indirizzo della regia: la riga `parametri=` di `avvio\pollaio.ini`, che è
+quella che la finestra del launcher legge davvero, e la riga `sorgente=`, che è
+quella che il server consegna a OBS. Te le scrive lui invece di farti aprire il
+file col blocco note e incollare a mano la coda dopo il `?`. La finestra si rifà
+subito, senza riavviare; funziona solo con la regia aperta dal launcher, perché
+una pagina qualunque non tocca i file del disco.
 
 Una correzione la fa da sé: se il fondo è «trasparente» ci scrive «scuro».
 Trasparente ha senso in una sorgente browser, dove sotto c'è il gioco; in una
@@ -428,27 +429,37 @@ prova è andata troppo in là.
 In fondo alla regia, dopo le istruzioni per OBS, c'è **Ripristina le
 impostazioni**: chiede conferma e poi riporta ogni manopola al valore di
 partenza — l'aspetto, cosa si vede, cosa si accende, la pulizia, la barra sotto
-la chat, l'anteprima e anche la misura della finestra. Le configurazioni salvate
-non le tocca: quelle si tolgono una per una, con la loro ×. E non tocca
-l'account: rimette le manopole, non ti butta fuori da Twitch.
+la chat, l'anteprima e anche la misura della finestra. Non tocca l'account:
+rimette le manopole, non ti butta fuori da Twitch.
 
-### Le configurazioni salvate
+### I cassetti, e il bottone Salva
 
-In fondo alla regia c'è **Salva com'è adesso**: si dà un nome alla
-configurazione e resta lì, come una pastiglia da ricliccare. Serve perché una
-diretta non ne ha una sola — il gameplay vuole il tema nudo e la colonna
-stretta, le chiacchiere vogliono il vetro scuro e il testo grande, la cattura
-finestra vuole il fondo verde — e rigirare dieci manopole a ogni cambio di
-scena è il modo sicuro di smettere di farlo e tenersi quella storta.
+Le manopole sono trentasette, divise in sette gruppi, e in colonna unica il
+problema non era scorrere: era che una manopola utile non si trovava. Dalla
+1.2.8 **i gruppi sono cassetti**: chiusi occupano una riga, col titolo, il
+numero di manopole che ci stanno dietro e una freccia. Si aprono con un clic o
+con Invio.
 
-La pastiglia accesa è quella che corrisponde alle manopole in questo momento, e
-si spegne da sola appena se ne tocca una. Salvare due volte con lo stesso nome
-non fa un doppione: aggiorna quella. Il × chiede conferma prima di dimenticare,
-e **Ripristina** non le tocca — rimette le manopole com'erano, non butta via il
-lavoro salvato.
+All'apertura è aperto solo **«L'aspetto»** — è l'unico gruppo che si gira
+*guardando* l'anteprima invece che leggendolo, e gli altri sei sono da
+mettere-una-volta. Poi la regia si ricorda come l'hai lasciata: riapri e ritrovi
+i tuoi cassetti. Il ricordo sta in questo browser, insieme al resto.
 
-Restano in questo browser, non nel file: se apri la regia su un altro computer
-non le trovi. Quello che si porta in giro è sempre l'indirizzo.
+**In fondo c'è «Salva»**, ed è il bottone che serve quasi sempre. Scrive la
+configurazione in due posti, senza che tu tocchi nessun indirizzo:
+
+- **la finestra di `Pollaio.exe`**, che si rifà subito — si ricollega alla chat,
+  quindi per un attimo è vuota;
+- **la sorgente browser di OBS**, che la prende al ricarica successivo.
+
+In OBS però funziona solo se ci hai incollato l'indirizzo corto, quello che
+finisce con `pollaio.html`: se ci hai messo la riga lunga col `?`, comanda
+quella, e allora si rifà con **Copia**. Il bottone si accende solo quando la
+regia è aperta dal launcher — da una pagina qualunque non si toccano i file del
+disco, e lì la strada resta Copia.
+
+Se le manopole che hai sotto gli occhi non sono quelle salvate, sotto il
+bottone compare un riquadro che te lo dice, e sparisce appena premi.
 
 ---
 

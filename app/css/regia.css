@@ -249,23 +249,40 @@ html[data-finestra] .regia__testa:active { cursor: grabbing; }
 }
 
 .regia__gruppo {
-  padding: var(--passo-3) var(--passo-2);
+  padding: 0;
   border: 1px solid var(--linea-forte);
   border-radius: var(--raggio);
   background-color: var(--pannello);
   box-shadow: var(--ombra-morbida);
 }
 
+/* Il cappello del cassetto. `list-style: none` più la riga `::-webkit-details-marker`
+   tolgono il triangolino di serie del browser: la freccia ce la disegniamo noi,
+   a destra, dove si guarda per capire se si apre. */
 .regia__gruppo-titolo {
   display: flex;
   align-items: center;
   gap: var(--passo);
+  padding: var(--passo-3) var(--passo-2);
+  cursor: pointer;
+  list-style: none;
+
   font-family: var(--font-mono);
   font-size: var(--t-micro);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: var(--spazio-etichetta);
   color: var(--viola-chiaro);
+}
+
+.regia__gruppo-titolo::-webkit-details-marker { display: none; }
+
+/* Un sommario largo quanto il pannello: l'anello a 3px in fuori scavalcherebbe
+   il bordo e si leggerebbe come un bordo sbagliato. È la deroga di §12, la
+   stessa del menù sul nome e dei pannelli Sondaggio e Pronostico. */
+.regia__gruppo-titolo:focus-visible {
+  outline: 2px solid var(--ciano);
+  outline-offset: -2px;
 }
 
 .regia__gruppo-titolo::before {
@@ -276,8 +293,43 @@ html[data-finestra] .regia__testa:active { cursor: grabbing; }
   background-color: currentColor;
 }
 
+/* La freccia: un triangolo di bordi, come quella che il foglio disegna già
+   altrove. Niente immagini e niente esadecimali — prende `currentColor`. */
+.regia__gruppo-titolo::after {
+  content: "";
+  flex: none;
+  margin-inline-start: auto;
+
+  inline-size: 0;
+  block-size: 0;
+  border-block: 4px solid transparent;
+  border-inline-start: 5px solid currentColor;
+
+  color: var(--testo-tenue);
+  rotate: 0deg;
+  transition: rotate var(--durata) var(--curva);
+}
+
+.regia__gruppo[open] .regia__gruppo-titolo::after { rotate: 90deg; }
+
+.regia__gruppo-nome {
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+/* Da chiuso è l'unica cosa che dice che dietro il titolo c'è roba, e quanta. */
+.regia__gruppo-quanti {
+  flex: none;
+  color: var(--testo-tenue);
+  font-family: var(--font-mono);
+  font-size: var(--t-micro);
+}
+
 .regia__gruppo-nota {
-  margin-block-start: 6px;
+  margin-block-start: 0;
+  padding-inline: var(--passo-2);
   color: var(--testo-tenue);
   font-size: var(--t-piccolo);
 }
@@ -287,6 +339,7 @@ html[data-finestra] .regia__testa:active { cursor: grabbing; }
   flex-direction: column;
   gap: var(--passo-3);
   margin-block-start: var(--passo-3);
+  padding: 0 var(--passo-2) var(--passo-3);
 }
 
 .regia__campo {
@@ -797,107 +850,6 @@ label.regia__etichetta { cursor: pointer; }
 
 .regia__eco.is-fatto { color: var(--ok); }
 
-.regia__preset {
-  margin-block-start: var(--r-passo-6);
-}
-
-.regia__preset-elenco {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--passo);
-  margin-block-start: var(--passo-2);
-  padding: 0;
-  list-style: none;
-}
-
-.regia__preset-voce {
-  display: inline-flex;
-  align-items: stretch;
-  border: 1px solid var(--linea-forte);
-  border-radius: var(--raggio-pill);
-  overflow: hidden;
-  transition: border-color var(--durata) var(--curva);
-}
-
-.regia__preset-voce:hover { border-color: var(--ciano); }
-
-.regia__preset-voce.is-attuale {
-  border-color: var(--ciano);
-  background-color: var(--pannello-2);
-}
-
-.regia__preset-carica {
-  min-block-size: 40px;
-  padding-inline: var(--passo-2);
-  border: 0;
-  background-color: transparent;
-  color: var(--testo);
-  font-family: var(--font-mono);
-  font-size: var(--t-piccolo);
-  letter-spacing: var(--spazio-etichetta);
-  cursor: pointer;
-}
-
-.regia__preset-carica:hover { color: var(--ciano); }
-
-.regia__preset-togli {
-  min-block-size: 40px;
-  padding-inline: var(--passo);
-  border: 0;
-  border-inline-start: 1px solid var(--linea);
-  background-color: transparent;
-  color: var(--testo-tenue);
-  font-family: var(--font-mono);
-  font-size: var(--t-piccolo);
-  line-height: 1;
-  cursor: pointer;
-  transition: color var(--durata) var(--curva), background-color var(--durata) var(--curva);
-}
-
-.regia__preset-togli:hover {
-  background-color: color-mix(in srgb, var(--allerta) 22%, transparent);
-  color: var(--allerta);
-}
-
-.regia__preset-voce.is-chiede .regia__preset-carica,
-.regia__preset-voce.is-chiede .regia__preset-togli {
-  display: none;
-}
-
-.regia__preset-chiesta {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--passo);
-  padding-inline: var(--passo-2);
-  color: var(--allerta);
-  font-family: var(--font-mono);
-  font-size: var(--t-micro);
-}
-
-.regia__nome {
-  min-block-size: 36px;
-  max-inline-size: 16ch;
-  padding-inline: var(--passo);
-  border: 1px solid var(--linea-forte);
-  border-radius: var(--raggio-s);
-  background-color: var(--fondo);
-  color: var(--testo);
-  font-family: var(--font-mono);
-  font-size: var(--t-piccolo);
-}
-
-.regia__nome:focus-visible {
-  outline: 2px solid var(--ciano);
-  outline-offset: -2px;
-}
-
-.regia__salva {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--passo);
-}
-
 .regia__conto { min-inline-size: 0; }
 
 .regia__campo--testo {
@@ -1057,7 +1009,7 @@ label.regia__etichetta { cursor: pointer; }
   gap: var(--passo-2);
 }
 
-.regia__azioni--consegna > :last-child { grid-column: 1 / -1; }
+.regia__azioni--consegna > :first-child { grid-column: 1 / -1; }
 
 .regia__misure { margin-block-start: var(--passo-3); }
 
@@ -1196,8 +1148,11 @@ label.regia__etichetta { cursor: pointer; }
 @media (max-width: 560px) {
   .regia { padding-block-start: var(--r-passo-4); }
 
-  .regia__gruppo,
+  .regia__gruppo-titolo,
+  .regia__gruppo-nota,
   .regia__obs { padding-inline: var(--passo); }
+
+  .regia__campi { padding-inline: var(--passo); }
 
   .regia__campo--numero .regia__riga { flex-wrap: wrap; }
   .regia__cursore { flex-basis: 100%; }

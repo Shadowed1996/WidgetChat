@@ -185,7 +185,7 @@ internal static class Programma
 
     public static string Installato = "";
 
-    public const string VERSIONE = "1.2.7";
+    public const string VERSIONE = "1.2.8";
 }
 
 internal sealed class Preferenze
@@ -303,7 +303,7 @@ internal sealed class Preferenze
         "# sparisce; questa e' della sorgente browser, dove il trasparente e'",
         "# proprio quello che serve per vedere il gioco sotto ai messaggi.",
         "#",
-        "# La scrive il bottone «Usala anche in Pollaio.exe» della regia, insieme",
+        "# La scrive il bottone «Salva» della regia, insieme",
         "# all'altra. Se e' vuota, l'indirizzo nudo apre il widget coi predefiniti.",
         "sorgente=",
         "",
@@ -1862,6 +1862,29 @@ internal static class Ponte
             return;
         }
 
+        // Il gemello del ramo qui sopra, per la coda che va a OBS. Su questa
+        // strada — il titolo del documento, quando non c'e' la WebView — ne
+        // arriva comunque uno solo dei due, ed e' il motivo per cui la regia
+        // spegne il bottone quando non e' nella Vetrina. Il ramo c'e' lo stesso:
+        // un comando che il launcher conosce a meta' e' peggio di uno che non
+        // conosce affatto.
+        if (comando == "sorgente")
+        {
+            const string testaS = "sorgente:";
+            if (gettone.Length < testaS.Length) return;
+
+            string codaS = gettone.Substring(testaS.Length);
+
+            int fineS = codaS.LastIndexOf(':');
+            codaS = fineS >= 0 ? codaS.Substring(0, fineS) : "";
+
+            if (!Preferenze.ParametriBuoni(codaS)) return;
+
+            string iniS = Path.Combine(Programma.Radice, Path.Combine("avvio", "pollaio.ini"));
+            Preferenze.RiscriviRiga(iniS, "sorgente", codaS);
+            return;
+        }
+
         if (comando == "trascina") Trascina(finestra);
     }
 
@@ -2596,11 +2619,18 @@ internal sealed class Vetrina : Form
             Preferenze p = Preferenze.Leggi(Path.Combine(Programma.Radice,
                                             Path.Combine("avvio", "pollaio.ini")));
 
+            Diagnosi.Scrivi("riparametra: ini=[" + p.Parametri + "] mia=[" + Programma.ParametriDelLauncher +
+                            "] sorgente=[" + p.Sorgente + "] webview=" + (vista.CoreWebView2 != null));
+
             Programma.SorgenteDelLauncher = p.Sorgente;
             if (p.Parametri == Programma.ParametriDelLauncher) return;
 
-            Programma.ParametriDelLauncher = p.Parametri;
+            // Prima si naviga, poi si prende nota. Al contrario, un `Navigate`
+            // che lancia — WebView non ancora pronta — lascerebbe la variabile
+            // gia' cambiata, e da li' in poi il confronto direbbe per sempre
+            // «uguale»: la finestra non si rifarebbe mai piu', fino a riavvio.
             vista.CoreWebView2.Navigate(Navigatore.IndirizzoLocale("pollaio.html", p));
+            Programma.ParametriDelLauncher = p.Parametri;
         }
         catch {  }
     }

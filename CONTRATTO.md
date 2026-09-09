@@ -778,10 +778,10 @@ Accessibilità, anche se è un overlay (la pagina si apre anche in un browser):
 - focus visibile `2px solid var(--ciano)` con `outline-offset: 3px`, con una
   deroga sul solo **offset**: dove i controlli stanno stretti dentro un
   pannello — le voci del menù sul nome, i campi dei pannelli Sondaggio e
-  Pronostico — l’anello va **all’interno** (`outline-offset: -2px`). Tinta e
-  spessore non cambiano mai. A 3px in fuori l’anello di un campo finisce sopra
-  il campo vicino, e un segno di fuoco che sconfina si legge come un bordo
-  sbagliato invece che come «sono qui».
+  Pronostico, i sommari dei cassetti della regia — l’anello va **all’interno**
+  (`outline-offset: -2px`). Tinta e spessore non cambiano mai. A 3px in fuori
+  l’anello di un campo finisce sopra il campo vicino, e un segno di fuoco che
+  sconfina si legge come un bordo sbagliato invece che come «sono qui».
 - `prefers-reduced-motion: reduce` spegne **tutte** le animazioni, e ogni foglio
   spegne a mano le proprie `@keyframes` in un paragrafo finale dedicato — con
   una sola deroga, dichiarata qui sotto: la manopola `movimento`
@@ -1026,7 +1026,7 @@ Nella finestra vera `fondo=trasparente` vuol dire bianco, e su bianco il testo
 chiaro sparisce: `codaPerLaFinestra()` lo corregge in `scuro`. In OBS quel
 trasparente è invece esattamente il punto — è il modo di vedere il gioco sotto
 ai messaggi. Con una riga sola bisognava scegliere quale delle due rovinare, e
-si rovinava OBS senza dirlo. Quindi il bottone «Usala anche in Pollaio.exe»
+si rovinava OBS senza dirlo. Quindi il bottone «Salva»
 manda **due comandi**: `parametri:` con la coda corretta, `sorgente:` con quella
 vera.
 
@@ -1054,6 +1054,65 @@ frase che era falsa nel caso normale.
 ricollega all'IRC: in diretta si nota. Si fa quando qualcuno preme il bottone,
 che è un gesto, non mentre gira una manopola.
 
+
+### I gruppi sono cassetti — `<details>`, non un accordion scritto a mano
+
+Trentasette manopole in sette gruppi, in colonna unica: il problema non era
+scorrere, era che una manopola utile **non si trovava**. Chiusi, i gruppi sono
+sette righe.
+
+**`<details>/<summary>` e non `<button aria-expanded>` + pannello**, e non è un
+pareggio. L'elemento è già nell'idioma della pagina (`.regia__conto-app` lo usa
+da sempre, e `menu.js` lo elenca fra i suoi comandi), il browser regala lo stato
+esposto agli assistenti vocali, Invio e Spazio, e l'apertura automatica quando
+si cerca dentro la pagina. La versione a mano costerebbe una quarantina di righe
+di JS — generazione degli id per `aria-controls`, tastiera, sincronia
+dell'attributo — e i loro difetti. **Non si scrive `aria-expanded` su un
+`<summary>`**: `<details>` lo espone da sé, e scriverlo sopra è una fonte nota
+di annunci contraddittori.
+
+**Niente attributo `name`.** Farebbe una fisarmonica esclusiva, che chiude un
+gruppo sotto le dita di chi ci sta dentro col Tab e lascia il fuoco orfano nel
+`body`. Un cassetto si chiude solo attivando il suo sommario, e lì il fuoco c'è
+già.
+
+**Aperto solo «L'aspetto»**, la prima volta. È l'unico gruppo che si gira
+*guardando* l'anteprima invece che leggendolo — sta scritto nella sua stessa
+nota — e gli altri sei sono da mettere-una-volta. Tutti chiusi farebbe sembrare
+la pagina vuota al primo avvio; due aperti rimette dentro lo scorrimento che si
+stava togliendo. Il **conteggio nel sommario** è quello che rende accettabile il
+tutto-chiuso: da chiuso è l'unica cosa che dice che dietro il titolo c'è roba, e
+quanta.
+
+**Lo stato sta in `sb-pollaio-regia`, non in una chiave nuova**: stessa durata,
+stessa frase già scritta nel sottotitolo, e `dimentica()` la pulisce già. Arriva
+da `localStorage` e finisce dritto in `sezione.open`, quindi `leggiAperti` tiene
+**solo** i booleani su chiavi di gruppo che esistono davvero. Le due direzioni
+— regia vecchia che legge il nuovo, regia nuova che legge il vecchio — sono
+entrambe innocue: manca il campo, e si ricade sul predefinito.
+
+**Il `toggle` chiama `salva()` diretta, non `programma()`**: aprire un cassetto
+non è girare una manopola, e non deve rientrare nel freno da 300ms né sfiorare
+l'anteprima.
+
+**Niente animazione di altezza.** `<details>` non la anima senza `calc-size`, e
+farla a mano vuol dire misurare in JS e portarsi dietro il difetto al
+ridimensionamento. Si muove solo la freccia, con una `transition` che il
+paragrafo finale del foglio già spegne sotto `prefers-reduced-motion`.
+
+**Quello che peggiora, e va saputo**: un accordion nasconde. Chi non sa che una
+manopola esiste non la incontrerà più scorrendo. Il conteggio mitiga, non
+risolve.
+
+### I preset, e perché non ci sono più
+
+C'erano: dodici configurazioni con un nome, in `localStorage`, da ricaricare con
+un clic. Sono state tolte su richiesta, ed è giusto che resti scritto **che era
+una scelta discutibile**: non erano loro a rendere lunga la pagina — quella sono
+le manopole, e i cassetti le hanno accorciate — ed erano l'unica cosa che faceva
+qualcosa che l'indirizzo non sa fare, cioè tenere *n* configurazioni invece di
+una. Stanno in git: se un giorno servono, si riprendono da lì.
+
 ### I due avvisi della regia — `.regia__allarme`
 
 Erano uno, adesso sono due, e hanno la stessa forma per un motivo: **sono le due
@@ -1061,7 +1120,7 @@ cose che il pollaio faceva giuste e in silenzio**, e che in silenzio si leggono
 come un guasto suo.
 
 **Il secondo: la finestra di `Pollaio.exe` è rimasta indietro.** Sotto il bottone
-«Usala anche in Pollaio.exe» compare un riquadro quando la coda che hai sotto gli
+«Salva» compare un riquadro quando la coda che hai sotto gli
 occhi non è quella che il launcher userà davvero. La finestra non legge la regia:
 legge `parametri=` del `.ini`, e le due cose divergono appena si gira una
 manopola. Chi non lo sa gira il glitch, guarda l'anteprima che ubbidisce, apre la

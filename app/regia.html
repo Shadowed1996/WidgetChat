@@ -33,7 +33,7 @@
     destra, e in fondo alla pagina mi porto via l’indirizzo da incollare in una
     sorgente browser di OBS. La configurazione <em>è</em> quell’indirizzo: qui
     resta solo una copia, in questo browser, per ritrovare le cose come le
-    avevo lasciate e per le configurazioni che salvo con un nome.
+    avevo lasciate.
   </p>
 </header>
 
@@ -228,18 +228,29 @@
     <code class="regia__indirizzo" id="indirizzo" tabindex="0">pollaio.html</code>
 
     <div class="regia__azioni regia__azioni--consegna">
-      <button class="regia__btn regia__btn--pieno" type="button" id="copia" aria-live="polite">
+      <button class="regia__btn regia__btn--pieno" type="button" id="usa-finestra">
+        Salva
+      </button>
+
+      <button class="regia__btn regia__btn--vuoto" type="button" id="copia" aria-live="polite">
         <span id="copia-testo">Copia</span>
       </button>
 
       <button class="regia__btn regia__btn--vuoto" type="button" id="apri">
         Apri in una finestra
       </button>
-
-      <button class="regia__btn regia__btn--vuoto" type="button" id="usa-finestra">
-        Usala anche in Pollaio.exe
-      </button>
     </div>
+
+    <p class="regia__nota">
+      <strong>Salva</strong> scrive la configurazione in due posti: la finestra di
+      <code>Pollaio.exe</code>, che si rifà subito, e la sorgente browser di OBS, che la
+      prende al ricarica successivo. In OBS però funziona solo se ci hai incollato
+      l’indirizzo corto, quello che finisce con <code>pollaio.html</code>: se ci hai messo
+      la riga lunga con il <code>?</code>, comanda quella, e allora si rifà con
+      <strong>Copia</strong>.
+    </p>
+
+    <p class="regia__nota" id="salva-nota" hidden></p>
 
     <p class="regia__allarme" id="scordata" hidden></p>
 
@@ -308,39 +319,6 @@
     </p>
   </section>
 
-  <section class="regia__preset" aria-labelledby="titolo-preset">
-    <h2 class="regia__sezione-titolo" id="titolo-preset">Le configurazioni salvate</h2>
-    <p class="regia__sezione-testo">
-      Una regia vera ne vuole più di una: quella per il gameplay, quella per le
-      chiacchiere, quella col fondo verde per il chroma key. Qui le metto da
-      parte con un nome e me le riprendo con un clic, invece di rigirare tutte
-      le manopole ogni volta che cambio scena.
-    </p>
-
-    <ul class="regia__preset-elenco" id="preset-elenco"></ul>
-
-    <p class="regia__vuoto" id="preset-vuoto">
-      Non ne ho ancora messa da parte nessuna. Sistemo le manopole come mi
-      piacciono, poi le do un nome qui sotto.
-    </p>
-
-    <div class="regia__azioni">
-
-      <span class="regia__salva">
-        <button class="regia__btn regia__btn--vuoto" type="button" id="preset-salva" aria-expanded="false">
-          Salva com’è adesso
-        </button>
-        <span class="regia__conferma" id="preset-nome-riga" hidden>
-          <label class="regia__conferma-testo" for="preset-nome">Come la chiamo?</label>
-          <input class="regia__nome" type="text" id="preset-nome" maxlength="24"
-                 placeholder="gameplay" autocomplete="off" spellcheck="false">
-          <button class="regia__btn regia__btn--mini" type="button" id="preset-conferma">Salva</button>
-          <button class="regia__btn regia__btn--mini" type="button" id="preset-annulla">Lascia stare</button>
-        </span>
-      </span>
-    </div>
-  </section>
-
   <section class="regia__obs" aria-labelledby="titolo-obs">
     <h2 class="regia__sezione-titolo" id="titolo-obs">Come lo attacco a OBS</h2>
     <ol class="regia__passi">
@@ -375,9 +353,7 @@
       <h2 class="regia__sezione-titolo" id="titolo-azzera">Ripristina le impostazioni</h2>
       <p class="regia__sezione-testo">
         Rimette ogni manopola com’era la prima volta: l’aspetto, cosa si vede,
-        cosa si accende, la pulizia, l’anteprima e la misura della finestra. Le
-        configurazioni salvate qui sopra restano dove sono — quelle si tolgono
-        una per una, con la loro ×.
+        cosa si accende, la pulizia, l’anteprima e la misura della finestra.
       </p>
     </div>
 
