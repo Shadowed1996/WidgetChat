@@ -1018,6 +1018,77 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
   background-color: var(--linea-forte);
 }
 
+.pollaio__azioni {
+  position: fixed;
+  z-index: var(--z-menu);
+
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 190px;
+  padding: 4px;
+
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio-s);
+  background-color: var(--fondo);
+  box-shadow: var(--ombra);
+}
+
+.pollaio__azioni-chi {
+  margin: 0 0 4px;
+  padding: 6px 10px;
+
+  border-block-end: 1px solid var(--linea);
+  color: var(--viola-chiaro);
+  font-family: var(--font-mono);
+  font-size: 0.66em;
+  letter-spacing: var(--spazio-etichetta);
+  overflow-wrap: anywhere;
+}
+
+.pollaio__azione {
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 5px;
+  background-color: transparent;
+  color: var(--testo);
+
+  font-family: var(--font-mono);
+  font-size: 0.66em;
+  line-height: 1.2;
+  text-align: start;
+  cursor: pointer;
+}
+
+.pollaio__azione:hover:not(:disabled) {
+  background-color: var(--viola-cupo);
+}
+
+.pollaio__azione:disabled {
+  color: var(--testo-tenue);
+  cursor: default;
+}
+
+.pollaio__azione.is-staccata {
+  margin-block-start: 4px;
+  border-block-start: 1px solid var(--linea);
+  border-start-start-radius: 0;
+  border-start-end-radius: 0;
+  padding-block-start: 10px;
+}
+
+.pollaio__azione.is-pericolosa { color: var(--live); }
+
+.pollaio__azione.is-pericolosa:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--live) 26%, transparent);
+  color: var(--testo);
+}
+
+.pollaio__riga[data-nick] .pollaio__nome:hover,
+.pollaio__lista-nome[data-nick]:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .pollaio__gente {
   flex: none;
   display: flex;
@@ -1123,7 +1194,8 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
   flex-direction: column;
   gap: calc(var(--passo) * 0.6);
 
-  padding-block-start: calc(var(--passo) * 0.75);
+  margin-block-start: var(--passo);
+  padding-block-start: var(--passo-2);
   border-block-start: 1px solid var(--linea);
 }
 
@@ -1143,8 +1215,23 @@ html[data-finestra] .pollaio .pollaio__attesa,
 html[data-finestra] .pollaio .pollaio__scrivi-manda,
 html[data-finestra] .pollaio .pollaio__invito-btn,
 html[data-finestra] .pollaio .pollaio__suggerito,
-html[data-finestra] .pollaio .pollaio__gente-bottone {
+html[data-finestra] .pollaio .pollaio__gente-bottone,
+html[data-finestra] .pollaio .pollaio__sondaggio-apri,
+html[data-finestra] .pollaio .pollaio__sondaggio-piu,
+html[data-finestra] .pollaio .pollaio__sondaggio-crea,
+html[data-finestra] .pollaio .pollaio__lista-nome[data-nick],
+html[data-finestra] .pollaio .pollaio__riga[data-nick] .pollaio__nome {
   cursor: pointer;
+}
+
+html[data-finestra] .pollaio__azioni,
+html[data-finestra] .pollaio__azioni * {
+  cursor: pointer;
+}
+
+html[data-finestra] .pollaio__azioni .pollaio__azione:disabled,
+html[data-finestra] .pollaio__azioni-chi {
+  cursor: default;
 }
 
 html[data-finestra] .pollaio .pollaio__scrivi-campo {
@@ -1158,8 +1245,121 @@ html[data-finestra] .pollaio .pollaio__scrivi-campo {
   gap: calc(var(--passo) * 0.5);
 }
 
+.pollaio__sondaggio {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--passo) * 0.4);
+
+  padding: var(--passo);
+  border: 1px solid var(--linea-viva);
+  border-radius: var(--raggio-s);
+  background-color: var(--pannello);
+}
+
+.pollaio__sondaggio-campo {
+  inline-size: 100%;
+  min-inline-size: 0;
+
+  padding: 0.4em 0.6em;
+  border: 1px solid var(--linea-forte);
+  border-radius: 5px;
+  background-color: var(--fondo);
+  color: var(--testo);
+
+  font-family: var(--font-testo);
+  font-size: 0.74em;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.pollaio__sondaggio-campo:focus {
+  border-color: var(--linea-viva);
+}
+
+.pollaio__sondaggio-campo::placeholder {
+  color: var(--testo-tenue);
+}
+
+.pollaio__sondaggio-scelte {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--passo) * 0.35);
+}
+
+.pollaio__sondaggio-piede {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--passo) * 0.5);
+}
+
+.pollaio__sondaggio-durata {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--passo) * 0.4);
+
+  color: var(--testo-tenue);
+  font-family: var(--font-mono);
+  font-size: 0.6em;
+  letter-spacing: var(--spazio-etichetta);
+  text-transform: uppercase;
+}
+
+.pollaio__sondaggio-durata .pollaio__sondaggio-campo {
+  inline-size: 6ch;
+  font-family: var(--font-mono);
+  font-size: 1em;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.pollaio__sondaggio-crea {
+  margin-inline-start: auto;
+
+  padding: 0.45em 0.9em;
+  border: 1px solid var(--viola);
+  border-radius: 5px;
+  background-color: color-mix(in srgb, var(--viola) 36%, transparent);
+  color: var(--testo);
+
+  font-family: var(--font-mono);
+  font-size: 0.6em;
+  letter-spacing: var(--spazio-etichetta);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.pollaio__sondaggio-crea:hover {
+  background-color: color-mix(in srgb, var(--viola) 54%, transparent);
+}
+
+.pollaio__sondaggio-piu {
+  padding: 0.4em 0.7em;
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio-pill);
+  background-color: transparent;
+  color: var(--testo-medio);
+
+  font-family: var(--font-mono);
+  font-size: 0.6em;
+  letter-spacing: var(--spazio-etichetta);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.pollaio__sondaggio-piu:hover:not(:disabled) {
+  border-color: var(--linea-viva);
+  color: var(--testo);
+}
+
+.pollaio__sondaggio-piu:disabled {
+  color: var(--testo-tenue);
+  cursor: default;
+}
+
 .pollaio__filtro,
 .pollaio__pausa,
+.pollaio__sondaggio-apri,
 .pollaio__invito-btn {
   display: inline-flex;
   align-items: center;
@@ -1191,7 +1391,8 @@ html[data-finestra] .pollaio .pollaio__scrivi-campo {
   color: var(--testo);
 }
 
-.pollaio__filtro.is-scelto {
+.pollaio__filtro.is-scelto,
+.pollaio__sondaggio-apri.is-scelto {
   border-color: var(--viola);
   background-color: color-mix(in srgb, var(--viola) 28%, var(--velo));
   color: var(--testo);

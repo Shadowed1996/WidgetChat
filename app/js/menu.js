@@ -106,6 +106,9 @@
     if (bersaglio.closest(COMANDI)) { return false; }
     if (bersaglio.closest('.menu')) { return false; }
     if (bersaglio.closest('.pollaio__barra')) { return false; }
+    if (bersaglio.closest('.pollaio__azioni')) { return false; }
+    if (bersaglio.closest('.pollaio__nome')) { return false; }
+    if (bersaglio.closest('.pollaio__lista')) { return false; }
 
     if (dentroLaRegia()) { return !!bersaglio.closest('.regia__testa'); }
     return true;

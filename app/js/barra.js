@@ -126,7 +126,7 @@
 
     var vuoto = window.Conto.ripulisci(nodi.campo.value) === '';
     nodi.manda.disabled = inVolo || vuoto;
-    nodi.manda.textContent = inVolo ? 'Mando…' : 'Manda';
+    nodi.manda.textContent = inVolo ? 'Invio…' : 'Invia';
   }
 
   function nellaVetrina() {
@@ -327,6 +327,152 @@
     return false;
   }
 
+  var MODI = {
+    poll: {
+      comando: 'poll', scopo: 'channel:manage:polls',
+      titolo: 60, scelta: 25, min: 2, max: 5,
+      durata: 120, durataMin: 15, durataMax: 1800,
+      domanda: 'La domanda', come: 'Scelta', crea: 'Apri il sondaggio',
+      vuoto: 'Servono almeno due scelte: un sondaggio con una risposta sola non è un sondaggio.'
+    },
+    prediction: {
+      comando: 'prediction', scopo: 'channel:manage:predictions',
+      titolo: 45, scelta: 25, min: 2, max: 10,
+      durata: 120, durataMin: 1, durataMax: 1800,
+      domanda: 'Su cosa si scommette', come: 'Esito', crea: 'Apri il pronostico',
+      vuoto: 'Servono almeno due esiti: su un esito solo non si scommette.'
+    }
+  };
+
+  var modo = MODI.poll;
+
+  function scelteVive() {
+    return nodi.sondaggioScelte.querySelectorAll('.pollaio__sondaggio-scelta');
+  }
+
+  function aggiungiScelta() {
+    var quante = scelteVive().length;
+    if (quante >= modo.max) { return; }
+
+    var campo = document.createElement('input');
+    campo.type = 'text';
+    campo.className = 'pollaio__sondaggio-campo pollaio__sondaggio-scelta';
+    campo.maxLength = modo.scelta;
+    campo.autocomplete = 'off';
+    campo.placeholder = modo.come + ' ' + (quante + 1);
+    campo.setAttribute('aria-label', modo.come + ' ' + (quante + 1));
+
+    nodi.sondaggioScelte.appendChild(campo);
+    nodi.sondaggioPiu.disabled = scelteVive().length >= modo.max;
+    return campo;
+  }
+
+  function svuotaSondaggio() {
+    nodi.sondaggioDomanda.value = '';
+    nodi.sondaggioScelte.textContent = '';
+
+    nodi.sondaggioDomanda.maxLength = modo.titolo;
+    nodi.sondaggioDomanda.placeholder = modo.domanda;
+
+    nodi.sondaggioDurata.min = String(modo.durataMin);
+    nodi.sondaggioDurata.max = String(modo.durataMax);
+    nodi.sondaggioDurata.value = String(modo.durata);
+
+    nodi.sondaggioCrea.textContent = modo.crea;
+    nodi.sondaggioPiu.textContent = 'Aggiungi ' + modo.come.toLowerCase();
+
+    var i;
+    for (i = 0; i < modo.min; i++) { aggiungiScelta(); }
+    nodi.sondaggioPiu.disabled = false;
+  }
+
+  function vestiApri() {
+    var aperto = !nodi.sondaggio.hidden;
+    var i;
+
+    for (i = 0; i < nodi.sondaggioApri.length; i++) {
+      var suo = aperto && nodi.sondaggioApri[i].getAttribute('data-modo') === modo.comando;
+      nodi.sondaggioApri[i].setAttribute('aria-expanded', suo ? 'true' : 'false');
+      nodi.sondaggioApri[i].classList.toggle('is-scelto', suo);
+    }
+  }
+
+  function alternaSondaggio(quale) {
+    var voluto = MODI[quale] || modo;
+
+    if (nodi.sondaggio.hidden || voluto !== modo) {
+      modo = voluto;
+      nodi.sondaggio.hidden = false;
+      svuotaSondaggio();
+      vestiApri();
+      nodi.sondaggioDomanda.focus();
+      return;
+    }
+
+    nodi.sondaggio.hidden = true;
+    vestiApri();
+  }
+
+  function creaSondaggio(evento) {
+    evento.preventDefault();
+    if (inVolo) { return; }
+
+    if (conf.prova) {
+      eco('Sono in prova: qui non apro niente per davvero.');
+      return;
+    }
+
+    var domanda = nodi.sondaggioDomanda.value.replace(/\s+/g, ' ').trim();
+    if (!domanda) {
+      eco('Mi manca la domanda.', true);
+      nodi.sondaggioDomanda.focus();
+      return;
+    }
+
+    var campi = scelteVive();
+    var scelte = [];
+    var i;
+
+    for (i = 0; i < campi.length; i++) {
+      var testo = campi[i].value.replace(/\s+/g, ' ').trim();
+      if (testo) { scelte.push(testo); }
+    }
+
+    if (scelte.length < modo.min) {
+      eco(modo.vuoto, true);
+      return;
+    }
+
+    if (domanda.indexOf('|') !== -1) {
+      eco('Nella domanda non ci può stare una barra verticale: è quella che separa le scelte.', true);
+      return;
+    }
+
+    var durata = parseInt(nodi.sondaggioDurata.value, 10);
+    if (!isFinite(durata)) { durata = 120; }
+
+    var riga = '/' + modo.comando + ' ' + domanda + ' | ' + scelte.join(' | ') + ' / ' + durata;
+
+    if (!canaleId) {
+      eco('Non so ancora l’id del canale: un attimo e riprova.', true);
+      return;
+    }
+
+    inVolo = true;
+    eco('Lo chiedo a Twitch.');
+
+    window.Comandi.esegui(riga, { canale: conf.canale, canaleId: canaleId },
+      function (guaio, detto) {
+        inVolo = false;
+
+        if (guaio) { eco(guaio, true); return; }
+
+        svuotaSondaggio();
+        alternaSondaggio(modo.comando);
+        eco(detto || 'Fatto.');
+      });
+  }
+
   var SCOMPARTI = [
     { chiave: 'streamer', titolo: 'Streamer' },
     { chiave: 'moderatori', titolo: 'Moderatori' },
@@ -371,6 +517,7 @@
         var voce = document.createElement('li');
         voce.className = 'pollaio__lista-nome';
         voce.textContent = gente[k].nome || gente[k].nick;
+        if (gente[k].nick) { voce.setAttribute('data-nick', gente[k].nick); }
         nomi.appendChild(voce);
       }
 
@@ -397,6 +544,7 @@
 
       canaleId = id;
       prendiLeMie(id);
+      if (window.Azioni && window.Azioni.canale) { window.Azioni.canale(id); }
 
       if (!window.Gente || !window.Gente.avvia) { return; }
 
@@ -460,6 +608,23 @@
 
     nodi.scrivi.hidden = !dentro;
     nodi.invito.hidden = dentro;
+
+    if (nodi.sondaggioApri && nodi.sondaggioApri.length) {
+      var q;
+      var nessuno = true;
+
+      for (q = 0; q < nodi.sondaggioApri.length; q++) {
+        var quale = nodi.sondaggioApri[q].getAttribute('data-modo');
+        var suo = dentro && window.Conto.puo(MODI[quale].scopo);
+        nodi.sondaggioApri[q].hidden = !suo;
+        if (suo) { nessuno = false; }
+      }
+
+      if (nessuno && !nodi.sondaggio.hidden) {
+        nodi.sondaggio.hidden = true;
+        vestiApri();
+      }
+    }
 
     if (dentro) {
       nodi.campo.placeholder = 'Scrivi come ' + chi.nome;
@@ -624,6 +789,14 @@
     nodi.campo = nodi.barra.querySelector('.pollaio__scrivi-campo');
     nodi.suggeriti = nodi.barra.querySelector('.pollaio__suggeriti');
 
+    nodi.sondaggio = nodi.barra.querySelector('.pollaio__sondaggio');
+    nodi.sondaggioApri = nodi.barra.querySelectorAll('.pollaio__sondaggio-apri');
+    nodi.sondaggioCrea = nodi.barra.querySelector('.pollaio__sondaggio-crea');
+    nodi.sondaggioDomanda = nodi.barra.querySelector('.pollaio__sondaggio-domanda');
+    nodi.sondaggioScelte = nodi.barra.querySelector('.pollaio__sondaggio-scelte');
+    nodi.sondaggioPiu = nodi.barra.querySelector('.pollaio__sondaggio-piu');
+    nodi.sondaggioDurata = nodi.barra.querySelector('.pollaio__sondaggio-durata input');
+
     nodi.gente = radice.querySelector('.pollaio__gente');
     nodi.genteBottone = radice.querySelector('.pollaio__gente-bottone');
     nodi.genteConta = radice.querySelector('.pollaio__gente-conta');
@@ -690,6 +863,38 @@
     nodi.pausa.addEventListener('click', alterna);
 
     if (nodi.genteBottone) { nodi.genteBottone.addEventListener('click', alternaLista); }
+
+    if (nodi.sondaggioApri.length) {
+      var b;
+      for (b = 0; b < nodi.sondaggioApri.length; b++) {
+        (function (bottone) {
+          bottone.addEventListener('click', function () {
+            alternaSondaggio(bottone.getAttribute('data-modo'));
+          });
+        }(nodi.sondaggioApri[b]));
+      }
+
+      nodi.sondaggioPiu.addEventListener('click', aggiungiScelta);
+      nodi.sondaggio.addEventListener('submit', creaSondaggio);
+      svuotaSondaggio();
+    }
+
+    if (window.Azioni && window.Azioni.monta && !conf.prova) {
+      window.Azioni.monta(nodi.radice, {
+        canale: conf.canale,
+        canaleId: canaleId,
+        su: eco,
+        scrivi: function (riga) {
+          if (nodi.scrivi.hidden) { return; }
+          nodi.campo.value = riga;
+          nodi.campo.setSelectionRange(riga.length, riga.length);
+          cresci();
+          vestiResta();
+          vestiManda();
+          nodi.campo.focus();
+        }
+      });
+    }
     nodi.attesa.addEventListener('click', alterna);
 
     window.Resa.suAttesa(vestiAttesa);

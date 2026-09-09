@@ -32,11 +32,57 @@ Non si importa un file, non si dipende da niente che stia là fuori.
 
    La scrittura è una cosa in più che l'utente accende da sé: è **il suo**
    account Twitch, collegato con un clic dalla regia oppure dal bottone che sta
-   nella barra sotto la chat (§18), con **un solo scopo**
-   (`user:write:chat`), e i messaggi partono da `helix/chat/messages`. La
-   connessione IRC **non** si tocca: resta anonima e di sola lettura anche
-   quando un account c'è, e il messaggio appena mandato torna indietro di lì
-   come quello di chiunque altro.
+   nella barra sotto la chat (§18), e i messaggi partono da
+   `helix/chat/messages`. La connessione IRC **non** si tocca: resta anonima e
+   di sola lettura anche quando un account c'è, e il messaggio appena mandato
+   torna indietro di lì come quello di chiunque altro.
+
+   **Gli scopi: da uno a quindici.** Qui c'era scritto «un solo scopo
+   (`user:write:chat`)», e non è più vero: la costante `SCOPI` di
+   `app/js/conto.js` oggi ne chiede quindici, perché accanto al campo per
+   scrivere sono nati i ventisette comandi di Twitch, il menù che si apre
+   cliccando un nome, e l'elenco di chi c'è in chat (§19).
+
+   **La regola che sopravvive non è il numero: è che si chiede solo ciò che
+   serve a una funzione che c'è davvero.** Ogni permesso di questo elenco è
+   legato a un comando che si vede e che si può premere; nessuno è chiesto «per
+   il futuro», «per comodità» o perché stava nella stessa famiglia di un altro.
+   Uno scopo che non ha dietro una funzione non entra, e una funzione che ne
+   vorrebbe uno nuovo si discute qui dentro prima che nel codice — che è
+   esattamente la frase di prima, scritta quando la funzione era una sola.
+
+   L'elenco, e accanto a ognuno la funzione che lo giustifica:
+
+   - `user:write:chat` — il campo sotto la chat, `helix/chat/messages` (§18)
+   - `user:read:emotes` — le tue emote native dentro il suggeritore (§18)
+   - `user:manage:whispers` — `/w`, il sussurro
+   - `moderator:read:chatters` — chi c'è in chat, l'elenco della barra (§19)
+   - `moderator:manage:banned_users` — `/ban`, `/timeout`, `/unban`,
+     `/untimeout`
+   - `moderator:manage:chat_messages` — `/clear`
+   - `moderator:manage:chat_settings` — `/slow`, `/followers`, `/subscribers`,
+     `/emoteonly`, `/uniquechat` e i loro `off`
+   - `moderator:manage:announcements` — `/announce`
+   - `moderator:manage:shoutouts` — `/shoutout`
+   - `channel:manage:raids` — `/raid`, `/unraid`
+   - `channel:manage:polls` — `/poll`
+   - `channel:manage:predictions` — `/prediction`
+   - `channel:manage:broadcast` — `/marker`
+   - `channel:manage:moderators` — `/mod`, `/unmod`, e i moderatori dentro
+     l'elenco di chi c'è
+   - `channel:manage:vips` — `/vip`, `/unvip`, e i VIP nello stesso elenco
+
+   **Il costo si paga una volta, e va detto perché è il prezzo della
+   decisione**: chi aveva già collegato l'account quando lo scopo era uno solo
+   **deve rifare il collegamento**. Un gettone non si allarga — i permessi si
+   fissano nel momento in cui l'utente dice di sì, e per averne di più bisogna
+   tornare a chiederglielo. Il pollaio però non lo scopre al momento sbagliato:
+   `Conto.puo(scopo)` guarda i permessi **prima** di chiamare Twitch (§19),
+   quindi la voce che non può si spegne e lo dice, invece di partire e
+   schiantarsi contro un 401. E un conto salvato da una versione vecchia non ha
+   nemmeno il campo `scopi`, quindi **non può niente**: è voluto, ed è il modo
+   di obbligare a riconnettere invece di lasciar credere che qualcosa si sia
+   rotto.
 
    **Il gettone sta in `localStorage` e da nessun'altra parte**: mai nella
    querystring, mai in `avvio\pollaio.ini`, mai in un file, mai dentro
@@ -52,10 +98,11 @@ Non si importa un file, non si dipende da niente che stia là fuori.
    richiesta, chiunque guardi la rete lo legge, e da solo non apre niente: senza
    il sì dell'utente su Twitch non vale nulla. Quindi **può stare nel sorgente**,
    ed è la costante `CLIENTE_PREDEFINITO` in cima a `app/js/conto.js`, il Client
-   ID dell'applicazione del canale, registrata su `dev.twitch.tv` come **Public**
-   con lo scopo `user:write:chat`. Se un giorno la si svuota, il Client ID torna
-   a metterlo l'utente dal campo della regia; chi si porta via il progetto ci
-   mette il suo.
+   ID dell'applicazione del canale, registrata su `dev.twitch.tv` come
+   **Public**. Gli scopi lì non si registrano: si chiedono a ogni collegamento,
+   e sono quelli dell'elenco qui sopra. Se un giorno la costante la si svuota,
+   il Client ID torna a metterlo l'utente dal campo della regia; chi si porta
+   via il progetto ci mette il suo.
 
    `Conto.cliente()` guarda in ordine il conto collegato, poi il Client ID messo
    da parte in `localStorage` (`sb-pollaio-cliente`), poi la costante;
@@ -187,10 +234,13 @@ chat/
    │  ├─ eventi.js        window.Eventi        — abbonamenti, raid, bits, moderazione
    │  ├─ treno.js         window.Treno         — l'Hype Train (vedi §15)
    │  ├─ resa.js          window.Resa          — dal messaggio al DOM
-   │  ├─ conto.js         window.Conto         — l'account Twitch: gettone e invio (§18)
+   │  ├─ conto.js         window.Conto         — l'account Twitch: gettone, permessi, e il tramite verso Helix (§18)
+   │  ├─ comandi.js       window.Comandi       — i ventisette comandi di Twitch, uno per endpoint (§19)
+   │  ├─ gente.js         window.Gente         — quanti guardano e chi c'è in chat (§19)
+   │  ├─ azioni.js        window.Azioni        — il menù che si apre cliccando un nome (§19)
    │  ├─ barra.js         window.Barra         — la striscia sotto la chat (§18)
    │  ├─ prova.js         window.Prova         — traffico finto per sistemare in OBS
-   │  ├─ menu.js          window.Menu          — il tasto destro, il trascinamento e il bordo che ridimensiona, nella finestra del launcher (§19)
+   │  ├─ menu.js          window.Menu          — il tasto destro, il trascinamento e il bordo che ridimensiona, nella finestra del launcher (§20)
    │  ├─ regia.js         window.Regia         — il configuratore
    │  ├─ prove.js         window.Prove         — i casi del banco (§16)
    │  └─ pollaio.js       window.Pollaio       — mette insieme i pezzi
@@ -212,6 +262,9 @@ viene prima di chi lo consuma.
 <script src="js/treno.js"></script>
 <script src="js/resa.js"></script>
 <script src="js/conto.js"></script>
+<script src="js/comandi.js"></script>
+<script src="js/gente.js"></script>
+<script src="js/azioni.js"></script>
 <script src="js/barra.js"></script>
 <script src="js/prova.js"></script>
 <script src="js/menu.js"></script>
@@ -220,6 +273,16 @@ viene prima di chi lo consuma.
 
 `barra.js` viene dopo `resa.js` e `conto.js` perché li consuma tutti e due, e
 `pollaio.js` resta ultimo perché monta l'una e l'altra.
+
+I tre nuovi stanno **fra `conto.js` e `barra.js`**, e non è un posto qualunque.
+Tutti e tre passano da `Conto` — `Comandi` e `Gente` per parlare con Helix,
+`Azioni` per sapere cosa l'account ha il permesso di fare — quindi vengono dopo
+di lui; e nessuno dei tre si monta da sé: è `barra.js` che accende `Gente`,
+monta `Azioni` e chiama `Comandi.esegui`, quindi devono esistere prima di lui.
+`azioni.js` sta dopo `comandi.js` perché è a `Comandi.esegui` che consegna la
+riga che ha composto: il globale lo guarda al momento del clic e non al
+caricamento, ma l'ordine dichiara chi dipende da chi, ed è per questo che
+questo elenco è un contratto e non una comodità.
 
 Anche `regia.html` ha il suo ordine, ed è un contratto per lo stesso motivo:
 
@@ -313,11 +376,11 @@ funzionare** e mostrare la chat di slayer_beard.
 | `movimento` | voce | `auto` | quando animare: `auto` obbedisce a `prefers-reduced-motion` del sistema · `sempre` anima comunque. Serve dentro OBS, dove la preferenza è di chi trasmette ma l'immagine la guardano gli spettatori (§12) |
 | `moderazione` | voce | `sbarra` | cosa fare a un messaggio cancellato: `sbarra` · `togli` · `tieni` |
 | `pollo` | sìno | `0` | mostra la mascotte accanto alla chat |
-| `barra` | sìno | `1` | la striscia sotto la chat: filtri e pausa (§18). In OBS non compare comunque |
-| `scrivi` | sìno | `1` | dentro la barra, il campo per scrivere in chat con l'account collegato — e, se non c'è ancora un account, il bottone che lo collega (§18) |
+| `barra` | sìno | `1` | la striscia sotto la chat: filtri, pausa e — con un account collegato — i pannelli dei comandi e l'elenco di chi c'è (§18, §19). In OBS non compare comunque |
+| `scrivi` | sìno | `1` | dentro la barra, il campo per scrivere in chat e per dare i comandi (§19) con l'account collegato — e, se non c'è ancora un account, il bottone che lo collega (§18) |
 | `prova` | sìno | `0` | modalità prova: traffico finto, per sistemare l'inquadratura in OBS |
 | `ostile` | sìno | `0` | vale solo con `prova=1`: mescola al traffico finto i casi cattivi — zalgo, scavalchi RTL, nick lunghissimi, muri di testo |
-| `finestra` | sìno | `0` | **lo mette `Pollaio.exe` da sé**, non si scrive a mano: dice alla pagina che sta girando nella finestra senza barra del titolo, e accende il menu del tasto destro, il trascinamento e il bordo che ridimensiona (§19). Nello SCHEMA è `nascosta`, quindi fra i comandi della regia non compare |
+| `finestra` | sìno | `0` | **lo mette `Pollaio.exe` da sé**, non si scrive a mano: dice alla pagina che sta girando nella finestra senza barra del titolo, e accende il menu del tasto destro, il trascinamento e il bordo che ridimensiona (§20). Nello SCHEMA è `nascosta`, quindi fra i comandi della regia non compare |
 
 API:
 
@@ -337,8 +400,11 @@ querystring e diventa `true`/`false` nei valori.
 
 **Due elenchi, e la differenza conta.** Il primo è tutto quello che serve a
 leggere e a disegnare la chat: nessuna autenticazione, nessun account, e così
-deve restare. Il secondo sono i sei indirizzi del conto (§18), gli unici che
-vogliono un gettone, e nessuno dei sei serve a leggere.
+deve restare. Il secondo sono gli indirizzi che vogliono un gettone: quelli del
+conto (§18) e quelli dei comandi, del menù sul nome e di chi c'è in chat (§19).
+Erano sei, adesso sono **ventuno**, e la cosa che conta non è cambiata:
+**nessuno dei ventuno serve a leggere la chat**, che si legge in anonimo come il
+giorno prima.
 
 Questa sezione si intitolava «tutte verificate, tutte senza autenticazione». La
 seconda metà non è più vera per tutte, e il titolo l'ha persa: meglio saperlo
@@ -358,17 +424,92 @@ leggendo il titolo che scoprirlo in fondo alla tabella.
 | FFZ globali | `https://api.frankerfacez.com/v1/set/global` | |
 | FFZ del canale | `https://api.frankerfacez.com/v1/room/<canale>` | oggi risponde **404**: è normale, si tace |
 
-Le sei del conto (§18), che tocca soltanto `js/conto.js`, soltanto dopo che
-l'utente ha collegato un account, e mai per disegnare un messaggio:
+I quattro del **collegamento**, su `id.twitch.tv`. Li tocca soltanto
+`js/conto.js`, e in chat non fanno niente: prendono un gettone e lo tengono
+vivo.
 
 | cosa | indirizzo | note |
 |---|---|---|
 | codice del dispositivo | `POST https://id.twitch.tv/oauth2/device` | `client_id` + `scopes`. Torna `user_code` (otto caratteri), `device_code` e `verification_uri`, che è già `twitch.tv/activate?device-code=<codice>`: si usa, ma **validato prima di essere aperto** (§18). Nessuna autenticazione |
 | gettone | `POST https://id.twitch.tv/oauth2/token` | `grant_type=urn:ietf:params:oauth:grant-type:device_code` finché l'utente non conferma, poi `refresh_token`. Nessun client secret |
-| controllo | `GET https://id.twitch.tv/oauth2/validate` | `Authorization: OAuth <gettone>`. Dice chi è e se il gettone vale ancora |
+| controllo | `GET https://id.twitch.tv/oauth2/validate` | `Authorization: OAuth <gettone>`. Dice chi è, se il gettone vale ancora, e **quali permessi porta**: il campo `scopes` è la sorgente degli `scopi` salvati nel conto, che poi `Conto.puo` interroga prima di ogni comando (§1.3) |
 | revoca | `POST https://id.twitch.tv/oauth2/revoke` | `client_id` + `token`. La chiama **Revoca account**, che quindi revoca davvero |
-| id del canale | `GET https://api.twitch.tv/helix/users?login=<canale>` | `Bearer` + `Client-Id`. Dà il `broadcaster_id`, che si tiene in cache |
+
+I due di Helix che `js/conto.js` chiama **da sé**, perché sono il conto:
+
+| cosa | indirizzo | note |
+|---|---|---|
+| id del canale | `GET https://api.twitch.tv/helix/users?login=<canale>` | `Bearer` + `Client-Id`. Dà il `broadcaster_id`, che si tiene in cache. Lo usano anche i comandi, per tradurre in id il nome di chi si banna o si saluta |
 | invio | `POST https://api.twitch.tv/helix/chat/messages` | `Bearer` + `Client-Id`, corpo `broadcaster_id`, `sender_id`, `message` |
+
+I quindici che passano da `Conto.verso`. Sono relativi a
+`https://api.twitch.tv/helix`, e ognuno ha il suo permesso: **il permesso si
+controlla prima di chiamare**, non dopo aver preso un 403 (§19).
+
+| cosa | indirizzo | chi lo chiama, e con quale permesso |
+|---|---|---|
+| ban e panchina | `POST` e `DELETE /moderation/bans` | `/ban` `/timeout` `/unban` `/untimeout` — `moderator:manage:banned_users` |
+| svuota la chat | `DELETE /moderation/chat` | `/clear` — `moderator:manage:chat_messages` |
+| i modi della chat | `PATCH /chat/settings` | `/slow` `/followers` `/subscribers` `/emoteonly` `/uniquechat` e i cinque `off` — `moderator:manage:chat_settings` |
+| annuncio | `POST /chat/announcements` | `/announce` — `moderator:manage:announcements` |
+| shoutout | `POST /chat/shoutouts` | `/shoutout` — `moderator:manage:shoutouts` |
+| raid | `POST` e `DELETE /raids` | `/raid` `/unraid` — `channel:manage:raids` |
+| segnalibro | `POST /streams/markers` | `/marker` — `channel:manage:broadcast` |
+| sondaggio | `POST /polls` | `/poll` e la pastiglia **Sondaggio** — `channel:manage:polls` |
+| pronostico | `POST /predictions` | `/prediction` e la pastiglia **Pronostico** — `channel:manage:predictions` |
+| dare e togliere il mod | `POST` e `DELETE /moderation/moderators` | `/mod` `/unmod` — `channel:manage:moderators` |
+| dare e togliere il VIP | `POST` e `DELETE /channels/vips` | `/vip` `/unvip` — `channel:manage:vips` |
+| sussurro | `POST /whispers` | `/w` — `user:manage:whispers` |
+| quanti guardano | `GET /streams?user_id=<id>` | `gente.js`, il contatore. Non chiede nessun permesso in più; a canale spento la risposta è vuota, e vuota vuol dire spento, non rotto |
+| chi c'è in chat | `GET /chat/chatters` | `gente.js`, e **solo a pannello aperto** — `moderator:read:chatters` |
+| i moderatori e i VIP del canale | `GET /moderation/moderators`, `GET /channels/vips` | `gente.js`, e solo sul proprio canale: servono a dividere la lista in scomparti. Sono gli stessi due indirizzi di sopra, letti invece che scritti |
+| le tue emote native | `GET /chat/emotes/user?user_id=<tuo>&broadcaster_id=<canale>` | `barra.js`, per il suggeritore — `user:read:emotes`. Risponde con le emote che **quell'utente** può usare **in quel canale** |
+
+Le righe sono sedici e gli indirizzi quindici, perché due compaiono due volte:
+`/moderation/moderators` e `/channels/vips` si scrivono per dare e togliere un
+ruolo, e si leggono per sapere chi ce l'ha.
+
+### `Conto.verso` — il tramite unico verso Helix
+
+Tutte e quindici passano da una funzione sola, ed è una regola:
+
+```js
+Conto.verso(metodo, percorso, corpo, su)
+// percorso relativo a https://api.twitch.tv/helix
+// su(guaio, dati, scollegato)
+```
+
+Mette `Authorization: Bearer` e `Client-Id`, e `Content-Type: application/json`
+soltanto quando c'è un corpo da mandare; se Twitch risponde **401 rinnova il
+gettone e riprova una volta sola** — una, non a ciclo, perché un rinnovo che non
+è servito non serve nemmeno al secondo giro; traduce **401**, **403** e **429**
+in una frase italiana che si può leggere in una barra larga quattrocento pixel;
+e consegna a chi ha chiamato un terzo argomento, `scollegato`, che dice se il
+guasto è di quelli che si riparano solo ricollegando l'account.
+
+**Il perché va dichiarato, perché è il motivo per cui esiste.** Senza un tramite
+unico, `comandi.js`, `gente.js` e la richiesta delle emote si riscriverebbero
+ciascuno l'autenticazione, il rinnovo del gettone e la traduzione degli errori.
+Tre copie della stessa cosa non restano uguali per molto, e **la quarta copia
+sarebbe quella sbagliata** — quella che non riprova sul 401, o che sul 403
+scrive «errore 403» a chi voleva solo mettere in panchina un molestatore. Un
+modulo nuovo che debba parlare con Helix non apre un `fetch`: chiama `verso`.
+
+Le due chiamate che restano fuori — `helix/users` e `helix/chat/messages` — sono
+dentro `conto.js`, cioè dentro il tramite stesso, e sono più vecchie di lui.
+
+Accanto a `verso`, `conto.js` espone i due che guardano i permessi.
+**`Conto.puo(scopo)`** dice se il gettone porta quel permesso, e la risposta
+viene dagli `scopi` che `oauth2/validate` ha consegnato al momento del
+collegamento: è la funzione che ogni comando interroga prima di partire e ogni
+bottone prima di offrirsi (§1.3, §19). Un conto senza `scopi` — cioè uno salvato
+prima che questi permessi esistessero — non può niente, che è il comportamento
+voluto. **`Conto.mancano()`** restituisce l'elenco degli scopi che il conto non
+ha, cioè la differenza fra quello che `SCOPI` chiede e quello che l'utente ha
+concesso: oggi non la chiama nessuno, ed è dichiarata qui perché serve a dire
+*quali* permessi mancano invece che soltanto *se* ne manca uno — il giorno che
+la regia lo vorrà scrivere, il conto è già in grado di farlo e non va
+riscritto.
 
 `id.twitch.tv` e `api.twitch.tv` mandano `Access-Control-Allow-Origin: *` sia
 sulla richiesta sia sul preflight, anche con `Origin: null`: **verificato sul
@@ -379,11 +520,11 @@ Senza quello il §1.2 non reggeva e il conto non si sarebbe potuto fare.
 Niente `console.error` che intasa il log di OBS: al massimo un `console.warn` col
 prefisso `[pollaio]`.
 
-Le sei del conto sono la deroga dichiarata alla seconda metà della regola: il
-tetto di tempo ce l'hanno (12 secondi), ma **lì un guasto si dice**, con una
-frase in chiaro nella barra o nella regia. Non è la stessa situazione: là c'è
-un'emote che non arriva, qui c'è qualcuno che ha appena premuto Manda e sta
-aspettando di sapere se il messaggio è partito.
+Gli indirizzi col gettone sono la deroga dichiarata alla seconda metà della
+regola: il tetto di tempo ce l'hanno (12 secondi), ma **lì un guasto si dice**,
+con una frase in chiaro nella barra o nella regia. Non è la stessa situazione:
+là c'è un'emote che non arriva, qui c'è qualcuno che ha appena premuto Invia, o
+Banna, e sta aspettando di sapere se è successo.
 
 ### La cache delle emote — un ricordo parziale non è mai «fresco»
 
@@ -660,8 +801,12 @@ un'interfaccia, si guarda in un browser).
   codice**, **Lascia stare** e **Revoca account**. Il campo del Client ID non
   sta lì in mezzo: sta piegato dentro un `<details class="regia__conto-app">`
   chiuso, che si apre da sé **solo** quando `Conto.serveClientId()` è vero. La
-  pagina lo dice per prima: l'account serve **solo** a scrivere, per leggere non
-  serve e non servirà mai.
+  pagina lo dice per prima, ed è la metà del confine che non si tocca: **per
+  leggere la chat l'account non serve e non servirà mai**. L'altra metà è
+  cresciuta — l'account adesso serve a scrivere *e a comandare* (§19) — e il
+  testo della regia è rimasto a «serve a una cosa sola: scrivere»: dice meno di
+  quello che l'account fa, il che è il verso giusto in cui sbagliare, ma resta
+  da rimettere in pari.
 - a sinistra i comandi, uno per ogni voce di `Impostazioni.SCHEMA`
 - a destra l'anteprima dal vivo dentro un `<iframe>` che punta a `pollaio.html`
   con i parametri correnti, su uno sfondo a scacchi che rende evidente la
@@ -698,9 +843,14 @@ raid, bits e annunci, ma dell'Hype Train non c'è traccia: non è difficile da
 leggere, proprio non viene trasmesso. Il vecchio canale che lo esponeva
 (PubSub) Twitch l'ha spento. L'API pubblica documentata (EventSub) lo espone
 ma pretende un token OAuth del proprietario del canale. **Il conto di §18 non
-serve a questo e non va allargato per questo**: ha un solo scopo
-(`user:write:chat`), chi lo collega non è per forza il padrone del canale, e un
-treno più comodo non vale uno scopo in più.
+serve a questo e non va allargato per questo**, e adesso che gli scopi sono
+quindici la frase vale più di prima, non di meno: ognuno di quei quindici sta lì
+perché dietro ha un comando che si preme (§1.3), mentre
+`channel:read:hype_train` non ne avrebbe nessuno — servirebbe soltanto a
+disegnare un po' meglio una fascia che si disegna già. Chi collega l'account,
+poi, non è per forza il padrone del canale. **Un permesso senza una funzione
+dietro non entra nemmeno quando fa comodo**: è la regola di §1.3, e una regola
+che si scavalca la prima volta che dà fastidio non era una regola.
 
 `js/treno.js` usa quindi l'**API GraphQL interna** di Twitch, la stessa che usa
 il sito di Twitch per disegnare la sua barra:
@@ -742,7 +892,7 @@ ancora.
 mezzo. `Impostazioni` (tipi, ritagli, sinonimi, andata e ritorno
 dell'indirizzo), `Irc.analizza` e `Irc.disescapa`, `Badge.leggi` e
 `Badge.ruoli`, `Eventi.leggi` e `Eventi.moderazione`, `Emote.pezzi`,
-`Rilievo.valuta`, `Conto.ripulisci`.
+`Rilievo.valuta`, `Conto.ripulisci`, `Comandi.analizza`.
 
 `Conto.ripulisci` è l'unica parte pura di `conto.js` — testo dentro, testo
 fuori, nessuna rete — e ci sono i casi apposta: i caratteri di controllo, gli
@@ -751,12 +901,27 @@ scavalchi di direzione, gli a capo che diventano una riga sola, e il taglio a
 un'emoji sul taglio esce intera invece che a metà. `prove.html` carica quindi
 anche `js/conto.js`, che di rete non ne apre nessuna finché non gliela si chiede.
 
+`Comandi.analizza(testo)` è la stessa cosa per `comandi.js`: **riga dentro,
+`{nome, argomenti}` fuori, oppure `null`** se quella riga non è un comando che
+il pollaio sappia fare. Non tocca la rete, non guarda il conto, non sa niente
+del DOM: decide soltanto se una riga è un comando e come si spezza. È la parte
+che vale la pena tenere ferma con dei casi, perché è quella che sta fra un
+utente che batte una barra e un `POST` su Helix — la ripulitura dei caratteri di
+controllo, la barra che deve stare in testa, il nome del comando in minuscolo,
+il resto spezzato sugli spazi, e soprattutto il `null` per tutto ciò che non è
+in tavola, che è quello che tiene un comando sconosciuto fuori dalla chat (§19).
+
+**Nota onesta**: `prove.html` oggi non carica `js/comandi.js` e in `prove.js`
+non c'è ancora nessun caso per `analizza`. Il modulo la espone apposta — è
+dichiarata qui, come `irc.js` dichiara le sue — ma finché quei casi non ci sono,
+questa riga dell'elenco è un impegno e non un fatto. Chi ci mette mano per primo
+aggiunge lo `<script>` e i casi, e questa nota sparisce.
 **Non si prova la rete, il DOM, il tempo.** Non perché non contino: perché un
 banco che simula una risposta di 7TV verifica il simulatore. `prove.html` non
-carica `resa.js` (vuole il DOM montato), `barra.js` (vuole il DOM, `Resa` e
-qualcuno che clicchi), `treno.js` (apre una connessione appena parte),
-`prova.js` e `pollaio.js` (mettono in moto il widget vero), e nessun caso
-chiama `carica()`. Il banco deve poter dire verde col cavo staccato, o nei
+carica `resa.js` (vuole il DOM montato), `barra.js` e `azioni.js` (vogliono il
+DOM e qualcuno che clicchi), `treno.js` e `gente.js` (sono rete e orologio, e
+partono da soli), `prova.js` e `pollaio.js` (mettono in moto il widget vero), e
+nessun caso chiama `carica()`. Il banco deve poter dire verde col cavo staccato, o nei
 giorni in cui 7TV è giù direbbe rosso e lo si smetterebbe di guardare.
 
 **Un modulo che espone una funzione per il banco lo dichiara nel commento**,
@@ -838,10 +1003,18 @@ venti richieste.
 ## 18. La barra sotto la chat — guardare, fermare, scrivere
 
 Sotto l'elenco dei messaggi c'è una striscia: le pastiglie dei filtri, il tasto
-che ferma la chat, e il campo da cui si scrive in chat con il proprio account.
-La possiede `js/barra.js` (`window.Barra`), la monta `js/pollaio.js` con
-`Barra.monta(radice, opzioni)` come fa con `Resa.monta`, e la governano due
-manopole nuove nel gruppo `barra`: `barra` e `scrivi` (§6).
+che ferma la chat, il campo da cui si scrive in chat con il proprio account, e
+— quando l'account c'è e ha i permessi — le pastiglie **Sondaggio** e
+**Pronostico**. Sopra l'elenco dei messaggi, ma montato da lei, sta anche il
+bottone che dice quanti guardano e apre l'elenco di chi c'è. La possiede
+`js/barra.js`
+(`window.Barra`), la monta `js/pollaio.js` con `Barra.monta(radice, opzioni)`
+come fa con `Resa.monta`, e la governano due manopole nel gruppo `barra`:
+`barra` e `scrivi` (§6).
+
+Qui c'è la striscia; **cosa ci si fa con un account collegato — i comandi, il
+menù sul nome, l'elenco di chi c'è — sta in §19**, perché è cresciuto fino a
+essere una cosa sua.
 
 ### Dove compare, e dove non compare mai
 
@@ -965,9 +1138,14 @@ un'applicazione sua su `dev.twitch.tv/console/apps` (tipo **Public**, redirect
 richiesta. Il *client secret* non serve, non si chiede e non si salva — se un
 giorno una schermata lo chiede, è quella schermata a essere sbagliata.
 
-**Uno scopo solo: `user:write:chat`.** Mandare messaggi a nome proprio. Non
-leggere la chat, che si legge in anonimo come sempre; non moderare; non toccare
-il canale. Uno scopo in più si discute qui dentro prima che nel codice.
+**Gli scopi sono quindici, e questo campo ne usa uno: `user:write:chat`.**
+Mandare messaggi a nome proprio. Qui c'era scritto «uno scopo solo», e per il
+campo è ancora vero: gli altri quattordici non servono a lui, servono ai
+comandi, al menù sul nome, all'elenco di chi c'è e alle tue emote nel
+suggeritore, e stanno tutti in §1.3 con accanto la funzione che li giustifica.
+Quello che non è cambiato è il confine: **niente di tutto questo serve a
+leggere la chat**, che si legge in anonimo come sempre. Uno scopo in più si
+discute qui dentro prima che nel codice.
 
 Il gettone si controlla con `GET /oauth2/validate`, si rinnova da solo col
 `refresh_token` quando mancano meno di dieci minuti alla scadenza, e su
@@ -1040,7 +1218,8 @@ overlay che mostra una chat diversa da quella vera è un overlay rotto, anche
 quando è più carino.
 
 L'elenco lo riempie `Emote.cerca`, API pubblica di `js/emote.js` accanto a
-`carica`, `pezzi`, `pezziKick`, `pronto` e `quante`:
+`carica`, `pezzi`, `pezziKick`, `aggiungiTwitch`, `quanteMie`, `pronto` e
+`quante`:
 
 ```js
 Emote.cerca(prefisso, tetto)
@@ -1056,10 +1235,35 @@ contro il 3, 2 e 1 di 7TV, BTTV e FFZ. Quindi **le emote del canale escono prima
 di tutte le globali**, che è l'ordine giusto: sono quelle che questa chat usa
 davvero.
 
-Nel catalogo, e quindi nel suggeritore, ci sono **solo** le emote di 7TV, BTTV e
-FFZ. Le native di Twitch non si possono suggerire: non esiste un elenco da cui
-prenderle senza autenticazione, e arrivano messaggio per messaggio dal tag
-`emotes` (§8). Si scrivono a mano, come si è sempre fatto.
+### Le native di Twitch nel suggeritore — un elenco a parte, e il perché
+
+Qui c'era scritto che le native di Twitch non si potevano suggerire, perché non
+esiste un elenco da cui prenderle senza autenticazione. La seconda metà è caduta
+insieme al conto: `helix/chat/emotes/user` (§7) risponde con le emote che
+**quell'utente** può usare **in quel canale**, ed è esattamente l'elenco che
+mancava. Le chiede `barra.js` appena l'account è collegato, se ha
+`user:read:emotes`, e le passa a `Emote.aggiungiTwitch(voci)`.
+
+**La decisione sta in dove finiscono, e non è un dettaglio di implementazione.**
+Non entrano nel `catalogo`: vanno in un elenco loro, e `Emote.cerca` guarda
+tutti e due. Il motivo è la regola già dichiarata due volte, qui sopra per
+`:nome:` e in §13 per la modalità prova, detta una terza: **il `catalogo`
+decide cosa si disegna nei messaggi degli altri**, e lì un'emote nativa deve
+continuare ad arrivare messaggio per messaggio dal tag `emotes` di Twitch (§8).
+Metterla nel catalogo vorrebbe dire disegnare l'emote anche a chi, in quel
+messaggio, su Twitch legge testo — cioè far divergere l'overlay dalla chat vera,
+che è il difetto da non introdurre nemmeno quando è più carino.
+
+Nel suggeritore, invece, **pesano più di tutte**: il loro peso vale 400 contro i
+100 del `PESO_CANALE`, quindi le tue native escono prima delle emote del canale
+e molto prima delle globali. È l'ordine giusto per lo stesso motivo per cui le
+emote del canale battono le globali — sono quelle che tu, in questo campo, stai
+per scrivere davvero.
+
+`Emote.cerca` fonde i due elenchi per nome tenendo il peso più alto, quindi un
+nome che sta in tutti e due esce una volta sola. Il resto dell'ordinamento è
+quello di prima, e resta quello: chi comincia col prefisso davanti a chi lo
+contiene, poi il peso, poi il nome più corto, poi l'alfabeto.
 
 ### `attiva`, il comando del launcher
 
@@ -1085,7 +1289,267 @@ che può far aprire qualunque cosa, e questo non ne ha bisogno né allora né
 adesso: la pagina chiede di aprire *quella* pagina, e dice soltanto con quale
 codice.
 
-## 19. Il bordo che ridimensiona — la finestra senza cornice
+## 19. I comandi, il menù sul nome, e chi c'è in chat
+
+Con un account collegato la barra smette di essere soltanto un posto da cui
+parlare e diventa il posto da cui si modera. Sono tre moduli nuovi, e nessuno
+dei tre si monta da sé: li accende `barra.js` (§4). Quindi **dove non c'è la
+barra non c'è niente di tutto questo** — in una sorgente browser di OBS, con
+`barra=0`, e in modalità prova, dove il menù sul nome non si monta apposta e a
+Twitch non arriva niente (§13).
+
+| file | globale | cosa fa |
+|---|---|---|
+| `app/js/comandi.js` | `window.Comandi` | i ventisette comandi di Twitch: ognuno sul suo endpoint Helix, ognuno col suo permesso. Non tocca il DOM |
+| `app/js/gente.js` | `window.Gente` | quanti guardano e chi c'è in chat, divisi in streamer, moderatori, VIP e utenti. Non tocca il DOM: consegna uno stato, e a disegnarlo è la barra |
+| `app/js/azioni.js` | `window.Azioni` | il menù che si apre cliccando un nome. È l'unico dei tre che disegna qualcosa |
+
+### La strada è una sola: la riga del comando
+
+`Comandi` espone quattro cose, e la forma dice già la decisione:
+
+```js
+Comandi.ELENCO             // [{nome: '/timeout <utente> [secondi] [motivo]', aiuto}]
+Comandi.e(testo)           // è un comando che so fare?
+Comandi.analizza(testo)    // → {nome, argomenti} | null — pura, per il banco (§16)
+Comandi.esegui(testo, {canale, canaleId}, su)
+```
+
+**Chi vuole dare un comando compone la riga e la passa a `Comandi.esegui`.** Non
+chiama Helix, non costruisce un corpo JSON, non si guarda i permessi per conto
+proprio. Oggi le porte sono tre:
+
+- il **campo** sotto la chat, dove la riga la batte l'utente;
+- il **menù sul nome**, che da un clic compone `/timeout tizio 600`;
+- i **pannelli** Sondaggio e Pronostico, che compongono
+  `/poll la domanda | a | b / 120`.
+
+**Tre porte, una stanza sola.** Il controllo del permesso, i ritagli sui limiti
+di Twitch, la traduzione degli errori e le frasi che si leggono stanno scritti
+**una volta sola**, dentro `comandi.js`: quello che vale per il comando battuto
+a mano vale identico per il menù e per i pannelli, senza che nessuno debba
+ricordarsi di tenerli allineati. **Chi aggiungerà la quarta porta compone una
+riga**, e questa regola conta più di ognuna delle tre porte che ci sono adesso.
+
+Cosa fa `esegui`, in ordine, e ogni passo è un cancello:
+
+1. `analizza` la riga. Se non è un comando in tavola, si ferma qui e lo dice.
+2. deve esserci un `Conto` che sappia fare `verso`, `chi`, `puo` e `canale`.
+3. deve esserci il `canaleId`, e deve essere un id numerico: **non si danno
+   comandi al buio**, perché un comando dato nel canale sbagliato non si annulla.
+4. deve esserci un account collegato, con un `utenteId` numerico.
+5. `Conto.puo(voce.scopo)`: **il permesso si controlla prima di chiamare.**
+6. solo allora il comando costruisce il suo percorso e chiama `Conto.verso` (§7).
+
+**Un comando che non conosco non finisce in chat, ed è il motivo per cui `e()`
+esiste.** Da `helix/chat/messages` Twitch **non esegue** i comandi: li scrive.
+Una riga come `/bam tizio`, battuta di fretta, non sarebbe un comando fallito:
+sarebbe un messaggio pubblico che dice `/bam tizio` davanti a tutti. Quindi la
+barra, davanti a una riga che comincia per barra, chiede prima a `Comandi.e` se
+è roba conosciuta, e se non lo è **non manda niente** e spiega perché.
+
+I ventisette, con il permesso che ciascuno pretende:
+
+| comando | cosa fa | permesso |
+|---|---|---|
+| `/ban <utente> [motivo]` | fuori dal canale per sempre | `moderator:manage:banned_users` |
+| `/timeout <utente> [secondi] [motivo]` | in panchina: senza numero dieci minuti, al massimo due settimane | idem |
+| `/unban <utente>` · `/untimeout <utente>` | gli riaprono la porta | idem |
+| `/clear` | svuota la chat per tutti | `moderator:manage:chat_messages` |
+| `/slow [secondi]` · `/slowoff` | il rallentatore: senza numero trenta secondi, da 3 a 120 | `moderator:manage:chat_settings` |
+| `/followers [minuti]` · `/followersoff` | scrivono solo i follower, e da quanto devono seguire | idem |
+| `/subscribers` · `/subscribersoff` | scrivono solo gli abbonati | idem |
+| `/emoteonly` · `/emoteonlyoff` | si parla solo a emote | idem |
+| `/uniquechat` · `/uniquechatoff` | niente messaggi copiati e incollati uguali | idem |
+| `/announce [blue\|green\|orange\|purple] <testo>` | annuncio in evidenza, fino a 500 caratteri | `moderator:manage:announcements` |
+| `/shoutout <utente>` | manda la chat a vedere un altro canale | `moderator:manage:shoutouts` |
+| `/raid <utente>` · `/unraid` | il raid e il suo annullamento | `channel:manage:raids` |
+| `/marker [descrizione]` | un segnalibro nella diretta, per ritrovare il punto | `channel:manage:broadcast` |
+| `/poll <domanda> \| <scelta> \| <scelta> [/ secondi]` | apre un sondaggio | `channel:manage:polls` |
+| `/prediction <domanda> \| <esito> \| <esito> [/ secondi]` | apre un pronostico | `channel:manage:predictions` |
+| `/mod <utente>` · `/unmod <utente>` | dà e toglie la spada | `channel:manage:moderators` |
+| `/vip <utente>` · `/unvip <utente>` | dà e toglie il VIP | `channel:manage:vips` |
+| `/w <utente> <testo>` | un sussurro: lo legge solo lui, e in chat non compare | `user:manage:whispers` |
+
+Tre regole di forma, uguali per tutti e ventisette:
+
+- **un numero fuori scala si ritaglia, non si rifiuta.** `/timeout tizio 99999999`
+  diventa due settimane, che è il massimo che Twitch accetta. Far ribattere la
+  riga per un limite che il pollaio conosce già è farsi dire due volte la stessa
+  cosa. Quello che invece si rifiuta è un numero che non è un numero: là non c'è
+  niente da ritagliare, e la risposta è la riga d'uso del comando.
+- **il nome di chi si comanda passa da `/^[a-z0-9_]{1,25}$/`**, con la
+  chiocciola tolta se c'è, e poi si traduce in id con `helix/users`: si comanda
+  sugli id, mai sui nomi.
+- **la risposta dice cosa è successo, in italiano e al passato**: «Fatto: tizio
+  sta in panchina per dieci minuti», «Fatto: il sondaggio è aperto, tre scelte,
+  si vota per due minuti». Un «OK» non si può controllare; una frase sì.
+
+### I pannelli Sondaggio e Pronostico
+
+Nella striscia dei filtri stanno due pastiglie, **Sondaggio** e **Pronostico**,
+che aprono lo stesso pannello (`.pollaio__sondaggio`) in due modi: la costante
+`MODI` di `barra.js` tiene i due profili, e `alternaSondaggio` cambia
+segnaposto, limiti dei campi, numero di righe e testo del bottone.
+
+**Il pannello non chiama Helix**: compone la riga e la passa a `Comandi.esegui`,
+esattamente come il menù sul nome. È la stessa decisione, e presa due volte di
+fila è un principio: **le porte compongono righe, la stanza è una sola.**
+
+**Le pastiglie compaiono solo se il gettone ha il permesso**
+(`channel:manage:polls`, `channel:manage:predictions`), controllato in
+`vestiConto` insieme a tutto il resto del conto. È la stessa disciplina delle
+voci spente nel menù sul nome: **non si offre un bottone che non può
+funzionare.** Se il permesso sparisce mentre il pannello è aperto, il pannello
+si chiude.
+
+Che qui la pastiglia **sparisca** e nel menù la voce resti **spenta** non è una
+distrazione: sono due posti diversi. Il menù è un elenco che si apre apposta, e
+la sua forma insegna cosa il pollaio sa fare, quindi una voce spenta col perché
+sopra vale più di un buco; la pastiglia invece sta in una fila che si guarda di
+sfuggita mentre si legge la chat, e una pastiglia spenta lì è solo spazio
+occupato da una cosa che non si può premere.
+
+I limiti sono quelli veri di Twitch, **verificati sulla documentazione e non a
+memoria** (`dev.twitch.tv/docs/api/reference`):
+
+| | titolo | scelte | ciascuna | durata |
+|---|---|---|---|---|
+| sondaggio | 60 caratteri | da 2 a 5 | 25 caratteri | da 15 a 1800 secondi |
+| pronostico | 45 caratteri | da 2 a 10 | 25 caratteri | da 1 a 1800 secondi |
+
+Vale la pena dire che la verifica **ha corretto un numero**: la finestra del
+pronostico parte da **1** secondo, non da 30, e `PREDIZIONE_MINIMA` in
+`comandi.js` è stata corretta di conseguenza. Un limite ricordato a memoria è un
+limite inventato, e un limite inventato più stretto del vero è una funzione che
+si rifiuta di fare una cosa che si poteva fare.
+
+Il pannello si difende da una cosa sola prima di comporre: **una barra verticale
+dentro la domanda**, che è il carattere con cui la riga separa le scelte. Lì non
+si ritaglia, si dice — perché ritagliare vorrebbe dire cambiare la domanda che
+l'utente ha scritto.
+
+### Il menù sul nome
+
+Si apre cliccando un nome, e i nomi cliccabili sono due: `.pollaio__nome` dentro
+una `.pollaio__riga[data-nick]`, cioè chi ha scritto un messaggio, e
+`.pollaio__lista-nome[data-nick]`, cioè un nome dentro l'elenco di chi c'è. Il
+nick si legge dal `data-nick`, e prima che si apra qualsiasi cosa deve passare
+per `/^[a-z0-9_]{1,25}$/`.
+
+Le voci sono dieci: **Sussurra**, **Shoutout**, **Timeout 10 minuti**, **Timeout
+un'ora**, **Togli il timeout**, **Fallo VIP**, **Togli il VIP**, **Fallo
+moderatore**, **Togli il moderatore**, **Banna**.
+
+**Il menù non chiama Helix.** «Timeout 10 minuti» su `tizio` diventa la riga
+`/timeout tizio 600`, e la riga va a `Comandi.esegui`: una strada sola, due modi
+di imboccarla. Non è un risparmio di righe, è che **quello che vale per il
+comando scritto vale per il menù senza che nessuno lo riscriva** — il controllo
+del permesso, il ritaglio dei limiti, la frase che torna indietro, il rinnovo
+del gettone sul 401. Un menù che avesse chiamato Helix per conto suo sarebbe
+stato la seconda copia di cui parla §7, e la seconda copia è quella che invecchia.
+
+**Le voci senza permesso sono spente, non nascoste**, con il perché nel `title`:
+«Serve un permesso che il collegamento non ha: riconnetti l'account.» Nasconderle
+avrebbe fatto un menù diverso su ogni computer, senza dire mai perché; spegnerle
+racconta cosa esiste e cosa manca, che è l'informazione che serve a chi deve
+decidere se vale la pena riconnettere (§1.3).
+
+**«Banna» chiede due volte.** Il primo clic non banna: la voce diventa «Sicuro?
+Banno tizio» e ha **quattro secondi** per farsi ripensare, dopo i quali torna
+com'era da sé. È l'unica voce a due tempi, ed è voluto che sia l'unica: il ban è
+la sola che faccia un danno che non si ripara — `/unban` riapre la porta, ma
+quello che è successo in chat è già successo, e chi se n'è andato se n'è andato.
+Un menù che chiede conferma per tutto insegna a dire di sì senza leggere, e a
+quel punto non protegge più niente.
+
+**«Sussurra» non manda: riempie il campo** con `/w tizio ` e ci porta dentro il
+cursore. Un sussurro è un messaggio, e i messaggi si scrivono; il menù arriva
+fino a dove può arrivare un clic e lascia il resto a chi deve dire qualcosa.
+È anche l'unica voce che compare sempre accesa, perché il permesso dei sussurri
+lo controlla `comandi.js` quando la riga parte davvero.
+
+Il menù si chiude con Esc, con un `mousedown` fuori, e quando la finestra perde
+il fuoco.
+
+**`menu.js` ha dovuto imparare tre selettori.** `afferrabile()` adesso esclude
+`.pollaio__nome`, `.pollaio__lista` e `.pollaio__azioni`, oltre ai comandi e a
+`.pollaio__barra` che escludeva già: senza, nella finestra senza cornice (§20)
+cliccare un nome trascinava la finestra invece di aprire il menù. La regola fin
+qui era rimasta implicita, e conviene scriverla: **dove si clicca non si
+trascina.** Ogni parte cliccabile che nasce fuori dalla barra va aggiunta a
+quell'elenco, o il trascinamento se la mangia.
+
+### Chi c'è in chat
+
+Il bottone sopra l'elenco dei messaggi dice quanti sono — «130 in chat · 42
+guardano», «canale spento» quando la diretta non c'è, «Chi c'è» finché non si sa
+ancora niente — e apre il pannello. Lo stato lo tiene `gente.js`:
+
+```js
+Gente.avvia({canale, canaleId, su, visibile})   // su(stato) a ogni cambiamento
+Gente.aggiorna()                                 // lo chiama chi apre il pannello
+Gente.stato()
+Gente.ferma()
+```
+
+```js
+{
+  spettatori: 42,        // -1 = canale spento
+  inChat: 130,
+  streamer: [{nick, nome}], moderatori: [], vip: [], utenti: [],
+  quando: 0,             // ms dell'ultima lettura riuscita
+  guaio: ''              // in chiaro, già in italiano
+}
+```
+
+Lo stato si consegna **solo quando cambia davvero**: una firma mette in fila i
+numeri, il guasto e i nick, e se è uguale a quella di prima non si avvisa
+nessuno. Ridisegnare ogni minuto una lista identica costa e fa lampeggiare.
+
+**Il ritmo sta nelle costanti in cima al file, ed è la disciplina del §15 detta
+una seconda volta**: il contatore ogni **60 s**, la lista di chi c'è ogni
+**120 s**, mai due letture a meno di **5 s** l'una dall'altra — che è la difesa
+dalle raffiche, perché chi apre e chiude il pannello cinque volte di fila non
+deve diventare cinque richieste — e dopo **5 giri andati male di fila**
+`gente.js` **si spegne da sé** con un `console.warn`, e la chat continua come se
+niente fosse. È la forma di `treno.js`: lento a riposo, una scorciatoia quando
+serve, e una resa dichiarata invece di un modulo che continua a bussare a vuoto.
+
+**La lista si legge solo a pannello aperto.** `visibile()` dice a `gente.js` se
+l'elenco è sullo schermo; se non lo è, il giro chiede soltanto il contatore. La
+risposta di `chat/chatters` è pesante — mille voci per pagina, fino a cinque
+pagine — e a pannello chiuso non serve a niente: il numero che si vede sul
+bottone sta già nella risposta di `streams`. Chiedere tutto per mostrare una
+cifra è lo spreco che non si nota finché non lo si fa per otto ore di fila.
+
+**`moderator:read:chatters` vale solo se sei lo streamer o un suo moderatore di
+quel canale.** Su un canale altrui Twitch risponde **403, e quel 403 non è un
+guasto**: è la risposta giusta a una domanda che non avevi il diritto di fare.
+Quindi non diventa un errore, diventa una frase dentro l'elenco — «Chi c'è in
+chat lo vedono soltanto lo streamer e i suoi moderatori, e qui non lo sei: ti
+resta il conto degli spettatori». Per lo stesso motivo i moderatori e i VIP del
+canale si chiedono **solo se il canale è il tuo** (l'`utenteId` del conto è
+uguale al `canaleId`); se non lo è non si chiedono affatto, la lista non si
+divide, e lo dice: «Questo canale non è il tuo, quindi non so chi è moderatore e
+chi è VIP: li trovi tutti fra gli utenti».
+
+**Un permesso che manca e un canale che non è il tuo sono due cose diverse, e il
+pollaio le dice diverse.** Confonderle avrebbe fatto sembrare rotta la
+situazione più normale che ci sia: guardare la chat di qualcun altro.
+
+Gli scomparti sono quattro — **Streamer**, **Moderatori**, **VIP**, **Utenti** —
+ordinati per nome dentro ciascuno, e ognuno porta il suo numero nel titolo. Lo
+streamer è sempre il primo e c'è anche quando non ha ancora scritto: è il suo
+canale. Ogni nome è cliccabile e apre il menù di qui sopra.
+
+`Gente` **non parte senza un account collegato**, e non è una scorciatoia: senza
+gettone `Conto.verso` non ha niente da mettere in `Authorization`, e sia
+`streams` sia `chatters` vogliono un `Bearer`. Chi non collega niente ha il
+pollaio di sempre (§1.3): il bottone di chi c'è non compare, e la chat si legge
+uguale.
+
+## 20. Il bordo che ridimensiona — la finestra senza cornice
 
 La finestra di `Pollaio.exe` si ridimensiona tirandone i bordi, come qualunque
 altra finestra. Il gesto è quello di sempre; quello che non è di sempre è **chi

@@ -392,7 +392,7 @@
       tipo: 'sìno',
       predefinito: true,
       etichetta: 'Il campo per scrivere in chat',
-      aiuto: 'Il campo dentro la barra da cui mando i messaggi con il mio account. Finché l’account non è collegato — si fa in fondo alla regia — al suo posto c’è solo la riga che lo dice, e senza collegamento il pollaio resta quello di sempre: legge la chat in anonimo e non scrive niente. Il gettone di Twitch resta in questo browser, non finisce mai nell’indirizzo e non passa da OBS.'
+      aiuto: 'Il campo dentro la barra da cui mando i messaggi con il mio account. Finché l’account non è collegato — si fa in cima alla regia — al suo posto c’è solo la riga che lo dice, e senza collegamento il pollaio resta quello di sempre: legge la chat in anonimo e non scrive niente. Il gettone di Twitch resta in questo browser, non finisce mai nell’indirizzo e non passa da OBS.'
     }
   ];
 

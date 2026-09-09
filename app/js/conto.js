@@ -545,20 +545,31 @@
     chiama(HELIX + percorso, opzioni, function (guaio, esito) {
       if (guaio) { su(guaio); return; }
 
-      if (esito.stato === 401 && riprova) {
-        rinnova(function (guaioDue, nuovo) {
-          if (guaioDue) { su(guaioDue, null, true); return; }
-          bussa(nuovo, metodo, percorso, corpo, false, su);
-        });
+      if (esito.stato === 401) {
+        var detto = String((esito.dati && esito.dati.message) || '');
+
+        if (/scope/i.test(detto)) {
+          su('A Twitch manca un permesso per questa cosa: ' + detto +
+             '. Si rimedia con «Connetti account», che li richiede tutti.');
+          return;
+        }
+
+        if (riprova) {
+          rinnova(function (guaioDue, nuovo) {
+            if (guaioDue) { su(guaioDue, null, true); return; }
+            bussa(nuovo, metodo, percorso, corpo, false, su);
+          });
+          return;
+        }
+
+        su(detto
+          ? 'Twitch non l’ha accettata: ' + detto
+          : 'Twitch non mi riconosce più: si rifà con «Connetti account».', null, !detto);
         return;
       }
 
-      if (esito.stato === 401) {
-        su('Twitch non mi riconosce più: si rifà con «Connetti account».', null, true);
-        return;
-      }
       if (esito.stato === 403) {
-        su('Twitch dice di no: per questa cosa servono i permessi di moderatore sul canale.');
+        su(guaioDi(esito, 'Twitch dice di no: per questa cosa servono i permessi di moderatore sul canale.'));
         return;
       }
       if (esito.stato === 429) {

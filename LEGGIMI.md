@@ -9,11 +9,17 @@ notate mentre la chat scorre.
 
 Per **guardarla** non serve installare niente, non serve un account, non serve
 una password: il pollaio entra in chat in anonimo, come ha sempre fatto. Un
-account Twitch serve **solo** se vuoi anche **scrivere**, dal campo in fondo
-alla chat, e si attacca da lì: finché non c'è nessuno collegato, al posto del
-campo c'è il bottone che fa tutto. La prima volta si passa dalla regia per
-riempire una riga, dopo è un clic. Se non lo attacchi, il widget è esattamente
-quello di prima.
+account Twitch serve se vuoi anche **fare** qualcosa — scrivere dal campo in
+fondo alla chat, dare i comandi da moderatore, aprire un sondaggio, vedere chi
+c'è dentro — e si attacca da lì: finché non c'è nessuno collegato, al posto del
+campo c'è il bottone che fa tutto, e collegarsi è un clic. Se non lo attacchi,
+il widget è esattamente quello di prima.
+
+**Se l'account l'avevi già collegato, va riconnesso una volta.** I comandi
+chiedono a Twitch dei permessi che il vecchio collegamento non aveva, e Twitch
+quei permessi li concede soltanto nel momento in cui ci si collega: a un
+collegamento già fatto non si aggiungono. È un clic, e sta tutto spiegato in
+«I permessi, e perché l'account va riconnesso», più sotto.
 
 Non c'è nessun `npm install`: sono file HTML, CSS e JavaScript scritti a mano.
 
@@ -232,6 +238,12 @@ messaggi.
 **Eventi** tiene le schede di abbonamento, riabbonamento, regali, raid e
 annunci, più ogni messaggio con dei bits.
 
+In fila con i filtri, ma filtri non sono, compaiono due pastiglie in più:
+**Sondaggio** e **Pronostico**. Aprono il pannellino per farli senza battere il
+comando a mano, e ci sono soltanto se l'account collegato ha il permesso di
+aprirli — se non le vedi è quello il motivo. Le racconto per bene nella sezione
+«I comandi di Twitch, dal campo della chat».
+
 Un dettaglio che vale la pena raccontare: con un filtro acceso il pollaio
 **tiene in pagina più righe** di quante ne dica la manopola «quanti messaggi
 resto ad appendere» — fino a sei volte tante — e di quelle conta solo quelle che
@@ -274,6 +286,11 @@ Le emote non si battono a memoria: **due punti e una lettera** aprono sopra al
 campo l'elenco di quelle che somigliano, e si sceglie da lì. Com'è fatto è
 spiegato nella stessa sezione.
 
+Dallo stesso campo partono anche **i comandi di Twitch** — `/ban`, `/timeout`,
+`/poll` e altri ventiquattro — e cliccando un nome si apre il menù che li dà
+senza far ricopiare niente. Sono due sezioni a parte, più sotto: «I comandi di
+Twitch, dal campo della chat» e «Il menù sul nome, e chi c'è in chat».
+
 Nell'anteprima della regia il bottone si vede ma non collega niente: là dentro è
 tutto finto, e collegare un account per davvero da un'anteprima sarebbe una
 sorpresa poco gradita.
@@ -284,6 +301,13 @@ Stanno nella regia, gruppo **La barra sotto la chat**, e nascono accese tutte e
 due: `barra` è la striscia coi filtri e la pausa, `scrivi` è il campo per
 scrivere dentro la striscia — e con lui il bottone «Connetti account» che ne fa
 le veci quando non c'è nessun account. Spegnerne una non spegne l'altra.
+
+`scrivi` però si porta dietro più di quello che dice il nome: da lì passa il
+riconoscimento dell'account, e dall'account passano le pastiglie del sondaggio,
+il bottone che conta chi c'è e le emote di Twitch nel suggeritore. Spegnendolo
+restano i filtri e la pausa, cioè la barra com'era prima. Il menù sul nome si
+apre ancora, ma resta a mani vuote: l'id del canale lo scopro insieme
+all'account, e quella strada passa di qui.
 
 ---
 
@@ -401,8 +425,10 @@ non le trovi. Quello che si porta in giro è sempre l'indirizzo.
 
 Il campo in fondo alla chat manda i messaggi **con il tuo account**. Invio
 manda, Esc svuota il campo, e sopra i quattrocento caratteri compare quanti ne
-restano — Twitch ne accetta cinquecento. In modalità prova non manda niente per
-davvero, e te lo dice invece di far finta.
+restano — Twitch ne accetta cinquecento. Il tasto accanto dice **Invia** —
+diceva «Manda» — e mentre il messaggio è per aria diventa «Invio…», così si vede
+che è partito e non lo si preme due volte. In modalità prova non manda niente
+per davvero, e te lo dice invece di far finta.
 
 ### Le emote si scelgono da un elenco, e i due punti non partono
 
@@ -424,21 +450,32 @@ che si comporta uguale.
 I due punti contano solo a inizio parola, cioè a capo del messaggio o dopo uno
 spazio: se no ogni `https://` avrebbe aperto un elenco.
 
-Le emote proposte sono le stesse che il pollaio ha già caricato — 7TV,
-BetterTTV, FrankerFaceZ. Vengono prima quelle che **cominciano** per quello che
-hai battuto, poi quelle che ce l'hanno in mezzo; e dentro a ciascuno dei due
-gruppi vengono prima le **emote del canale**, che sono quelle che uno vuole
-quasi sempre, poi le più corte, poi in ordine alfabetico.
+Le emote proposte vengono da quattro parti: i tre cataloghi che il pollaio
+carica comunque — 7TV, BetterTTV, FrankerFaceZ — e **Twitch stesso**. L'ordine è
+questo: prima quelle che **cominciano** per quello che hai battuto, poi quelle
+che ce l'hanno in mezzo; e dentro a ciascuno dei due gruppi vengono prima **le
+tue emote di Twitch**, poi le **emote del canale** prese dai cataloghi, poi le
+più corte, poi in ordine alfabetico.
 
 Finché l'elenco è aperto, **Invio sceglie invece di mandare** ed **Esc chiude
 l'elenco invece di svuotare il campo**: sono i due tasti che si premono senza
 guardare, e mandare mezzo messaggio per aver confermato un'emote sarebbe stato
 un brutto scherzo. Appena l'elenco si chiude tornano a fare quello di sempre.
 
-Le emote **native di Twitch** — `Kappa`, `PogChamp` — nell'elenco non ci sono:
-quelle non stanno in nessuno dei tre cataloghi, il pollaio le riconosce soltanto
-quando arrivano dentro a un messaggio già scritto. Si battono a mano come prima,
-e in chat si vedono lo stesso.
+**Le emote native di Twitch adesso ci sono**, ed è la novità che si nota di
+più. Sono quelle scritte come `slayer156Hype`, o come `Kappa`: non stanno in
+nessuno dei tre cataloghi, e infatti fino a poco fa il suggeritore non ne
+proponeva una. Il risultato era beffardo — chi è abbonato al canale doveva
+battere a memoria proprio le emote per cui paga. Adesso, appena l'account è
+collegato, chiedo a Twitch **quali emote puoi usare tu in questo canale**,
+quelle dei tuoi abbonamenti comprese, e le metto per prime: sono le uniche che
+tutti vedono davvero, perché le altre tre le disegna soltanto chi ha
+l'estensione installata.
+
+Serve il collegamento e serve il permesso `user:read:emotes`. Senza, il
+suggeritore torna com'era — i tre cataloghi e basta — e le native si battono a
+mano come sempre. In chat si vedono lo stesso: quelle arrivano dentro al
+messaggio, per una strada che non passa di qui.
 
 ### Collegare l'account
 
@@ -453,8 +490,9 @@ campo per scrivere. Non devi aprire la regia, e non devi tornare a dire a
 nessuno che hai finito: se ne accorge da solo.
 
 **Dalla regia.** Sezione **«Il tuo account Twitch»**, che è la prima cosa della
-pagina, subito sotto il titolo. Il giro è identico e il bottone si chiama
-uguale, **Connetti account**; in più qui c'è una riga di stato che dice sempre a
+pagina, subito sotto il titolo. Il giro è identico e il bottone fa la stessa
+cosa — si chiama **Connetti account** la prima volta e **Riconnetti account**
+quando un account c'è già; in più qui c'è una riga di stato che dice sempre a
 che punto siamo, il codice scritto grande, e i bottoni **Riapri Twitch**, **Copia
 il codice** e **Lascia stare**, che servono quando il browser fa i capricci.
 
@@ -465,36 +503,78 @@ codice resta scritto in pagina lo stesso, perché se il browser non si apre — 
 si apre quello sbagliato, dove non sei loggato — devi poterlo battere a mano su
 `twitch.tv/activate`. Vale mezz'ora, e io intanto resto lì ad aspettare.
 
-### La prima volta: il Client ID
+### Il Client ID: quasi sempre non devi fare niente
 
-C'è una cosa che va messa una volta sola, e quella va messa **dalla regia**: il
-**Client ID**. Sta in fondo alla sezione dell'account, dentro il blocco
-richiudibile **«Con quale applicazione mi presento a Twitch»**. Se il Client ID
-c'è già il blocco è chiuso e non lo vedi nemmeno; se manca si apre da solo, e la
-riga di stato ti dice che è l'unica volta in cui questa pagina ti chiede
-qualcosa. Da lì in poi collegarsi è **un clic e basta**, da tutte e due le
-strade.
+Twitch non concede permessi a un programma anonimo: vuole sapere *quale*
+programma glieli sta chiedendo, e quel nome pubblico è il **Client ID**. Non è
+un segreto e non è una password — viaggia in chiaro dentro ogni richiesta, e
+infatti nella regia sta lì in bella vista.
 
-Si riempie così: su `dev.twitch.tv/console/apps` registri **un'applicazione
-tua** — «Register Your Application», nome qualsiasi, **OAuth Redirect URL**
-`http://localhost`, categoria «Chat Bot», tipo **Public**. Twitch ti dà il
-**Client ID**: lo incolli nel campo e premi **Connetti account**. Il **Client
-Secret** non serve: non copiarlo da nessuna parte.
+**Uno ce n'è già dentro**, quello del pollaio, e quindi collegare l'account è un
+clic e basta, da tutte e due le strade. Il campo sta in regia in fondo alla
+sezione dell'account, dentro il blocco richiudibile **«Con quale applicazione mi
+presento a Twitch»**: se è pieno il blocco resta chiuso e non lo vedi nemmeno.
+Era una domanda che questa pagina faceva a tutti e che quasi nessuno aveva
+motivo di sentirsi fare.
 
-Finché quel campo è vuoto il bottone sotto la chat non parte: te lo dice e ti
-manda in regia, perché è l'unico posto dove il campo c'è.
+Serve solo se vuoi presentarti a Twitch **con un'applicazione tua** invece che
+con la mia — perché stai facendo la tua versione del pollaio, o perché non ti va
+che sulla pagina di conferma compaia il mio nome. Si fa così: su
+`dev.twitch.tv/console/apps`, «Register Your Application», nome qualsiasi,
+**OAuth Redirect URL** `http://localhost`, categoria «Chat Bot», tipo
+**Public**. Twitch ti dà il Client ID: lo incolli nel campo e premi **Connetti
+account**. Il **Client Secret** non serve: non copiarlo da nessuna parte.
 
-**Perché serve un'applicazione tua e non una mia.** Non è un capriccio del
-pollaio: Twitch non concede permessi a un programma anonimo, vuole sapere *quale*
-programma glieli sta chiedendo, e quel nome pubblico è il Client ID. Non è un
-segreto e non è una password — viaggia in chiaro dentro ogni richiesta, e infatti
-nella regia sta lì in bella vista.
+Se quel campo restasse vuoto — l'unico modo è svuotarlo a mano — il bottone
+sotto la chat non parte: te lo dice e ti manda in regia, perché è l'unico posto
+dove il campo c'è.
+
+### I permessi, e perché l'account va riconnesso
+
+Qui è cambiata la cosa più importante di tutte, e va detta forte.
+
+Prima il permesso chiesto era **uno solo**, `user:write:chat`: mandare messaggi
+a nome tuo. Adesso sono **quindici**, perché i comandi, la lista di chi c'è e le
+emote di Twitch non passano da quello. Su Twitch ogni cosa ha il suo permesso, e
+non ne esiste uno che le contenga tutte — quindi si chiedono uno per uno, e sono
+esattamente questi:
+
+| permesso | a cosa serve |
+|---|---|
+| `user:write:chat` | scrivere in chat, come prima |
+| `moderator:manage:banned_users` | `/ban` `/timeout` `/unban` `/untimeout` |
+| `moderator:manage:chat_messages` | `/clear` |
+| `moderator:manage:chat_settings` | `/slow` `/followers` `/subscribers` `/emoteonly` `/uniquechat` e i loro «off» |
+| `moderator:manage:announcements` | `/announce` |
+| `moderator:manage:shoutouts` | `/shoutout` |
+| `channel:manage:raids` | `/raid` `/unraid` |
+| `channel:manage:polls` | `/poll`, e la pastiglia **Sondaggio** |
+| `channel:manage:predictions` | `/prediction`, e la pastiglia **Pronostico** |
+| `channel:manage:broadcast` | `/marker` |
+| `channel:manage:moderators` | `/mod` `/unmod`, e sapere chi è moderatore nella lista |
+| `channel:manage:vips` | `/vip` `/unvip`, e sapere chi è VIP nella lista |
+| `user:manage:whispers` | `/w` |
+| `moderator:read:chatters` | chi c'è in chat adesso |
+| `user:read:emotes` | le emote di Twitch nel suggeritore |
+
+**Twitch i permessi li concede solo nel momento in cui ci si collega.** Non si
+aggiungono dopo, non si chiedono al volo quando servono: o c'erano quando hai
+detto di sì, o non ci sono. Ecco perché **chi aveva collegato l'account prima di
+questa versione deve riconnetterlo una volta** — e in regia il bottone si chiama
+apposta **Riconnetti account** quando un account c'è già.
+
+Chi non lo fa non rompe niente e non perde niente di quello che aveva: continua
+a scrivere in chat come sempre. Ma ogni comando si ferma prima di partire e dice
+quale permesso manca, nel menù sul nome le voci restano spente, le due pastiglie
+del sondaggio non compaiono e il bottone di chi c'è nemmeno.
+
+Se quindici ti sembrano tanti, la risposta onesta è che sono tanti: Twitch li fa
+vedere tutti sulla pagina di conferma e li dà in blocco, quindi dicendo di sì li
+dai tutti insieme. Sono uno per comando, e l'unico modo di averne meno sarebbe
+avere meno comandi. Quello che non cambia è che **senza collegamento il pollaio
+legge la chat esattamente come prima**, in anonimo.
 
 ### Il gettone, e come si toglie
-
-Il permesso chiesto è **uno solo**: `user:write:chat`, cioè mandare messaggi a
-nome tuo. Non può leggere i tuoi messaggi privati, non può bannare nessuno, non
-può toccare le impostazioni del canale.
 
 **Dove finisce il gettone: in questo browser e basta.** Non finisce
 nell'indirizzo che la regia ti fa copiare, non finisce in `avvio\pollaio.ini`, e
@@ -516,8 +596,232 @@ nuovo un clic solo.
 
 **Quello che non cambia, ed è il punto**: per *leggere* la chat non serve e non
 servirà mai nessun account. Il pollaio entra in chat in anonimo come ha sempre
-fatto, e senza collegamento è esattamente il widget di prima. L'account serve a
-una cosa sola, ed è scritta nel nome del permesso.
+fatto, e senza collegamento è esattamente il widget di prima. L'account non
+serve a guardare la chat: serve a farci qualcosa dentro.
+
+---
+
+## I comandi di Twitch, dal campo della chat
+
+Dal campo in fondo alla chat si danno **ventisette comandi**, battuti come si
+sono sempre battuti: `/ban tizio`, `/slow 10`, `/announce si parte`. Partono per
+davvero.
+
+**Perché è una sezione e non una riga.** Nel 2023 Twitch ha spento i comandi via
+IRC: da allora la barra non è più un pezzo di testo che la chat interpreta, e
+ognuno è diventato **un endpoint suo dell'API, con un permesso suo**. Peggio:
+l'API con cui il pollaio manda i messaggi quei comandi non li esegue, li
+rifiuta. Chi provava `/ban tizio` si vedeva rispondere «Twitch non l'ha fatto
+passare» e non poteva capirci niente — non aveva sbagliato a scrivere, era una
+strada chiusa in fondo. Adesso il comando lo riconosco prima di mandarlo e lo
+giro all'endpoint giusto.
+
+E quello che scrivi non finisce mai in chat per sbaglio: se la riga comincia per
+`/` e il comando non lo conosco, **non lo mando** — te lo dico e resta nel
+campo. Un `/bam tizio` battuto storto che compare in chat davanti a tutti è
+esattamente la figura che non voglio farti fare.
+
+### L'elenco
+
+| comando | cosa fa |
+|---|---|
+| `/ban <utente> [motivo]` | lo caccio dal canale per sempre, con il motivo se glielo vuoi dire |
+| `/timeout <utente> [secondi] [motivo]` | lo metto in panchina: senza numero sono dieci minuti, al massimo due settimane |
+| `/unban <utente>` | gli riapro la porta del canale |
+| `/untimeout <utente>` | gli tolgo la panchina prima della fine |
+| `/clear` | svuoto la chat per tutti quelli che stanno guardando |
+| `/slow [secondi]` | un messaggio ogni tanto: senza numero sono trenta secondi, da tre a centoventi |
+| `/slowoff` | tolgo il rallentatore |
+| `/followers [minuti]` | scrivono solo i follower: col numero, solo chi segue da almeno quei minuti |
+| `/followersoff` | torna a scrivere chiunque, follower o no |
+| `/subscribers` | scrivono solo gli abbonati |
+| `/subscribersoff` | torna a scrivere anche chi non è abbonato |
+| `/emoteonly` | si parla solo a emote |
+| `/emoteonlyoff` | si torna a parlare anche a parole |
+| `/uniquechat` | niente messaggi copiati e incollati uguali |
+| `/uniquechatoff` | si può ripetere quello che si vuole |
+| `/announce [blue\|green\|orange\|purple] <testo>` | un annuncio in evidenza in chat: senza colore prende quello del canale |
+| `/shoutout <utente>` | mando la chat a vedere un altro canale |
+| `/raid <utente>` | porto la gente da un altro: parte il conto alla rovescia |
+| `/unraid` | annullo il raid prima che parta |
+| `/marker [descrizione]` | metto un segnalibro nella diretta, per ritrovare il punto dopo |
+| `/poll <domanda> \| <scelta> \| <scelta> [\| altre] [/ secondi]` | apro un sondaggio: da due a cinque scelte |
+| `/prediction <domanda> \| <esito> \| <esito> [\| altri] [/ secondi]` | apro un pronostico: da due a dieci esiti |
+| `/mod <utente>` | lo faccio moderatore del canale |
+| `/unmod <utente>` | gli tolgo la spada da moderatore |
+| `/vip <utente>` | gli do il VIP |
+| `/unvip <utente>` | gli tolgo il VIP |
+| `/w <utente> <testo>` | un sussurro: lo legge solo lui, e in chat non compare |
+
+Il nome di chi si scrive con o senza la chiocciola, non cambia niente: `@tizio`
+e `tizio` sono la stessa cosa. Le maiuscole nemmeno.
+
+Dove Twitch ha un limite di lunghezza io **taglio invece di farmi dire di no**:
+il motivo di un ban e il testo di un annuncio o di un sussurro a cinquecento
+caratteri, la descrizione di un segnalibro a centoquaranta. Preferisco un motivo
+accorciato a un comando che non parte.
+
+### `/poll` e `/prediction`, che vanno spiegati
+
+Sono gli unici due con una sintassi da imparare, perché sono gli unici che
+devono passare a Twitch più di una cosa per volta:
+
+```
+/poll <domanda> | <scelta> | <scelta> [| altre] [/ secondi]
+/prediction <domanda> | <esito> | <esito> [| altri] [/ secondi]
+```
+
+La barra verticale separa la domanda dalle risposte, e le risposte fra loro.
+
+La durata è la parte con il trucco. Si scrive in fondo — una barra, uno spazio,
+i secondi — e la leggo come durata **solo se la riga finisce così**. Serviva
+perché una domanda tipo «chi vince, A/B?» ha una barra in mezzo e non voleva
+dire niente del genere: guardando solo la coda, quella barra resta parte della
+domanda. Se la durata non la metti sono **due minuti**.
+
+```
+/poll Che si gioca stasera? | Elden Ring | Un souls a caso | Si chiacchiera / 180
+```
+
+Il sondaggio vuole da **due a cinque** scelte e dura da quindici secondi a
+mezz'ora; il pronostico vuole da **due a dieci** esiti e la finestra arriva alla
+stessa mezz'ora. Anche qui taglio dove Twitch ha un limite: la domanda di un
+sondaggio a sessanta caratteri, quella di un pronostico a quarantacinque, ogni
+scelta a venticinque.
+
+### Sondaggio e Pronostico: i due pannellini
+
+Il comando scritto resta, per chi lo sa a memoria. Ma comporre
+`/poll domanda | scelta | scelta / 120` dentro un campo largo quattrocento pixel
+è scomodo e facile da sbagliare — una barra dimenticata e il sondaggio ha una
+scelta sola — quindi accanto ai filtri ci sono due pastiglie, **Sondaggio** e
+**Pronostico**, che aprono lo stesso pannello in due modi diversi.
+
+Dentro c'è la domanda, le scelte una per riga, **Aggiungi scelta** per farne
+un'altra e la durata in secondi. Si conferma con **Apri il sondaggio** o **Apri
+il pronostico**. Il pannello nasce con due scelte già pronte, perché è il minimo
+che Twitch accetta, e il tasto per aggiungerne si spegne da sé quando sei
+arrivato al massimo: i limiti li fa vedere invece di dirteli dopo.
+
+| | domanda | quante | ognuna | durata |
+|---|---|---|---|---|
+| **Sondaggio** | 60 caratteri | da 2 a 5 scelte | 25 caratteri | 15–1800 secondi |
+| **Pronostico** | 45 caratteri | da 2 a 10 esiti | 25 caratteri | 1–1800 secondi |
+
+Le righe lasciate vuote le salto, quindi non devi cancellarle: se ne apri cinque
+e ne riempi tre, il sondaggio ha tre scelte. L'unica cosa che il pannello
+rifiuta è **una barra verticale dentro la domanda**, perché è il segno con cui
+compone il comando e se ne trovasse una in mezzo taglierebbe la domanda a metà.
+
+Sotto è lo stesso motore: il pannello compone la riga del comando e la fa
+eseguire allo stesso pezzo di codice che esegue `/poll` battuto a mano. Non ci
+sono due strade che possono scollarsi, ce n'è una con due porte d'ingresso.
+
+**Le due pastiglie compaiono solo se il collegamento ha il permesso** —
+`channel:manage:polls` per il sondaggio, `channel:manage:predictions` per il
+pronostico — e senza account collegato non si vedono affatto. Un bottone che
+c'è ma non funziona è peggio di un bottone che non c'è. In modalità prova fanno
+eccezione: si vedono, ma non aprono niente, perché là l'id del canale non lo
+vado nemmeno a cercare.
+
+### Quando un comando non parte
+
+Prima di chiamare Twitch controllo tre cose, in quest'ordine, e ognuna ha la sua
+risposta:
+
+- **non so chi sei**: l'account non è collegato, e i comandi li do a nome tuo;
+- **non so ancora in che canale siamo**: l'id numerico del canale me lo dice
+  Twitch subito dopo il collegamento, e per un attimo non ce l'ho. Riprova fra
+  un secondo — comandi al buio non ne do;
+- **al tuo collegamento manca il permesso**: è il caso che capiterà a te se
+  l'account l'avevi collegato prima, e si risolve riconnettendolo.
+
+Poi risponde Twitch, e quello che dice te lo riporto com'è. Un no che parla di
+moderatore vuol dire quasi sempre che sul canale non lo sei: il permesso ce
+l'hai, il ruolo no. Sono due cose diverse e si confondono facilmente — il
+permesso è quello che hai dato tu al pollaio, il ruolo è quello che ti ha dato
+lo streamer.
+
+---
+
+## Il menù sul nome, e chi c'è in chat
+
+Questa è la parte che si userà davvero. Ricopiare un nick a mano mentre la chat
+scorre è il modo migliore di dare il timeout alla persona sbagliata, e comunque
+quasi nessuno lo fa: quando serve un timeout serve subito.
+
+### Il menù sul nome
+
+**Clicca il nome di chi ha scritto**, quello in testa al suo messaggio, oppure
+un nome nella lista di chi c'è, e si apre un menù:
+
+*Sussurra · Shoutout · Timeout 10 minuti · Timeout un'ora · Togli il timeout ·
+Fallo VIP · Togli il VIP · Fallo moderatore · Togli il moderatore · Banna*.
+
+Non c'è niente da scrivere: la persona ce l'hai già davanti. E sotto non c'è
+niente di nuovo — il menù compone la riga del comando e la fa fare **allo stesso
+pezzo di codice** che esegue i comandi battuti a mano. Una strada sola, due modi
+di imboccarla: il giorno che `/timeout` cambia, cambia in tutti e due i posti
+insieme.
+
+Le cose che contano:
+
+- **Le voci per cui il collegamento non ha il permesso sono spente**, e il
+  perché sta nel `title`: ci passi sopra col mouse e te lo dice. Meglio una voce
+  spenta che spiega di una accesa che fallisce.
+- **Banna chiede conferma.** Il primo clic la fa diventare «Sicuro? Banno
+  tizio», il secondo — entro quattro secondi — banna davvero; passati i quattro
+  secondi torna com'era da sola. È l'unica voce da cui non si torna indietro, ed
+  è l'unica che chiede due volte.
+- **Sussurra non manda niente**: riempie il campo con `/w tizio ` e ti lascia
+  scrivere. Un sussurro senza testo non ha senso, e mandarlo al primo clic
+  sarebbe stato soltanto un modo di spedire messaggi vuoti. È anche l'unica voce
+  che resta accesa quando il permesso manca, e ha senso: non fa partire niente,
+  quindi il controllo del permesso arriva quando premi Invio.
+- **Esc chiude**, e chiude anche un clic fuori dal menù.
+
+Il menù c'è dove c'è la barra: nella finestra di `Pollaio.exe` e nella pagina
+aperta a mano in un browser. In una sorgente browser di OBS no, e **in modalità
+prova nemmeno** — là dentro le persone sono inventate, e bannare una persona
+inventata chiamerebbe Twitch per davvero.
+
+### Il contatore, e la lista di chi c'è
+
+In cima alla chat compare un bottone: **«N in chat · N guardano»**. Sono due
+numeri diversi ed è giusto tenerli separati — chi guarda è quasi sempre molto
+più di chi scrive, e il rapporto fra i due dice più di ciascuno dei due preso da
+solo. A canale spento il bottone lo scrive, «canale spento», che è comunque
+un'informazione.
+
+Cliccandolo si apre un pannello diviso in quattro scomparti: **streamer,
+moderatori, VIP, utenti**. Dentro c'è chi è in chat **adesso** — non l'elenco dei
+moderatori del canale, non l'anagrafe dei VIP: gli scomparti servono a mettere
+in ordine le persone che ci sono, non a fare la lista di quelle che potrebbero
+esserci.
+
+**Il bottone compare solo con l'account collegato**, perché quei numeri li
+chiedo all'API e senza collegamento non ho niente con cui chiederli.
+
+Tre cose da dire con onestà, perché sono limiti veri e non guasti:
+
+- **Chi c'è in chat, Twitch lo fa vedere solo allo streamer e ai suoi
+  moderatori.** Su un canale dove non sei né l'uno né l'altro quella lista non
+  arriva: resta il conto degli spettatori, e il pannello scrive per esteso
+  perché. Non è il pollaio che non ce la fa.
+- **Moderatori e VIP li so dividere solo sul tuo canale.** Altrove Twitch non mi
+  lascia chiedere chi sono, quindi ci sono tutti ma stanno tutti fra gli utenti.
+  Anche questo il pannello lo dice, invece di lasciartelo indovinare da uno
+  scomparto vuoto.
+- **Il ritmo è educato**: il contatore ogni minuto, la lista ogni due, e **la
+  lista la chiedo soltanto a pannello aperto**. Un widget acceso otto ore non ha
+  nessun motivo di farsi mandare mille nomi da Twitch per tenerli in un pannello
+  che nessuno sta guardando. Appena lo apri la lettura la faccio subito, a meno
+  che non sia appena passata di lì: fra due letture lascio comunque cinque
+  secondi.
+
+Se le letture vanno male cinque volte di fila smetto di provare, e il contatore
+resta fermo su quello che sapeva. Un numero vecchio è meglio di un widget che
+martella Twitch a vuoto per tutta la diretta.
 
 ---
 
@@ -621,7 +925,7 @@ serve per quando vuoi ritoccare a mano.
 | chiave | valore | cosa fa |
 |---|---|---|
 | `barra` | `1` | la striscia coi filtri e la pausa. In una sorgente browser di OBS non compare comunque, qualunque cosa dica questa chiave |
-| `scrivi` | `1` | il campo per scrivere dentro la striscia. Senza account collegato al suo posto c'è il bottone «Connetti account» |
+| `scrivi` | `1` | il campo per scrivere dentro la striscia, e con lui i comandi, le pastiglie del sondaggio, il bottone di chi c'è e le emote di Twitch nel suggeritore. Senza account collegato al suo posto c'è il bottone «Connetti account» |
 
 ---
 
@@ -680,8 +984,9 @@ password, e questa parte non è cambiata: niente da custodire, niente che scade,
 niente che possa essere bannato. È così in `pollaio.html` aperto da solo, ed è
 così nella sorgente browser di OBS, sempre.
 
-Per **scrivere** un account serve, e allora quelle tre cose diventano tutte e
-tre false. Vale la pena dirle una per una invece di lasciarle scoprire.
+Per **scrivere**, per i comandi e per sapere chi c'è, un account serve, e allora
+quelle tre cose diventano tutte e tre false. Vale la pena dirle una per una
+invece di lasciarle scoprire.
 
 - **C'è qualcosa da custodire**: il gettone che Twitch rilascia dopo il tuo sì.
   Sta nella memoria di questo browser e basta — non nell'indirizzo che copi in
@@ -695,18 +1000,25 @@ tre false. Vale la pena dirle una per una invece di lasciarle scoprire.
   regole di chiunque altro: il widget non ha una corsia preferenziale, manda un
   messaggio come lo manderesti dal sito di Twitch.
 
-Il permesso è `user:write:chat` e soltanto quello, e **Revoca account** nella
-regia lo revoca davvero su Twitch invece di limitarsi a dimenticarlo qui.
+I permessi adesso sono quindici invece di uno — sono in tabella nella sezione
+«I permessi, e perché l'account va riconnesso» — e **Revoca account** nella
+regia li revoca davvero su Twitch, tutti insieme, invece di limitarsi a
+dimenticare il gettone qui.
 
 **Vede**: tutti i messaggi, emote di Twitch, 7TV, BetterTTV e FrankerFaceZ,
 tutti i badge, i colori dei nomi, i `/me`, le risposte, i bits e i cheermote,
 abbonamenti, riabbonamenti, regali singoli e in blocco, raid, annunci,
 primi messaggi, ban, pause e cancellazioni dei moderatori.
 
-**Non vede**: chi entra e chi esce dalla chat (Twitch non lo dice più in modo
-affidabile), gli spettatori collegati, e le cose che passano solo dall'API con
-un login che abbia il permesso di leggerle — quello che chiedo serve a scrivere,
-non a leggere, quindi non cambia niente di questo elenco.
+**Con l'account collegato vede in più**: quanti stanno guardando, chi è in chat
+adesso — ma solo dove sei lo streamer o un suo moderatore, che è una regola di
+Twitch e non mia — e quali emote di Twitch puoi usare tu in questo canale.
+Queste tre non passano dalla chat, passano dall'API, e l'API vuole un login: è
+tutta qui la differenza fra prima e adesso.
+
+**Non vede**: chi entra e chi esce dalla chat, perché Twitch non lo dice più in
+modo affidabile. E senza account collegato non vede nemmeno le tre cose della
+riga qui sopra.
 
 ---
 
@@ -736,6 +1048,27 @@ da un **giro completo**. Un giro parziale si usa lo stesso, subito — meglio du
 emote che nessuna, e la chat non deve partire spoglia per aspettare la rete —
 ma non blocca più il rifornimento: mentre leggi, il catalogo se lo sta già
 richiedendo.
+
+**Un comando risponde che al collegamento manca un permesso.**
+Il collegamento è più vecchio dei comandi. Twitch i permessi li dà solo quando
+si collega l'account, quindi a uno già fatto non c'è modo di aggiungerli: apri
+la regia, **Riconnetti account**, un clic, e tornano tutti. È la stessa cosa che
+tiene spente le voci del menù sul nome, che nasconde le pastiglie del sondaggio
+e che fa mancare il bottone di chi c'è.
+
+**Un comando dice che Twitch ha detto di no, e parla di moderatore.**
+Quello è un altro paio di maniche: il permesso ce l'hai, il ruolo no. Il
+permesso è quello che hai dato tu al pollaio, il ruolo è quello che ti ha dato
+lo streamer sul suo canale. Nessuna riconnessione lo risolve — o sei moderatore
+di quel canale, o quel comando non lo puoi dare da nessuna parte, nemmeno dal
+sito di Twitch.
+
+**Il bottone con quanti sono in chat non compare.**
+O l'account non è collegato — quei numeri li chiedo all'API, e senza login non
+ho niente con cui chiederli — oppure sei in una sorgente browser di OBS, dove di
+tutta la barra non compare niente. Se invece compare ma la lista dice che non
+può, allora è il caso onesto: su quel canale non sei né lo streamer né un suo
+moderatore, e chi c'è in chat Twitch lo fa vedere solo a loro.
 
 **I badge sono forme colorate semplici invece di quelli veri.**
 Vuol dire che il servizio dei badge non ha risposto e il widget ha usato quelli
@@ -813,9 +1146,13 @@ chat/
 │  │  ├─ treno.js        l'hype train
 │  │  ├─ resa.js         l'unico file che tocca la pagina
 │  │  ├─ conto.js        il collegamento con l'account Twitch, e il mandare
+│  │  ├─ comandi.js      i ventisette comandi: cosa vuol dire ognuno, che
+│  │  │                  permesso vuole e a quale endpoint di Twitch va
+│  │  ├─ gente.js        quanti guardano, chi c'è in chat, e chi è cosa
+│  │  ├─ azioni.js       il menù che si apre cliccando un nome
 │  │  ├─ barra.js        la striscia sotto la chat: filtri, pausa, campo per
-│  │  │                  scrivere, e l'elenco delle emote che si apre coi due
-│  │  │                  punti
+│  │  │                  scrivere, l'elenco delle emote che si apre coi due
+│  │  │                  punti, e il pannellino di sondaggio e pronostico
 │  │  ├─ prova.js        il traffico finto
 │  │  ├─ menu.js         il tasto destro e i bordi che si tirano, nella
 │  │  │                  finestra di Pollaio.exe

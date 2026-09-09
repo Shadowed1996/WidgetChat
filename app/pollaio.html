@@ -64,11 +64,37 @@
       <button class="pollaio__filtro" type="button" data-filtro="youtube" aria-pressed="false" hidden>YouTube</button>
       <button class="pollaio__filtro" type="button" data-filtro="eventi" aria-pressed="false">Eventi</button>
 
+      <button class="pollaio__sondaggio-apri" type="button" data-modo="poll" aria-expanded="false"
+              aria-controls="modulo-sondaggio" hidden>Sondaggio</button>
+
+      <button class="pollaio__sondaggio-apri" type="button" data-modo="prediction" aria-expanded="false"
+              aria-controls="modulo-sondaggio" hidden>Pronostico</button>
+
       <button class="pollaio__pausa" type="button" aria-pressed="false" title="Ferma la chat: quello che c’è resta lì">
         <span class="pollaio__pausa-segno" aria-hidden="true"></span>
         <span class="pollaio__pausa-testo">Ferma</span>
       </button>
     </div>
+
+    <form class="pollaio__sondaggio" id="modulo-sondaggio" hidden>
+      <input class="pollaio__sondaggio-campo pollaio__sondaggio-domanda" type="text"
+             maxlength="60" placeholder="La domanda" aria-label="La domanda del sondaggio"
+             autocomplete="off">
+
+      <div class="pollaio__sondaggio-scelte"></div>
+
+      <div class="pollaio__sondaggio-piede">
+        <button class="pollaio__sondaggio-piu" type="button">Aggiungi scelta</button>
+
+        <label class="pollaio__sondaggio-durata">
+          <span>secondi</span>
+          <input class="pollaio__sondaggio-campo" type="number" min="15" max="1800" step="15"
+                 value="120" inputmode="numeric" aria-label="Quanto dura il sondaggio">
+        </label>
+
+        <button class="pollaio__sondaggio-crea" type="submit">Apri il sondaggio</button>
+      </div>
+    </form>
 
     <button class="pollaio__attesa" type="button" hidden></button>
 
@@ -80,7 +106,7 @@
                   autocomplete="off" autocapitalize="sentences" spellcheck="false"></textarea>
         <span class="pollaio__scrivi-resta" aria-hidden="true" hidden></span>
       </span>
-      <button class="pollaio__scrivi-manda" type="submit" disabled>Manda</button>
+      <button class="pollaio__scrivi-manda" type="submit" disabled>Invia</button>
     </form>
 
     <p class="pollaio__invito" hidden>
@@ -105,6 +131,7 @@
 <script src="js/conto.js"></script>
 <script src="js/comandi.js"></script>
 <script src="js/gente.js"></script>
+<script src="js/azioni.js"></script>
 <script src="js/barra.js"></script>
 <script src="js/prova.js"></script>
 <script src="js/menu.js"></script>
