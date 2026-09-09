@@ -65,7 +65,11 @@
   var ultimaLettura = 0;
   var ultimaLista = 0;
 
-  var spettatori = 0;
+  // `null` finché Twitch non ha risposto la prima volta, e non `0`: uno zero
+  // qui vuol dire «in diretta, e non guarda nessuno», che è una cosa vera e
+  // diversa da «non lo so ancora». Chi legge questo campo decide cosa scrivere
+  // in faccia a qualcuno, e su un dubbio non deve scrivere niente.
+  var spettatori = null;
   var nomeStreamer = '';
   var inChat = 0;
   var scomparti = { moderatori: [], vip: [], utenti: [] };
@@ -493,7 +497,7 @@
   }
 
   function azzera() {
-    spettatori = 0;
+    spettatori = null;
     nomeStreamer = '';
     inChat = 0;
     scomparti = { moderatori: [], vip: [], utenti: [] };

@@ -1019,6 +1019,43 @@
     fra(rimetti, durata + 600);
   }
 
+  // La spia diceva una cosa sola: a che punto sta il collegamento. Adesso ne
+  // dice due, e non sono la stessa — si può essere collegatissimi a una chat di
+  // un canale spento. Il collegamento viene prima: se la linea è caduta, quella
+  // è la notizia, e la targhetta della diretta aspetta il suo turno invece di
+  // coprirla. Torna da sé appena il collegamento si rimette a posto.
+  var SPIA_CALMA = { accesa: 1, spenta: 1, live: 1, offline: 1 };
+
+  var direttaAccesa = null;
+  var dentroDiretta = false;
+
+  function vestiDiretta() {
+    if (!nodi.spia || direttaAccesa === null) { return; }
+
+    var ora = nodi.spia.getAttribute('data-stato');
+    if (!SPIA_CALMA[ora]) { return; }
+
+    // «IN LIVE» è una conferma, e una conferma ha finito il suo lavoro appena
+    // arriva il primo messaggio: da lì si toglie di mezzo come faceva «Sono nel
+    // pollaio». «OFFLINE» invece resta, perché lì l'informazione è che non
+    // arriverà niente, ed è vera finché dura.
+    if (direttaAccesa) {
+      if (!primoArrivato) { spia('live', 'IN LIVE'); }
+      else if (ora === 'offline') { spia('spenta', ''); }
+      return;
+    }
+
+    spia('offline', 'OFFLINE');
+  }
+
+  function diretta(accesa) {
+    var v = !!accesa;
+    if (v === direttaAccesa) { return; }
+
+    direttaAccesa = v;
+    vestiDiretta();
+  }
+
   function spia(stato, testo) {
     if (!nodi.spia) { return; }
     var s = String(stato || 'spenta');
@@ -1027,12 +1064,22 @@
 
     nodi.spia.setAttribute('data-stato', s);
     if (nodi.spiaTesto && testo !== undefined) { nodi.spiaTesto.textContent = String(testo); }
+
+    // Rimessa la linea, la targhetta della diretta torna al suo posto da sola.
+    // Il paletto serve perché `vestiDiretta` richiama `spia`: senza, le due si
+    // rincorrerebbero.
+    if (!dentroDiretta && s === 'accesa') {
+      dentroDiretta = true;
+      try { vestiDiretta(); } finally { dentroDiretta = false; }
+    }
   }
 
   function togliSpia() {
     if (primoArrivato || !nodi.spia) { return; }
     primoArrivato = true;
-    if (nodi.spia.getAttribute('data-stato') === 'accesa') { spia('spenta', ''); }
+
+    var ora = nodi.spia.getAttribute('data-stato');
+    if (ora === 'accesa' || ora === 'live') { spia('spenta', ''); }
   }
 
   function imposta(opzioni) {
@@ -1088,6 +1135,7 @@
     cancellaDi: cancellaDi,
     svuota: svuota,
     spia: spia,
+    diretta: diretta,
     treno: treno,
     tinta: tinta,
     quante: function () { return righe.length; },

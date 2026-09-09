@@ -729,6 +729,13 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
 .pollaio__spia[data-stato="resa"]    { --spia: var(--live); }
 .pollaio__spia[data-stato="prova"]   { --spia: var(--magenta); }
 
+/* La diretta, che è un'altra cosa dal collegamento: verde come «accesa» quando
+   c'è, e il rosso di `--live` quando non c'è. Lo stesso rosso di «resa» apposta:
+   sono i due casi in cui non arriverà niente, e chi guarda la spia vuole sapere
+   quello, non di chi è la colpa. */
+.pollaio__spia[data-stato="live"]    { --spia: var(--ok); }
+.pollaio__spia[data-stato="offline"] { --spia: var(--live); }
+
 .pollaio__spia[data-stato="spenta"] {
   display: none;
 }

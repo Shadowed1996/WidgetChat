@@ -1730,8 +1730,8 @@ quell'elenco, o il trascinamento se la mangia.
 ### Chi c'è in chat
 
 Il bottone sopra l'elenco dei messaggi dice quanti sono — «130 in chat · 42
-guardano», «canale spento» quando la diretta non c'è, «Chi c'è» finché non si sa
-ancora niente — e apre il pannello. Lo stato lo tiene `gente.js`:
+guardano», «Chi c'è» finché non si sa ancora niente — e apre il pannello. Lo
+stato lo tiene `gente.js`:
 
 ```js
 Gente.avvia({canale, canaleId, su, visibile})   // su(stato) a ogni cambiamento
@@ -1742,13 +1742,18 @@ Gente.ferma()
 
 ```js
 {
-  spettatori: 42,        // -1 = canale spento
+  spettatori: 42,        // -1 = canale spento, null = non lo so ancora
   inChat: 130,
   streamer: [{nick, nome}], moderatori: [], vip: [], utenti: [],
   quando: 0,             // ms dell'ultima lettura riuscita
   guaio: ''              // in chiaro, già in italiano
 }
 ```
+
+**`spettatori` parte a `null` e non a `0`**, e non è pignoleria: uno zero qui
+vuol dire «in diretta, e non guarda nessuno», che è una cosa vera e diversa da
+«Twitch non ha ancora risposto». Chi legge questo campo ci scrive una targhetta
+in faccia a qualcuno, e su un dubbio non deve scrivere niente.
 
 Lo stato si consegna **solo quando cambia davvero**: una firma mette in fila i
 numeri, il guasto e i nick, e se è uguale a quella di prima non si avvisa
@@ -1795,6 +1800,47 @@ gettone `Conto.verso` non ha niente da mettere in `Authorization`, e sia
 `streams` sia `chatters` vogliono un `Bearer`. Chi non collega niente ha il
 pollaio di sempre (§1.3): il bottone di chi c'è non compare, e la chat si legge
 uguale.
+
+### La spia dice due cose, e il collegamento viene prima
+
+«canale spento» stava nella pastiglia del conteggio, e da lì è stato tolto: una
+pastiglia che di solito conta persone e all'improvviso annuncia che qualcosa è
+spento **si legge come un guasto**, non come una notizia. Il conteggio conta, e
+quando non c'è niente da contare non scrive niente.
+
+La notizia sta nella spia, che adesso porta due informazioni diverse sullo
+stesso pezzo di schermo:
+
+| stato | tinta | quando |
+|---|---|---|
+| `collego` `riprovo` `resa` | allerta, allerta, `--live` | il **collegamento** alla chat |
+| `accesa` | `--ok` | collegato, e della diretta non si sa niente |
+| `live` | `--ok` | collegato, e il canale è in diretta |
+| `offline` | `--live` | collegato, e il canale è spento |
+
+**Il collegamento viene prima.** `Resa.diretta(accesa)` scrive la targhetta solo
+se la spia è in uno stato calmo (`accesa`, `spenta`, `live`, `offline`): se la
+linea è caduta, quella è la notizia, e «OFFLINE» aspetta invece di coprirla —
+altrimenti si direbbe «il canale è spento» a chi in realtà ha la rete giù, che è
+la diagnosi sbagliata detta con sicurezza. Appena il collegamento torna
+`accesa`, `spia()` rimette la targhetta da sé.
+
+**«IN LIVE» sparisce al primo messaggio, «OFFLINE» resta.** Sono due frasi con
+due lavori diversi: la prima è una conferma, e una conferma ha finito appena la
+chat comincia a scorrere — se ne va come faceva «Sono nel pollaio». La seconda
+dice che non arriverà niente, ed è vera finché dura, quindi non se ne va: a
+canale spento si chiacchiera lo stesso, e proprio lì la targhetta serve.
+
+**In una sorgente browser di OBS non compare, e non c'è una riga che lo
+imponga.** Lo stato della diretta lo sa solo `barra.js`, che è l'unico posto che
+chiede `/streams`, e `barra.js` in OBS non parte nemmeno (`avvia` esce subito su
+`inObs()`). La cosa giusta capita da sé perché il dato nasce dove serve: è
+meglio di un `html[data-finestra]` in più da ricordarsi.
+
+**Senza account collegato la targhetta non c'è**, e la spia resta a «Sono nel
+pollaio». Lo stato della diretta si sa solo chiedendolo a Helix, e leggere la
+chat senza account resta la promessa del §1: meglio non dire niente che dire
+«OFFLINE» a un canale che sta trasmettendo.
 
 ## 20. Il bordo che ridimensiona — la finestra senza cornice
 

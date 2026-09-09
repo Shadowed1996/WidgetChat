@@ -91,9 +91,10 @@ combaciare con quello che scrivi in OBS.
 **Finché non scrive nessuno la finestra dice su quale canale sta ascoltando.**
 Non è un abbellimento: una spia verde e zero messaggi vuol dire tanto «il
 canale è fermo» quanto «stai ascoltando il canale sbagliato», e queste due cose
-si somigliano troppo per lasciarle indistinguibili a diretta iniziata. In OBS
-quella scritta non compare: là un overlay senza messaggi deve restare
-invisibile.
+si somigliano troppo per lasciarle indistinguibili a diretta iniziata. Con
+l'account collegato la spia dice anche se sei in diretta — «IN LIVE» verde,
+«OFFLINE» rossa — e quel dubbio si accorcia ancora. In OBS niente di tutto
+questo compare: là un overlay senza messaggi deve restare invisibile.
 
 ---
 
@@ -799,10 +800,39 @@ inventata chiamerebbe Twitch per davvero.
 In cima alla chat compare un bottone: **«N in chat · N guardano»**. Sono due
 numeri diversi ed è giusto tenerli separati — chi guarda è quasi sempre molto
 più di chi scrive, e il rapporto fra i due dice più di ciascuno dei due preso da
-solo. A canale spento il bottone lo scrive, «canale spento», che è comunque
-un'informazione.
+solo. Quando non c'è niente da contare il bottone dice solo «Chi c'è».
 
-Cliccandolo si apre un pannello diviso in quattro scomparti: **streamer,
+Fino alla 1.2.1, a canale spento, ci scriveva **«canale spento»** — e sembrava
+un guasto: una pastiglia che di solito conta gente e all'improvviso annuncia che
+qualcosa è spento si legge come un errore, non come una notizia. Adesso quella
+notizia sta dove si guarda per sapere come sta il pollaio, cioè nella spia.
+
+**La spia dice se sei in diretta.** Con l'account collegato, la targhetta in
+alto diventa **«IN LIVE»** verde quando il canale trasmette e **«OFFLINE»** rossa
+quando è spento. Due modi diversi di stare lì, apposta:
+
+- **«IN LIVE» è una conferma**, e finito il suo lavoro se ne va: sparisce al
+  primo messaggio, come faceva «Sono nel pollaio». Non deve stare in mezzo per
+  otto ore a dirti una cosa che sai.
+- **«OFFLINE» resta.** A canale spento si chiacchiera lo stesso, ed è proprio lì
+  che serve saperlo: se la chat è ferma vuoi poter distinguere «non scrive
+  nessuno» da «non sto ascoltando niente».
+
+Se cade la linea la spia torna a parlare del collegamento — «Caduta la linea» ha
+la precedenza su «OFFLINE», perché dire «il canale è spento» a chi ha la rete giù
+è una diagnosi sbagliata detta con sicurezza. Appena la linea torna, la targhetta
+si rimette da sola.
+
+**In OBS non compare.** Lo stato della diretta lo sa solo la barra, che in una
+sorgente browser non parte proprio: l'overlay in trasmissione resta pulito, e i
+tuoi spettatori non si vedono comparire un «OFFLINE» rosso appena stacchi.
+
+**Senza account collegato non c'è**, e la spia resta a «Sono nel pollaio»: se sei
+in diretta lo so solo chiedendolo a Twitch, e senza collegamento non ho niente
+con cui chiederlo. Meglio non dire niente che dire «OFFLINE» a un canale che sta
+trasmettendo.
+
+Cliccando il bottone si apre un pannello diviso in quattro scomparti: **streamer,
 moderatori, VIP, utenti**. Dentro c'è chi è in chat **adesso** — non l'elenco dei
 moderatori del canale, non l'anagrafe dei VIP: gli scomparti servono a mettere
 in ordine le persone che ci sono, non a fare la lista di quelle che potrebbero

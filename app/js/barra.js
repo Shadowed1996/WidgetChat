@@ -486,9 +486,13 @@
   function scriviConta(stato) {
     var pezzi = [];
 
+    // «canale spento» stava qui e sembrava un guasto: una pastiglia che di
+    // solito conta gente, e all'improvviso dice che qualcosa è spento. Lo dice
+    // la spia adesso, con la sua targhetta, che è il posto dove uno guarda per
+    // sapere come sta il pollaio. Qui si contano le persone, e se non ce n'è
+    // da contare non si scrive niente.
     if (stato.inChat > 0) { pezzi.push(stato.inChat + ' in chat'); }
     if (stato.spettatori > 0) { pezzi.push(stato.spettatori + ' guardano'); }
-    else if (stato.spettatori === -1) { pezzi.push('canale spento'); }
 
     nodi.genteConta.textContent = pezzi.length ? pezzi.join(' · ') : 'Chi c’è';
   }
@@ -604,12 +608,25 @@
     pagina('', 1);
   }
 
+  // Lo stato della diretta lo sa solo questo modulo: è l'unico che chiede
+  // `/streams`. E questo modulo in una sorgente browser di OBS non parte
+  // nemmeno — `avvia` esce subito su `inObs()` — quindi la targhetta si vede
+  // dove c'è qualcuno che la guarda e in trasmissione mai, senza doverlo
+  // scrivere una seconda volta.
+  function diciLaDiretta(stato) {
+    if (!window.Resa || !window.Resa.diretta) { return; }
+    if (typeof stato.spettatori !== 'number') { return; }
+
+    window.Resa.diretta(stato.spettatori >= 0);
+  }
+
   function vestiGente(stato) {
     if (!nodi.gente || !stato) { return; }
 
     ultimaGente = stato;
     nodi.gente.hidden = false;
     scriviConta(stato);
+    diciLaDiretta(stato);
 
     if (!nodi.lista.hidden) { disegnaLista(stato); }
   }
