@@ -101,21 +101,21 @@ Sono davvero diversi, e la differenza conta.
 
 ### A. Sorgente browser — **è questa quella giusta per l'overlay**
 
-**La cosa da capire prima di tutto: la configurazione È la coda dell'indirizzo.**
+**La cosa da capire prima di tutto: la configurazione viaggia dopo il `?`.**
 Tutto quello che giri nella regia — l'effetto d'ingresso, il tema, la scala —
-finisce dopo il `?`. Dove quella coda manca valgono i predefiniti, e siccome
-l'effetto predefinito è «Scivola», che è discreto, sembra che l'overlay funzioni
-e che l'effetto sia rotto. Non è rotto: non gliel'hai chiesto. **Se incolli in
-OBS solo il percorso fino a `pollaio.html`, hai incollato le impostazioni di
-nessuno.**
+finisce lì. Dove quella coda manca valgono i predefiniti, e siccome l'effetto
+predefinito è «Scivola», che è discreto, sembra che l'overlay funzioni e che
+l'effetto sia rotto. Non è rotto: non gliel'hai chiesto.
 
-Con `Pollaio.exe` acceso, il bottone **Copia** della regia ti dà un indirizzo di
-rete, coda compresa:
+**Ma la coda non sei tu a doverla portare, se il server c'è.** Con `Pollaio.exe`
+acceso incolli in OBS solo indirizzo e porta, e il server ci attacca lui la
+configurazione che hai salvato. È il modo giusto, ed è quello che ti dà il
+bottone **Copia**:
 
 ```
 Sorgente → + → Browser
   ☐ File locale        ← senza spunta
-  URL:        http://192.168.1.20:4747/pollaio.html
+  URL:        http://192.168.1.20:4747
   Larghezza:  400
   Altezza:    600
   ☑ Aggiorna il browser quando la scena diventa attiva
@@ -1254,11 +1254,11 @@ la coda dell'indirizzo.** Le impostazioni stanno tutte dopo il `?`, e dove non
 ci sono valgono i predefiniti — fra cui l'effetto «Scivola», che è talmente
 discreto da sembrare nessun effetto.
 
-- **In OBS**: se hai incollato l'indirizzo corto — quello che finisce con
-  `pollaio.html` e basta — il server ti manda da solo alla configurazione della
-  regia, e basta premere **Salva** e ricaricare la sorgente. Se invece nel campo
-  URL c'è una riga lunga con il `?`, comanda quella: la si rifà con **Copia** e
-  la si reincolla.
+- **In OBS**: se hai incollato l'indirizzo corto — solo indirizzo e porta, niente
+  altro — il server ti manda da solo alla configurazione della regia, e basta
+  premere **Salva** e ricaricare la sorgente. Se invece nel campo URL c'è una
+  riga lunga con il `?`, comanda quella: la si rifà con **Copia** e la si
+  reincolla.
 - **In `Pollaio.exe`**: la finestra non legge la regia, legge la riga
   `parametri=` di `avvio\pollaio.ini`. La scrive **Salva**, e dalla 1.2.8 la
   finestra si rifà subito, senza riavviare. Se le manopole che hai sotto gli

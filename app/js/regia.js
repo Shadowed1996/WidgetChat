@@ -555,13 +555,11 @@
   function indirizzoDaIncollare() {
     const rete = serventeVero();
 
-    // Nudo, senza coda: il server la risolve da sé, mandando chi chiede
-    // l’indirizzo corto alla configurazione scritta da Salva. È il punto di
-    // tutto il rimando — con la coda attaccata, ogni volta che si gira una
-    // manopola l’indirizzo cambia e va reincollato in OBS. Così invece si
-    // incolla una volta sola, e da lì in poi si preme Salva e si ricarica la
-    // sorgente.
-    if (rete) { return rete + '/pollaio.html'; }
+    // Corto fino in fondo: solo `http://<ip>:<porta>`, senza nemmeno il nome del
+    // file. Il browser chiede `/`, il server lo riconosce nudo esattamente come
+    // `/pollaio.html` e rimanda alla coda scritta da Salva. Un indirizzo che si
+    // legge tutto d'un fiato e si detta al telefono.
+    if (rete) { return rete; }
 
     const cartella = cartellaVera();
     if (!cartella) { return indirizzoQui(); }

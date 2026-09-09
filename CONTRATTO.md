@@ -1116,12 +1116,14 @@ disfaceva il rimando invece di usarlo: ogni volta che si girava una manopola
 l'indirizzo cambiava, e andava reincollato in OBS. Cioè si pagava la scomodità
 del `file:///` pur avendo il server.
 
-Adesso, quando il server c'è, il Copia consegna `http://<ip>:<porta>/pollaio.html`
-e basta. **L'indirizzo si incolla in OBS una volta sola e non si tocca più**: le
-impostazioni non ci viaggiano dentro, le scrive `Salva` nel `.ini` e il rimando
-gliele porta. Cambi una manopola, premi Salva, ricarichi la sorgente. Senza
-server — spento, o regia aperta senza launcher — resta il `file:///` con la
-coda, perché lì non c'è nessuno che possa risolverla.
+Adesso, quando il server c’è, il Copia consegna `http://<ip>:<porta>` e basta —
+niente percorso, nemmeno il nome del file: il browser chiede `/`, e `Nuda()` lo
+riconosce nudo esattamente come `/pollaio.html`. **L'indirizzo si incolla in OBS
+una volta sola e non si tocca più**: le impostazioni non ci viaggiano dentro, le
+scrive `Salva` nel `.ini` e il rimando gliele porta. Cambi una manopola, premi
+Salva, ricarichi la sorgente. Senza server — spento, o regia aperta senza
+launcher — resta il `file:///` con la coda, perché lì non c'è nessuno che possa
+risolverla.
 
 **La regola generale, che vale oltre questo caso:** un indirizzo che cambia a
 ogni modifica è un indirizzo che qualcuno deve ricordarsi di aggiornare, e prima
