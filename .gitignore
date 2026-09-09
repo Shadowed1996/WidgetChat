@@ -23,9 +23,47 @@ avvio/pollaio.ico
 # primo avvio con dentro tutte le spiegazioni.
 avvio/pollaio.ini
 
+# Gli altri scarti della compilazione C#: se un giorno qualcuno apre il
+# progetto con Visual Studio invece che con compila.cmd, questi compaiono.
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.pdb
+*.exe.config
+
+# L'archivio e la cartella che mette insieme il workflow di release: si
+# rifanno a ogni tag.
+pacchetto/
+pollaio.zip
+
+# Il launcher, durante l'aggiornamento, si sposta di lato prima di sostituirsi.
+*.vecchio
+
 # Roba di Windows che si infila dappertutto.
 Thumbs.db
 desktop.ini
+ehthumbs.db
+$RECYCLE.BIN/
+*.lnk
+
+# Roba di macOS e di Linux, per quando il repository si guarda da lì.
+.DS_Store
+._*
+.Trash-*
+
+# Cartelle di configurazione degli editor: sono preferenze personali.
+.idea/
+*.swp
+*~
+
+# Segreti: qui non ce ne sono e non ce ne devono finire. Il gettone di Twitch
+# vive nella memoria del browser, non su disco — questa riga è una rete di
+# sicurezza, non una descrizione di come funziona.
+.env
+.env.*
+*.local.ini
 
 # NOTA su lib/: le tre librerie di WebView2 ci VANNO. Non sono un risultato
 # della compilazione, sono un ingrediente: senza, il progetto non compila

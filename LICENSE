@@ -1,0 +1,52 @@
+LICENZA D'USO PROPRIETARIA — TUTTI I DIRITTI RISERVATI
+
+Copyright (c) 2026 Filippo — GitHub @Shadowed1996
+
+«il pollaio» — widget della chat di Twitch, Kick e YouTube per OBS, comprensivo
+del widget web in app/, del launcher C# in avvio/, della grafica, dei testi e
+della documentazione (di seguito "il Software") — è di proprietà esclusiva del
+titolare del copyright sopra indicato.
+
+NON È CONSENTITO, senza esplicito permesso scritto del titolare:
+  - copiare, riprodurre o distribuire il Software, in tutto o in parte;
+  - modificare, adattare, tradurre o creare opere derivate;
+  - decompilare, disassemblare o effettuare reverse engineering;
+  - sublicenziare, vendere, noleggiare o cedere il Software a terzi;
+  - rimuovere o alterare le note di copyright e le presenti condizioni;
+  - presentare il Software, o parti di esso, come proprio lavoro originale.
+
+È CONSENTITO al solo destinatario espressamente autorizzato dal titolare:
+  - utilizzare ed eseguire il Software per le finalità concordate;
+  - conservarne copie di sicurezza a fini di continuità operativa.
+
+COMPONENTI DI TERZE PARTI
+Il Software può includere componenti di terze parti distribuiti con licenze
+proprie, indicate nei rispettivi file. Tali licenze prevalgono, limitatamente
+ai componenti a cui si riferiscono, sulle condizioni qui esposte.
+
+In particolare:
+  - i caratteri JetBrains Mono, Manrope e Space Grotesk in app/font/ sono
+    distribuiti con SIL Open Font License 1.1, il cui testo si trova in
+    app/font/LICENZA.txt;
+  - le librerie Microsoft Edge WebView2 in lib/ sono distribuite secondo le
+    condizioni di licenza software Microsoft per il WebView2 SDK;
+  - le immagini di emote e badge mostrate dal widget sono servite da Twitch,
+    7TV, BetterTTV e FrankerFaceZ e appartengono ai rispettivi titolari: il
+    Software le visualizza e non le ridistribuisce.
+
+ESCLUSIONE DI GARANZIA
+IL SOFTWARE È FORNITO "COSÌ COM'È", SENZA GARANZIE DI ALCUN TIPO, ESPRESSE O
+IMPLICITE, COMPRESE, A TITOLO ESEMPLIFICATIVO, LE GARANZIE DI COMMERCIABILITÀ,
+IDONEITÀ A UNO SCOPO PARTICOLARE E NON VIOLAZIONE DI DIRITTI ALTRUI.
+
+LIMITAZIONE DI RESPONSABILITÀ
+IN NESSUN CASO IL TITOLARE DEL COPYRIGHT POTRÀ ESSERE RITENUTO RESPONSABILE
+PER QUALSIASI RIVENDICAZIONE, DANNO DIRETTO O INDIRETTO, PERDITA DI DATI O
+DI PROFITTO DERIVANTE DALL'USO O DALL'IMPOSSIBILITÀ DI USO DEL SOFTWARE.
+
+LEGGE APPLICABILE
+Il presente accordo è regolato dalla legge italiana. Per ogni controversia
+è competente in via esclusiva il foro del luogo di residenza del titolare.
+
+Per richieste di licenza, autorizzazioni o collaborazioni:
+https://github.com/Shadowed1996

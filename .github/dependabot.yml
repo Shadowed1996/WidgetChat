@@ -1,0 +1,16 @@
+# Il widget ha zero dipendenze e il launcher usa il compilatore che Windows si
+# porta dietro: non c'è npm, non c'è NuGet, non c'è niente da aggiornare lì.
+# L'unica cosa che invecchia sono le action dei workflow, ed è quella che si
+# tiene sotto controllo qui.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "chore"
+    commit-message:
+      prefix: "chore"

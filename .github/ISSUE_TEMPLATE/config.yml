@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Manuale del pollaio
+    url: https://github.com/Shadowed1996/WidgetChat/blob/main/LEGGIMI.md
+    about: "Installazione, i due modi di metterlo in OBS, le impostazioni una per una e la sezione «Se qualcosa non va». La risposta è quasi sempre qui."
+  - name: Le regole del progetto
+    url: https://github.com/Shadowed1996/WidgetChat/blob/main/CONTRATTO.md
+    about: "Per chi mette mano al codice, i vincoli del progetto: stile, proprietà dei file, protocollo."
+  - name: Segnalare una vulnerabilità
+    url: https://github.com/Shadowed1996/WidgetChat/security/advisories/new
+    about: "I problemi di sicurezza non si segnalano con una issue pubblica, ma con un advisory privato."
+  - name: Contattare l'autore
+    url: https://github.com/Shadowed1996
+    about: "Per tutto il resto: richieste di licenza, autorizzazioni, collaborazioni."

@@ -1,0 +1,34 @@
+# .editorconfig — «il pollaio»
+#
+# I valori non sono scelti a tavolino: sono quelli che i file già usano.
+# Due spazi in JavaScript, CSS e HTML, quattro nel C# del launcher.
+#
+# I fine riga sono CRLF, e non è una svista: il progetto gira solo su Windows,
+# .gitattributes li fissa già a crlf, e un .cmd con fine riga di Unix funziona
+# finché non incontra una `goto` — poi smette senza dire perché.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.cs]
+indent_size = 4
+
+[*.{cmd,bat}]
+end_of_line = crlf
+indent_size = 2
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[Makefile]
+indent_style = tab

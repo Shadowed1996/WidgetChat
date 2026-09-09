@@ -17,3 +17,33 @@
 *.dll   binary
 *.exe   binary
 *.woff2 binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.woff  binary
+*.ttf   binary
+*.otf   binary
+*.pdf   binary
+*.zip   binary
+
+# Questi restano testo comunque, anche quando qualcuno li apre con un editor
+# che non sa cosa siano.
+.gitattributes text
+.gitignore     text
+.editorconfig  text
+*.md           text
+*.txt          text
+
+# lib/ non è roba mia: sono le tre librerie di WebView2, prese così come
+# escono da Microsoft. Fuori dalle statistiche del linguaggio e fuori dai
+# diff, che altrimenti raccontano un progetto in C# che qui non c'è.
+lib/**         linguist-vendored
+
+# I caratteri sono di terzi allo stesso modo.
+app/font/**    linguist-vendored
+
+# I manuali sono documentazione, non codice: contano come tale.
+LEGGIMI.md     linguist-documentation
+CONTRATTO.md   linguist-documentation
+docs/**        linguist-documentation

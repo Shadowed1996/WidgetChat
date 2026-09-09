@@ -1,0 +1,75 @@
+name: Richiesta di una funzionalità
+description: Proponi qualcosa che il pollaio non fa ancora
+title: "[Funzionalità]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Le proposte sono benvenute. Due cose da sapere prima, perché cambiano il modo di scriverle:
+
+        - il progetto ha **zero dipendenze** e deve continuare a funzionare aperto da `file://`: niente npm, niente framework, niente CDN. I vincoli sono elencati in [`CONTRATTO.md`](https://github.com/Shadowed1996/WidgetChat/blob/main/CONTRATTO.md);
+        - la **lettura della chat resta anonima**, sempre. Quello che serve un account lo si accende apposta.
+
+        Una proposta che rispetta questi vincoli ha molte più probabilità di essere realizzata.
+
+  - type: textarea
+    id: problema
+    attributes:
+      label: Quale problema risolve
+      description: Racconta la situazione concreta in cui manca, non la soluzione. È la parte più utile.
+      placeholder: Quando raido un altro canale non mi accorgo di chi mi ha seguito, perché i messaggi scorrono troppo in fretta.
+    validations:
+      required: true
+
+  - type: textarea
+    id: soluzione
+    attributes:
+      label: Soluzione proposta
+      description: Cosa dovrebbe fare il pollaio, e dove — nell'overlay, nella regia, nel launcher.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternative
+    attributes:
+      label: Alternative valutate
+      description: Altri modi a cui hai pensato, e perché li hai scartati. Anche «si può già fare così, ma è scomodo perché…» va benissimo.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: ambito
+    attributes:
+      label: Che parte riguarda
+      options:
+        - L'overlay della chat (app/pollaio.html)
+        - La regia (app/regia.html)
+        - La barra sotto la chat, i comandi, l'account
+        - Il launcher Windows (Pollaio.exe)
+        - Una piattaforma nuova o una sorgente di emote
+        - La documentazione
+        - Altro / non so
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priorita
+    attributes:
+      label: Quanto ti servirebbe
+      options:
+        - Bassa — sarebbe un di più
+        - Media — mi farebbe comodo spesso
+        - Alta — senza, il pollaio non copre il mio caso
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: controlli
+    attributes:
+      label: Controlli
+      options:
+        - label: Ho cercato fra le issue aperte e non c'è già la stessa proposta
+          required: true
+        - label: Ho letto i vincoli in CONTRATTO.md e la proposta non li viola
+          required: false

@@ -1,0 +1,115 @@
+name: Segnalazione di un difetto
+description: Qualcosa non funziona come dovrebbe nel pollaio
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Grazie per la segnalazione.
+
+        Prima di aprirla, due controlli veloci che risolvono la maggior parte dei casi:
+
+        - la sezione **«Se qualcosa non va»** di [`LEGGIMI.md`](https://github.com/Shadowed1996/WidgetChat/blob/main/LEGGIMI.md) descrive già il problema?
+        - stai usando l'ultima versione? Il launcher si aggiorna da solo all'avvio, ma se hai messo `aggiorna=0` in `avvio\pollaio.ini` il controllo non lo fa più.
+
+        **Non incollare mai gettoni, chiavi API o password**, nemmeno tue.
+        Per un problema di **sicurezza** non si usa questo modulo: si segue [`SECURITY.md`](https://github.com/Shadowed1996/WidgetChat/blob/main/SECURITY.md).
+
+  - type: textarea
+    id: descrizione
+    attributes:
+      label: Cosa succede
+      description: Descrivi il difetto in poche righe, come lo racconteresti a voce.
+      placeholder: Da quando ho acceso il tema «insegna», i messaggi con una emote sola restano vuoti.
+    validations:
+      required: true
+
+  - type: textarea
+    id: riproduzione
+    attributes:
+      label: Passi per riprodurre
+      description: In ordine, uno per riga. Se serve un indirizzo con dei parametri dopo il `?`, incollalo qui.
+      placeholder: |
+        1. Apro `app/pollaio.html?tema=insegna&prova=1`
+        2. Aspetto che arrivi un messaggio con una sola emote
+        3. La riga compare vuota
+    validations:
+      required: true
+
+  - type: textarea
+    id: atteso
+    attributes:
+      label: Cosa dovrebbe succedere
+      description: Il comportamento che ti aspettavi.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: dove
+    attributes:
+      label: Dove succede
+      description: Il pollaio si usa in più modi, e non si comportano allo stesso modo.
+      options:
+        - Sorgente browser di OBS
+        - Finestra di Pollaio.exe (cattura finestra)
+        - Regia (Regia.exe o app/regia.html)
+        - Pagina aperta da file:// in un browser
+        - Banco di prova (app/prove.html)
+        - Installazione o aggiornamento (Installa.exe)
+        - Altro / non so
+    validations:
+      required: true
+
+  - type: input
+    id: versione
+    attributes:
+      label: Versione del pollaio
+      description: La trovi nella regia, oppure è il tag della release che hai scaricato.
+      placeholder: "1.2.15"
+    validations:
+      required: true
+
+  - type: textarea
+    id: ambiente
+    attributes:
+      label: Ambiente
+      description: Versione di Windows, browser o runtime WebView2, versione di OBS.
+      placeholder: |
+        - Windows: 11 24H2
+        - Motore: WebView2 (oppure Chrome 141)
+        - OBS: 31.0.2
+      value: |
+        - Windows:
+        - Motore (WebView2 / Chrome):
+        - OBS:
+    validations:
+      required: true
+
+  - type: textarea
+    id: impostazioni
+    attributes:
+      label: Impostazioni in uso
+      description: L'indirizzo che hai incollato in OBS, oppure le righe di `avvio\pollaio.ini` che hai cambiato. Togli prima eventuali dati personali.
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Log, errori, schermate
+      description: La console del browser (F12), quello che scrive `app/prova-obs.html`, oppure una schermata. Trascina qui le immagini.
+      render: text
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: controlli
+    attributes:
+      label: Controlli
+      options:
+        - label: Ho cercato fra le issue aperte e non ce n'è già una uguale
+          required: true
+        - label: Non ho incollato gettoni, chiavi API o password
+          required: true

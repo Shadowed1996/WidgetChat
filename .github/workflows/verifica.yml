@@ -1,0 +1,169 @@
+name: Verifica
+
+# Controlli informativi. Non devono MAI fermare il lavoro di nessuno: ogni passo
+# è `continue-on-error`, e il risultato si legge nel riepilogo del job, non nel
+# semaforo rosso o verde. Il workflow che pubblica davvero è release.yml, e
+# quello sì che può fermarsi.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  controlli:
+    name: Controlli sulla documentazione e sui file
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Prendo il codice
+        uses: actions/checkout@v5
+
+      - name: Ci sono i file standard
+        id: standard
+        continue-on-error: true
+        run: |
+          echo "## File standard" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| File | Esito |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          mancanti=0
+          for f in README.md LICENSE SECURITY.md CONTRIBUTING.md CODE_OF_CONDUCT.md CHANGELOG.md \
+                   LEGGIMI.md CONTRATTO.md \
+                   .github/CODEOWNERS .github/PULL_REQUEST_TEMPLATE.md \
+                   .github/ISSUE_TEMPLATE/bug_report.yml \
+                   .github/ISSUE_TEMPLATE/richiesta_funzionalita.yml \
+                   .github/ISSUE_TEMPLATE/config.yml \
+                   .github/dependabot.yml .editorconfig .gitattributes .gitignore; do
+            if [ -f "$f" ]; then
+              echo "| \`$f\` | presente |" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "| \`$f\` | MANCA |" >> "$GITHUB_STEP_SUMMARY"
+              mancanti=$((mancanti + 1))
+            fi
+          done
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$mancanti" -gt 0 ]; then
+            echo "File mancanti: $mancanti" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Ci sono tutti." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: I file JSON sono sintatticamente validi
+        continue-on-error: true
+        run: |
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "## JSON" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          trovati=0
+          rotti=0
+          while IFS= read -r f; do
+            trovati=$((trovati + 1))
+            if jq empty "$f" >/dev/null 2>&1; then
+              echo "- \`$f\` — ok" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "- \`$f\` — **non valido**" >> "$GITHUB_STEP_SUMMARY"
+              rotti=$((rotti + 1))
+            fi
+          done < <(find . -type f -name '*.json' -not -path './.git/*')
+          if [ "$trovati" -eq 0 ]; then
+            echo "Nessun file JSON nel repository." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Esaminati $trovati file, non validi $rotti." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: I file YAML sono sintatticamente validi
+        continue-on-error: true
+        run: |
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "## YAML" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          rotti=0
+          while IFS= read -r f; do
+            if python3 -c "import sys, yaml; yaml.safe_load(open(sys.argv[1], encoding='utf-8'))" "$f" 2>/dev/null; then
+              echo "- \`$f\` — ok" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "- \`$f\` — **non valido**" >> "$GITHUB_STEP_SUMMARY"
+              rotti=$((rotti + 1))
+            fi
+          done < <(find .github -type f \( -name '*.yml' -o -name '*.yaml' \))
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "File YAML non validi: $rotti" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Zero dipendenze — nessuno script o foglio di stile da fuori
+        continue-on-error: true
+        run: |
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Zero dipendenze" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          esterni=$(grep -rnoE '<(script|link)[^>]+(src|href)="https?://[^"]+"' app/*.html || true)
+          if [ -n "$esterni" ]; then
+            echo "Trovati riferimenti esterni nelle pagine — il progetto non deve dipendere da CDN:" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "$esterni" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Nessuno script e nessun foglio di stile arriva da fuori." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -f package.json ] || [ -f package-lock.json ]; then
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "ATTENZIONE: è comparso un package.json. Il progetto non usa npm." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: I file richiamati dalle pagine esistono
+        continue-on-error: true
+        run: |
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Collegamenti interni delle pagine" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          persi=0
+          for pagina in app/*.html; do
+            while IFS= read -r rif; do
+              [ -z "$rif" ] && continue
+              case "$rif" in http*|data:*|\#*) continue ;; esac
+              if [ ! -f "app/$rif" ]; then
+                echo "- \`$pagina\` richiama \`$rif\`, che non c'è" >> "$GITHUB_STEP_SUMMARY"
+                persi=$((persi + 1))
+              fi
+            done < <(grep -oE '(src|href)="[^"]+"' "$pagina" | sed -E 's/^(src|href)="//; s/"$//')
+          done
+          if [ "$persi" -eq 0 ]; then
+            echo "Tutti i file richiamati dalle pagine sono al loro posto." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Riferimenti che non trovano il file: $persi" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: La versione del launcher è leggibile
+        continue-on-error: true
+        run: |
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Versione" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          versione=$(grep -oE 'VERSIONE[[:space:]]*=[[:space:]]*"[^"]+"' avvio/Pollaio.cs | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+          if [ -z "$versione" ]; then
+            echo "\`VERSIONE\` non trovata in \`avvio/Pollaio.cs\`: la pubblicazione di una release si fermerebbe." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "\`avvio/Pollaio.cs\` dichiara la versione **$versione**." >> "$GITHUB_STEP_SUMMARY"
+            if grep -q "\[$versione\]" CHANGELOG.md 2>/dev/null; then
+              echo "Il \`CHANGELOG.md\` ha la voce corrispondente." >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "Il \`CHANGELOG.md\` non ha ancora la voce \`[$versione]\`." >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+
+      - name: Riepilogo
+        if: always()
+        continue-on-error: true
+        run: |
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "---" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Questi controlli sono **informativi**: segnalano, non bloccano." >> "$GITHUB_STEP_SUMMARY"
+          echo "Il banco di prova vero è \`app/prove.html\`, e si apre con un doppio clic." >> "$GITHUB_STEP_SUMMARY"
