@@ -893,8 +893,10 @@ Tre cose da dire con onestà, perché sono limiti veri e non guasti:
   Quello che si può fare, e che dalla 1.2.9 il pollaio fa, è **riconoscere
   chi ha scritto**: il badge da moderatore o da VIP viaggia attaccato al
   messaggio, quindi chi parla finisce nel suo scomparto anche su un canale
-  altrui. Chi non ha ancora aperto bocca resta fra gli utenti. È una copertura
-  parziale e il pannello lo dice, invece di far finta di sapere tutto.
+  altrui. Chi non ha ancora aperto bocca resta fra gli utenti. Il pannello non
+  te lo spiega: mostra le persone che ha, e basta — una frase che racconta una
+  mancanza, dentro un riquadro che di solito mostra dei dati, si legge come un
+  guasto.
 - **I bot hanno il loro scomparto**, e vengono prima dei ruoli: un bot
   moderatore è un bot, che è quello che vuoi vedere guardando l'elenco. Twitch
   non ha nessun modo di dirmi chi è un bot, quindi sono quelli che scrivi tu

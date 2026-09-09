@@ -2054,6 +2054,22 @@ manopola `bot`, che il pollaio usava già per la pulizia della chat e che adesso
 serve anche qui. Vengono prima dei ruoli: un bot moderatore è un bot, ed è
 quello che uno vuole vedere guardando l'elenco.
 
+
+**Il pannello è un elenco di persone, non un posto dove spiegare i limiti di
+Twitch.** Sul canale altrui non si scrive più niente: i due elenchi non si
+chiedono, chi ha scritto sta già nel suo scomparto grazie ai badge, e gli altri
+stanno fra gli utenti — che è esattamente quello che si vede. È la stessa
+correzione già fatta al contatore con «canale spento»: **una frase che spiega
+una mancanza, dentro un riquadro che di solito mostra dei dati, si legge come un
+guasto.**
+
+Ogni nome è una **pastiglia**. Prima erano parole separate da uno spazio, e
+trenta nomi di fila si leggevano come una frase lunga invece che come un elenco:
+il bordo è quello che li rende trenta cose distinte. Il bordo prende anche la
+tinta dello scomparto, così un moderatore si riconosce anche dopo che l'occhio
+si è staccato dal titolo; il titolo porta il pallino della stessa tinta, perché
+un colore su un testo piccolo in monospazio non si legge da solo; e il numero
+sta a destra, più quieto, perché è un dato e non un'etichetta.
 `Gente` **non parte senza un account collegato**, e non è una scorciatoia: senza
 gettone `Conto.verso` non ha niente da mettere in `Authorization`, e sia
 `streams` sia `chatters` vogliono un `Bearer`. Chi non collega niente ha il

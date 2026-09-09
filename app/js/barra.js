@@ -514,7 +514,13 @@
 
       var titolo = document.createElement('p');
       titolo.className = 'pollaio__lista-titolo';
-      titolo.textContent = quale.titolo + ' · ' + gente.length;
+      titolo.appendChild(document.createTextNode(quale.titolo));
+
+      var conta = document.createElement('span');
+      conta.className = 'pollaio__lista-conta';
+      conta.textContent = String(gente.length);
+      titolo.appendChild(conta);
+
       scomparto.appendChild(titolo);
 
       var nomi = document.createElement('ul');

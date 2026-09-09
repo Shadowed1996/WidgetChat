@@ -1144,10 +1144,16 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
   color: var(--testo);
 }
 
-.pollaio__riga[data-nick] .pollaio__nome:hover,
-.pollaio__lista-nome[data-nick]:hover {
+.pollaio__riga[data-nick] .pollaio__nome:hover {
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+
+/* Sulla pastiglia la sottolineatura sta male: si accende il bordo, che è il
+   segno che quella cosa si clicca. */
+.pollaio__lista-nome[data-nick]:hover {
+  border-color: var(--ciano);
+  color: var(--testo);
 }
 
 .pollaio__gente {
@@ -1234,12 +1240,25 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
 
 .pollaio__lista-scomparto {
   margin-block-start: var(--passo-2);
+  padding-block-start: var(--passo-2);
+  border-block-start: 1px solid var(--linea);
 }
 
-.pollaio__lista-scomparto:first-child { margin-block-start: 0; }
+.pollaio__lista-scomparto:first-child {
+  margin-block-start: 0;
+  padding-block-start: 0;
+  border-block-start: 0;
+}
 
+/* Il titolo porta il pallino della tinta dello scomparto: il colore da solo,
+   su un testo piccolo in monospazio, non si legge. Il numero sta a destra e
+   più quieto — è un dato, non un'etichetta. */
 .pollaio__lista-titolo {
-  margin: 0 0 calc(var(--passo) * 0.5);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--passo) * 0.5);
+
+  margin: 0 0 calc(var(--passo) * 0.75);
 
   color: var(--tinta-scomparto, var(--testo-tenue));
   font-family: var(--font-mono);
@@ -1248,27 +1267,65 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
   text-transform: uppercase;
 }
 
+.pollaio__lista-titolo::before {
+  content: "";
+  flex: none;
+  inline-size: 0.5em;
+  block-size: 0.5em;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+.pollaio__lista-conta {
+  margin-inline-start: auto;
+  color: var(--testo-tenue);
+  font-variant-numeric: tabular-nums;
+}
+
 .pollaio__lista-scomparto[data-chi="streamer"]   { --tinta-scomparto: var(--magenta); }
 .pollaio__lista-scomparto[data-chi="moderatori"] { --tinta-scomparto: var(--ok); }
 .pollaio__lista-scomparto[data-chi="vip"]        { --tinta-scomparto: var(--viola-chiaro); }
+.pollaio__lista-scomparto[data-chi="bot"]        { --tinta-scomparto: var(--allerta); }
 
 .pollaio__lista-nomi {
   display: flex;
   flex-wrap: wrap;
-  gap: calc(var(--passo) * 0.4) calc(var(--passo) * 0.7);
+  gap: calc(var(--passo) * 0.4);
 
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+/* Ogni nome è una pastiglia. Prima erano parole separate da uno spazio, e
+   trenta nomi di fila si leggevano come una frase lunga invece che come un
+   elenco: il bordo è quello che li rende trenta cose distinte. */
 .pollaio__lista-nome {
   min-inline-size: 0;
   overflow-wrap: anywhere;
 
+  padding: 0.14em 0.6em;
+  border: 1px solid var(--linea);
+  border-radius: var(--raggio-pill);
+  background-color: var(--pannello);
+
   color: var(--testo-medio);
-  font-size: 0.72em;
-  line-height: 1.5;
+  font-size: 0.68em;
+  line-height: 1.6;
+}
+
+/* Chi ha un ruolo lo porta addosso: il bordo prende la tinta dello scomparto,
+   così si riconosce anche dopo che l'occhio si è staccato dal titolo. */
+.pollaio__lista-scomparto[data-chi="streamer"] .pollaio__lista-nome,
+.pollaio__lista-scomparto[data-chi="moderatori"] .pollaio__lista-nome,
+.pollaio__lista-scomparto[data-chi="vip"] .pollaio__lista-nome,
+.pollaio__lista-scomparto[data-chi="bot"] .pollaio__lista-nome {
+  border-color: color-mix(in srgb, var(--tinta-scomparto) 45%, transparent);
+  color: var(--testo);
+}
+
+.pollaio__lista-nome[data-nick] {
+  transition: border-color var(--durata) var(--curva);
 }
 
 .pollaio__barra {

@@ -49,8 +49,6 @@
 
   var NON_MOD = 'Chi c’è in chat lo vedono soltanto lo streamer e i suoi moderatori, e qui non lo sei: ti resta il conto degli spettatori.';
 
-  var ALTRUI = 'Questo canale non è il tuo: l’elenco completo dei moderatori e dei VIP Twitch lo dice soltanto al suo streamer. Qui riconosco quelli che hanno scritto — il badge viaggia col messaggio — e gli altri stanno fra gli utenti finché non parlano.';
-
   var STORTO = 'Twitch ha risposto in un modo che non capisco.';
 
   var conf = { canale: '', canaleId: '', bot: [], su: null, visibile: null };
@@ -443,8 +441,12 @@
           });
       }
 
+      // Sul canale altrui i due elenchi non si chiedono, e non si dice niente:
+      // il pannello e' un elenco di persone, non un posto dove spiegare i limiti
+      // di Twitch. Chi ha scritto sta gia' nel suo scomparto grazie ai badge, e
+      // gli altri stanno fra gli utenti — che e' esattamente cio' che si vede.
       if (!padrone) {
-        r.guaioRuoli = ALTRUI;
+        r.guaioRuoli = '';
       } else {
         if (!permesso(SCOPO_MODERATORI)) {
           r.guaioRuoli = uniti([r.guaioRuoli, SENZA_MODERATORI]);
