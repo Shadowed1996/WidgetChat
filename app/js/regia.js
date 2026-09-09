@@ -30,7 +30,7 @@
     {
       chiave: 'chat',
       titolo: 'Le altre chat',
-      nota: 'Il pollaio può raccogliere più chat in una sola, e mettere sopra ogni messaggio la targhetta di dove è stato scritto. TikTok non c’è, e non è una dimenticanza: la sua chat pretende una firma calcolata da un server, e questa è una pagina aperta dal disco. Non si può fare da qui, quindi non ti metto un campo che non farebbe niente.'
+      nota: 'Il pollaio può raccogliere più chat in una sola, e mettere sopra ogni messaggio la targhetta di dove è stato scritto. TikTok non c’è, e non è una dimenticanza: la sua chat pretende una firma calcolata da un server, e questa è una pagina aperta dal disco. Non si può fare da qui, quindi non ti metto un campo che non farebbe niente. Le live congiunte di Twitch qui non hanno campi per un motivo diverso: si accendono da sole quando parte una Stream Together, e non c’è niente da scrivere.'
     },
     {
       chiave: 'aspetto',

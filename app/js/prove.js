@@ -46,7 +46,8 @@
       nome: 'Tizio', colore: '', badge: [],
       ruoli: { capo: false, mod: false, vip: false, abbonato: false, artista: false, staff: false, bot: false },
       pezzi: [], bits: 0, risposta: null, primo: false, ritorno: false,
-      rilievo: null, evento: null, cancellato: false, msgId: ''
+      rilievo: null, evento: null, cancellato: false,
+      stanza: '', mirrorato: false, msgId: ''
     };
     let chiave;
     for (chiave in (extra || {})) {
@@ -405,6 +406,113 @@
     const r = window.Rilievo.valuta(messaggio({ primo: true, pezzi: [{ tipo: 'testo', testo: 'ciao' }] }));
     vero(r, 'deve uscire un giudizio');
     uguale(r.livello, 1, 'livello');
+  });
+
+  gruppo('Chat condivisa');
+
+  prova('i tag di una live congiunta si leggono tutti', function () {
+
+    const r = window.Irc.analizza(
+      '@badges=;source-badges=moderator/1,subscriber/12;source-badge-info=subscriber/14;' +
+      'source-room-id=987654;room-id=47738247;source-id=abc-1;id=def-2 ' +
+      ':tizio!tizio@tizio.tmi.twitch.tv PRIVMSG #slayer_beard :ciao');
+
+    uguale(r.tag['source-room-id'], '987654', 'la stanza di partenza');
+    uguale(r.tag['room-id'], '47738247', 'la stanza di arrivo');
+    uguale(r.tag['source-badges'], 'moderator/1,subscriber/12', 'i badge di là');
+    uguale(r.tag['source-badge-info'], 'subscriber/14', 'i mesi di abbonamento di là');
+    uguale(r.tag['source-id'], 'abc-1', 'l’id originale');
+  });
+
+  prova('la stanza di partenza uguale a quella di arrivo vuol dire «è di casa»', function () {
+
+    const r = window.Irc.analizza(
+      '@source-room-id=47738247;room-id=47738247 ' +
+      ':tizio!tizio@tizio.tmi.twitch.tv PRIVMSG #slayer_beard :ciao');
+
+    uguale(r.tag['source-room-id'], r.tag['room-id'],
+      'quando combaciano il messaggio è nato qui, e i tag source non aggiungono niente');
+  });
+
+  prova('da un altro canale comandano i source-badges, non i tag della nostra stanza', function () {
+
+    const r = window.Badge.ruoli('moderator/1', { mod: '0', subscriber: '1', vip: '1' }, true);
+    uguale(r.mod, true, 'moderatore di là');
+    uguale(r.abbonato, false, 'l’abbonamento della nostra stanza non lo riguarda');
+    uguale(r.vip, false, 'nemmeno il vip della nostra stanza');
+  });
+
+  prova('nella nostra stanza i tag mod/vip/subscriber contano ancora', function () {
+
+    const r = window.Badge.ruoli('', { mod: '1', subscriber: '1', vip: '1' });
+    uguale(r.mod, true, 'mod');
+    uguale(r.abbonato, true, 'abbonato');
+    uguale(r.vip, true, 'vip');
+  });
+
+  prova('i badge di un canale che non conosco ripiegano sui disegni, non sui nostri', function () {
+
+    const b = window.Badge.leggi('moderator/1', '987654');
+    uguale(b.length, 1, 'quanti');
+    uguale(b[0].chiave, 'moderator', 'chiave');
+    vero(/^data:image\/svg\+xml,/.test(b[0].url),
+      'doveva essere il disegno di scorta, era ' + mostra(b[0].url));
+  });
+
+  prova('le emote native non dipendono dalla stanza', function () {
+
+    const p = window.Emote.pezzi('Kappa', '25:0-4', 0, '987654');
+    let trovata = null;
+    for (let i = 0; i < p.length; i++) { if (p[i].tipo === 'emote') { trovata = p[i]; } }
+    vero(trovata, 'deve esserci un pezzo emote');
+    uguale(trovata.nome, 'Kappa', 'nome');
+  });
+
+  prova('una stanza che non conosco non cambia il testo', function () {
+    const p = window.Emote.pezzi('ciao a tutti', '', 0, '987654');
+    uguale(p.length, 1, 'quanti pezzi');
+    uguale(p[0].testo, 'ciao a tutti', 'testo');
+  });
+
+  prova('chi nomina l’altro streamer della sessione viene evidenziato', function () {
+    window.Rilievo.imposta({ canale: 'slayer_beard', parole: '', menzioni: true, primo: true });
+    window.Rilievo.stormo([
+      { id: '47738247', nick: 'slayer_beard', ospite: false },
+      { id: '987654', nick: 'altrostreamer', ospite: true }
+    ]);
+
+    const r = window.Rilievo.valuta(messaggio({
+      pezzi: [{ tipo: 'testo', testo: 'ciao @altrostreamer' }]
+    }));
+
+    vero(r, 'deve uscire un giudizio');
+    uguale(r.motivo, 'menzione', 'motivo');
+  });
+
+  prova('finita la sessione, l’altro streamer non accende più niente', function () {
+    window.Rilievo.imposta({ canale: 'slayer_beard', parole: '', menzioni: true, primo: true });
+    window.Rilievo.stormo([{ id: '47738247', nick: 'slayer_beard', ospite: false }]);
+
+    const r = window.Rilievo.valuta(messaggio({
+      pezzi: [{ tipo: 'testo', testo: 'ciao @altrostreamer' }]
+    }));
+
+    vero(!r || r.motivo !== 'menzione', 'non doveva accendersi, è uscito ' + mostra(r));
+  });
+
+  prova('il nostro canale resta nominabile anche durante una live congiunta', function () {
+    window.Rilievo.imposta({ canale: 'slayer_beard', parole: '', menzioni: true, primo: true });
+    window.Rilievo.stormo([
+      { id: '47738247', nick: 'slayer_beard', ospite: false },
+      { id: '987654', nick: 'altrostreamer', ospite: true }
+    ]);
+
+    const r = window.Rilievo.valuta(messaggio({
+      pezzi: [{ tipo: 'testo', testo: 'ciao @slayer_beard' }]
+    }));
+
+    vero(r, 'deve uscire un giudizio');
+    uguale(r.motivo, 'menzione', 'motivo');
   });
 
   gruppo('Conto');

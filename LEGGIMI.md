@@ -235,6 +235,11 @@ d'una**: con la sola Twitch, «Tutto» e «Twitch» sarebbero lo stesso bottone
 scritto due volte. È la stessa regola della targhetta della piattaforma sopra ai
 messaggi.
 
+Quando sei in una **live congiunta** (la sezione più sotto) ne compare una **per
+ogni streamer** della sessione, il tuo compreso: servono a guardare la chat di
+uno solo, che con la piattaforma non si potrebbe fare visto che siete tutti su
+Twitch. Spariscono da sole quando la sessione finisce.
+
 **Eventi** tiene le schede di abbonamento, riabbonamento, regali, raid e
 annunci, più ogni messaggio con dei bits.
 
@@ -532,7 +537,7 @@ dove il campo c'è.
 Qui è cambiata la cosa più importante di tutte, e va detta forte.
 
 Prima il permesso chiesto era **uno solo**, `user:write:chat`: mandare messaggi
-a nome tuo. Adesso sono **quindici**, perché i comandi, la lista di chi c'è e le
+a nome tuo. Adesso sono **sedici**, perché i comandi, la lista di chi c'è e le
 emote di Twitch non passano da quello. Su Twitch ogni cosa ha il suo permesso, e
 non ne esiste uno che le contenga tutte — quindi si chiedono uno per uno, e sono
 esattamente questi:
@@ -554,6 +559,7 @@ esattamente questi:
 | `user:manage:whispers` | `/w` |
 | `moderator:read:chatters` | chi c'è in chat adesso |
 | `user:read:emotes` | le emote di Twitch nel suggeritore |
+| `user:read:chat` | sapere chi è entrato in una live congiunta **prima** che scriva, e quando la sessione finisce |
 
 **Twitch i permessi li concede solo nel momento in cui ci si collega.** Non si
 aggiungono dopo, non si chiedono al volo quando servono: o c'erano quando hai
@@ -566,7 +572,7 @@ a scrivere in chat come sempre. Ma ogni comando si ferma prima di partire e dice
 quale permesso manca, nel menù sul nome le voci restano spente, il pannello del
 sondaggio non si apre e il bottone di chi c'è non compare.
 
-Se quindici ti sembrano tanti, la risposta onesta è che sono tanti: Twitch li fa
+Se sedici ti sembrano tanti, la risposta onesta è che sono tanti: Twitch li fa
 vedere tutti sulla pagina di conferma e li dà in blocco, quindi dicendo di sì li
 dai tutti insieme. Sono uno per comando, e l'unico modo di averne meno sarebbe
 avere meno comandi. Quello che non cambia è che **senza collegamento il pollaio
@@ -980,6 +986,49 @@ Se non lo vuoi proprio: `treno=0`.
 
 ---
 
+## Le live congiunte
+
+Twitch le chiama **Stream Together**: inviti altri streamer nella tua diretta e
+le vostre chat diventano una sola, fino a sei canali, con i moderatori di tutti
+che valgono per tutti. Il pollaio la riconosce da solo. **Non c'è niente da
+configurare, niente da accendere e nessun canale in più da scrivere da qualche
+parte**: quando la sessione parte cambia la chat, e il widget se ne accorge.
+
+Cosa vedi cambiare:
+
+- **I messaggi degli altri streamer arrivano con la loro faccia e il loro
+  nome** su una targhetta sopra la riga, con una tinta diversa per canale. I
+  tuoi restano nudi come sempre: sono i tuoi, si riconoscono perché non hanno
+  niente sopra.
+- **I badge sono quelli giusti.** Un moderatore dell'altro canale si vede come
+  moderatore, un suo abbonato con il distintivo del **suo** abbonamento — non
+  col tuo. Se il suo distintivo non si riesce a recuperare, al posto suo va il
+  disegnino di scorta: mai il tuo badge addosso a qualcun altro, che sarebbe
+  una bugia.
+- **Le emote sono le sue.** 7TV, BetterTTV e FrankerFaceZ dell'altro canale
+  vengono caricate quando serve, e valgono solo per i suoi messaggi. Le emote
+  di Twitch funzionano per tutti come sempre.
+- **Nella barra sotto la chat compare una pastiglia per ogni streamer**, così
+  puoi guardare solo la chat di uno.
+- **Chi nomina l'altro streamer si accende** come chi nomina te: in una live
+  congiunta sta parlando di questa diretta comunque.
+
+Tutto questo **senza account collegato**: basta la chat, che porta già dentro
+di sé tutto quello che serve. L'unica differenza se l'account c'è: il pollaio
+sa chi partecipa **prima** che scriva — quindi faccia, nome, badge ed emote
+sono già pronti al primo messaggio — e sa **quando la sessione finisce**, così
+le pastiglie e le targhette si tolgono di mezzo subito invece di restare lì.
+Senza account, un canale compare al suo primo messaggio, che è un ritardo di
+niente.
+
+Quello che il pollaio **non** fa: non avvia una live congiunta. Quella si fa
+dalla dashboard di Twitch, e Twitch non lascia farla da fuori.
+
+Kick e YouTube non hanno niente del genere, e infatti qui non c'entrano: questa
+è una cosa di Twitch e basta.
+
+---
+
 ## Cosa vede e cosa non vede
 
 Per **leggere**, il widget entra in chat **in anonimo**, senza account e senza
@@ -1003,7 +1052,7 @@ invece di lasciarle scoprire.
   regole di chiunque altro: il widget non ha una corsia preferenziale, manda un
   messaggio come lo manderesti dal sito di Twitch.
 
-I permessi adesso sono quindici invece di uno — sono in tabella nella sezione
+I permessi adesso sono sedici invece di uno — sono in tabella nella sezione
 «I permessi, e perché l'account va riconnesso» — e **Revoca account** nella
 regia li revoca davvero su Twitch, tutti insieme, invece di limitarsi a
 dimenticare il gettone qui.
@@ -1013,11 +1062,16 @@ tutti i badge, i colori dei nomi, i `/me`, le risposte, i bits e i cheermote,
 abbonamenti, riabbonamenti, regali singoli e in blocco, raid, annunci,
 primi messaggi, ban, pause e cancellazioni dei moderatori.
 
+**Vede anche le live congiunte**, senza che tu colleghi niente: i messaggi
+degli altri streamer con la loro faccia, i loro badge e le loro emote. Sta
+nella sezione «Le live congiunte» qui sopra.
+
 **Con l'account collegato vede in più**: quanti stanno guardando, chi è in chat
 adesso — ma solo dove sei lo streamer o un suo moderatore, che è una regola di
-Twitch e non mia — e quali emote di Twitch puoi usare tu in questo canale.
-Queste tre non passano dalla chat, passano dall'API, e l'API vuole un login: è
-tutta qui la differenza fra prima e adesso.
+Twitch e non mia — quali emote di Twitch puoi usare tu in questo canale, e chi
+è entrato in una live congiunta prima ancora che scriva. Queste non passano
+dalla chat, passano dall'API, e l'API vuole un login: è tutta qui la differenza
+fra prima e adesso.
 
 **Non vede**: chi entra e chi esce dalla chat, perché Twitch non lo dice più in
 modo affidabile. E senza account collegato non vede nemmeno le tre cose della
@@ -1147,6 +1201,7 @@ chat/
 │  │  ├─ rilievo.js      decide cosa è importante
 │  │  ├─ eventi.js       abbonamenti, raid, bits, moderazione
 │  │  ├─ treno.js        l'hype train
+│  │  ├─ stormo.js       le live congiunte: chi sono gli altri canali
 │  │  ├─ resa.js         l'unico file che tocca la pagina
 │  │  ├─ conto.js        il collegamento con l'account Twitch, e il mandare
 │  │  ├─ comandi.js      i ventisette comandi: cosa vuol dire ognuno, che

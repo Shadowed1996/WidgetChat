@@ -25,7 +25,8 @@
     'channel:manage:moderators',
     'channel:manage:vips',
     'user:read:emotes',
-    'user:manage:whispers'
+    'user:manage:whispers',
+    'user:read:chat'
   ];
 
   var SCOPI = [SCOPO_SCRIVERE].concat(SCOPI_COMANDI).join(' ');

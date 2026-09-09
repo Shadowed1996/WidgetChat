@@ -10,6 +10,10 @@
   const FFZ_GLOBALI   = 'https://api.frankerfacez.com/v1/set/global';
   const FFZ_CANALE    = 'https://api.frankerfacez.com/v1/room/';
 
+  // Degli altri canali di una live congiunta si conosce l'id numerico e basta:
+  // FFZ ha la stessa stanza indicizzata anche così.
+  const FFZ_PER_ID    = 'https://api.frankerfacez.com/v1/room/id/';
+
   const CDN_TWITCH = 'https://static-cdn.jtvnw.net/emoticons/v2/';
   const CDN_BTTV   = 'https://cdn.betterttv.net/emote/';
   const CDN_CHEER  = 'https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/dark/';
@@ -38,6 +42,14 @@
   const CODA_MUTA = /[.,;:!?)\]}'"»…]+$/;
 
   const catalogo = Object.create(null);
+
+  // Un banco per ogni altro canale della live congiunta: in memoria e basta,
+  // dura quanto la sessione. Tenerli separati è l'unico modo perché due canali
+  // che chiamano un'emote allo stesso modo non si sovrascrivano a vicenda.
+  const OSPITI = Object.create(null);
+  const ospitiInCorso = Object.create(null);
+
+  const SOLO_CIFRE = /^[0-9]{1,12}$/;
 
   let quantita = 0;
   let fontiOk = 0;
@@ -96,13 +108,17 @@
     });
   }
 
-  function deposita(nome, voce) {
+  function depositaIn(dove, nome, voce) {
     if (!nome || !voce || !voce.url) { return; }
 
-    const vecchia = catalogo[nome];
+    const vecchia = dove[nome];
     if (vecchia && vecchia.peso >= voce.peso) { return; }
-    if (!vecchia) { quantita++; }
-    catalogo[nome] = voce;
+    if (!vecchia && dove === catalogo) { quantita++; }
+    dove[nome] = voce;
+  }
+
+  function deposita(nome, voce) {
+    depositaIn(catalogo, nome, voce);
   }
 
   function daCatalogo(voce) {
@@ -117,7 +133,7 @@
     };
   }
 
-  function leggiSette(voci, dalCanale) {
+  function leggiSette(voci, dalCanale, dove) {
     if (!Array.isArray(voci)) { return; }
 
     for (let i = 0; i < voci.length; i++) {
@@ -130,7 +146,7 @@
 
       const bandiere = (Number(voce.flags) || 0) | (Number(dato.flags) || 0);
 
-      deposita(nome, {
+      depositaIn(dove, nome, {
         nome: nome,
         url: radice + '/' + fileSette(host, '2x'),
         url2: radice + '/' + fileSette(host, '4x'),
@@ -155,7 +171,7 @@
     return scelto || (misura + '.webp');
   }
 
-  function leggiBttv(voci, dalCanale) {
+  function leggiBttv(voci, dalCanale, dove) {
     if (!Array.isArray(voci)) { return; }
 
     for (let i = 0; i < voci.length; i++) {
@@ -164,7 +180,7 @@
       const id = String(voce.id || '');
       if (!nome || !ID_EMOTE.test(id)) { continue; }
 
-      deposita(nome, {
+      depositaIn(dove, nome, {
         nome: nome,
         url: CDN_BTTV + id + '/2x',
         url2: CDN_BTTV + id + '/3x',
@@ -176,7 +192,7 @@
     }
   }
 
-  function leggiFfz(dati, dalCanale) {
+  function leggiFfz(dati, dalCanale, dove) {
     if (!dati || typeof dati !== 'object') { return; }
 
     const insiemi = dati.sets;
@@ -205,7 +221,7 @@
         const url2 = aHttps(misure[4] || misure[2] || misure[1]);
         if (!url) { continue; }
 
-        deposita(nome, {
+        depositaIn(dove, nome, {
           nome: nome,
           url: url,
           url2: url2 || url,
@@ -320,36 +336,36 @@
 
     if (scelte.sette !== false) {
       lavori.push(sorgente(SETTE_GLOBALI, '7TV globali', false, function (dati) {
-        leggiSette(dati.emotes, false);
+        leggiSette(dati.emotes, false, catalogo);
       }));
       if (id) {
         lavori.push(sorgente(SETTE_CANALE + id, '7TV del canale', false, function (dati) {
-          leggiSette(dati.emote_set && dati.emote_set.emotes, true);
+          leggiSette(dati.emote_set && dati.emote_set.emotes, true, catalogo);
         }));
       }
     }
 
     if (scelte.bttv !== false) {
       lavori.push(sorgente(BTTV_GLOBALI, 'BTTV globali', false, function (dati) {
-        leggiBttv(dati, false);
+        leggiBttv(dati, false, catalogo);
       }));
       if (id) {
 
         lavori.push(sorgente(BTTV_CANALE + id, 'BTTV del canale', true, function (dati) {
-          leggiBttv(dati.channelEmotes, true);
-          leggiBttv(dati.sharedEmotes, true);
+          leggiBttv(dati.channelEmotes, true, catalogo);
+          leggiBttv(dati.sharedEmotes, true, catalogo);
         }));
       }
     }
 
     if (scelte.ffz !== false) {
       lavori.push(sorgente(FFZ_GLOBALI, 'FFZ globali', false, function (dati) {
-        leggiFfz(dati, false);
+        leggiFfz(dati, false, catalogo);
       }));
       if (CANALE) {
 
         lavori.push(sorgente(FFZ_CANALE + encodeURIComponent(CANALE), 'FFZ del canale', true, function (dati) {
-          leggiFfz(dati, true);
+          leggiFfz(dati, true, catalogo);
         }));
       }
     }
@@ -388,6 +404,55 @@
 
     attesa = giroDiRete(id, scelte);
     return attesa;
+  }
+
+  // Un altro canale della live congiunta. Si parte dal solo id numerico —
+  // è quello che il tag `source-room-id` regala — e si prendono soltanto le
+  // emote di quella stanza: i globali stanno già nel catalogo di casa.
+  // Apre il banco di un canale ospite senza andare in rete. Basta da solo a
+  // togliere a quel canale le emote *del nostro*, che è la metà della regola.
+  // Lo usa la modalità prova, dove i canali sono finti.
+  function ospite(idCanale) {
+    const id = String(idCanale === undefined || idCanale === null ? '' : idCanale).trim();
+    if (!SOLO_CIFRE.test(id)) { return ''; }
+
+    if (!Object.prototype.hasOwnProperty.call(OSPITI, id)) {
+      OSPITI[id] = Object.create(null);
+    }
+    return id;
+  }
+
+  function caricaOspite(idCanale, opzioni) {
+    const id = ospite(idCanale);
+    if (!id) { return Promise.resolve(0); }
+    if (Object.prototype.hasOwnProperty.call(ospitiInCorso, id)) { return ospitiInCorso[id]; }
+
+    const scelte = opzioni || {};
+    const banco = OSPITI[id];
+
+    const lavori = [];
+
+    if (scelte.sette !== false) {
+      lavori.push(sorgente(SETTE_CANALE + id, '7TV dell’ospite', true, function (dati) {
+        leggiSette(dati.emote_set && dati.emote_set.emotes, true, banco);
+      }));
+    }
+    if (scelte.bttv !== false) {
+      lavori.push(sorgente(BTTV_CANALE + id, 'BTTV dell’ospite', true, function (dati) {
+        leggiBttv(dati.channelEmotes, true, banco);
+        leggiBttv(dati.sharedEmotes, true, banco);
+      }));
+    }
+    if (scelte.ffz !== false) {
+      lavori.push(sorgente(FFZ_PER_ID + id, 'FFZ dell’ospite', true, function (dati) {
+        leggiFfz(dati, true, banco);
+      }));
+    }
+
+    function fine() { return Object.keys(banco).length; }
+
+    ospitiInCorso[id] = Promise.all(lavori).then(fine, fine);
+    return ospitiInCorso[id];
   }
 
   function leggiTagEmotes(tag) {
@@ -510,9 +575,16 @@
     return '';
   }
 
-  function guardaParola(parola, bits, uscita) {
+  function guardaParola(parola, bits, uscita, banco) {
 
-    const voce = catalogo[parola];
+    // Prima il banco del canale da cui il messaggio è partito. Poi quello di
+    // casa, ma senza le emote *del* nostro canale: sono nostre, e in bocca a
+    // chi scrive da un'altra stanza non ci sono mai state (§17).
+    let voce = banco ? banco[parola] : null;
+    if (!voce) {
+      const nostra = catalogo[parola];
+      if (nostra && (!banco || nostra.peso < PESO_CANALE)) { voce = nostra; }
+    }
     if (voce) { uscita.push(daCatalogo(voce)); return; }
 
     if (bits > 0) {
@@ -546,7 +618,7 @@
     spingiTesto(uscita, parola);
   }
 
-  function guardaGrezzo(grezzo, bits, uscita) {
+  function guardaGrezzo(grezzo, bits, uscita, banco) {
     if (!grezzo) { return; }
 
     const parti = grezzo.split(/(\s+)/);
@@ -554,8 +626,14 @@
       const parte = parti[i];
       if (!parte) { continue; }
       if (!parte.trim()) { spingiTesto(uscita, parte); continue; }
-      guardaParola(parte, bits, uscita);
+      guardaParola(parte, bits, uscita, banco);
     }
+  }
+
+  function bancoDi(stanza) {
+    const id = String(stanza === undefined || stanza === null ? '' : stanza).trim();
+    if (!id || !Object.prototype.hasOwnProperty.call(OSPITI, id)) { return null; }
+    return OSPITI[id];
   }
 
   const EMOTE_KICK = /\[emote:(\d+):([^\]]*)\]/g;
@@ -598,17 +676,18 @@
     return uscita;
   }
 
-  function pezzi(testo, tagEmotes, tagBits) {
+  function pezzi(testo, tagEmotes, tagBits, stanza) {
     const corpo = typeof testo === 'string' ? testo : '';
     const uscita = [];
     if (!corpo) { return uscita; }
 
     const bits = Number(tagBits) > 0 ? Number(tagBits) : 0;
     const tratti = tagliaNative(corpo, tagEmotes);
+    const banco = bancoDi(stanza);
 
     for (let i = 0; i < tratti.length; i++) {
       if (tratti[i].emote) { uscita.push(tratti[i].emote); continue; }
-      guardaGrezzo(tratti[i].testo, bits, uscita);
+      guardaGrezzo(tratti[i].testo, bits, uscita, banco);
     }
     return uscita;
   }
@@ -685,6 +764,8 @@
 
   window.Emote = {
     carica: carica,
+    ospite: ospite,
+    caricaOspite: caricaOspite,
     pezzi: pezzi,
     pezziKick: pezziKick,
     cerca: cerca,

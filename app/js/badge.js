@@ -75,6 +75,18 @@
   const CATALOGO = {};
   const PRIMA = {};
 
+  // Le chiavi che arrivano dall'endpoint del *nostro* canale e non dai globali:
+  // sono le uniche che non valgono per gli altri canali di una live congiunta
+  // (§17). L'abbonato di un altro canale ha il suo distintivo, non il nostro.
+  const NOSTRE = {};
+
+  // Una live congiunta porta in casa gente abbonata altrove: ogni canale
+  // ospite tiene il suo banco, in memoria e basta — dura quanto la sessione.
+  const OSPITI = {};
+  const ospitiInCorso = {};
+
+  const SOLO_CIFRE = /^[0-9]{1,12}$/;
+
   let pronto = false;
   let inCorso = null;
   let firmaCarica = '';
@@ -122,7 +134,7 @@
     });
   }
 
-  function assorbi(elenco) {
+  function assorbiIn(catalogo, prima, elenco, segna) {
     if (!elenco || !Array.isArray(elenco)) { return 0; }
 
     const visti = {};
@@ -134,6 +146,7 @@
       if (!Array.isArray(gruppo.versions)) { continue; }
 
       const chiave = gruppo.set_id;
+      if (segna) { segna[chiave] = true; }
 
       for (let j = 0; j < gruppo.versions.length; j++) {
         const v = gruppo.versions[j];
@@ -151,8 +164,8 @@
           url2: sicuro(v.image_url_4x) || due
         };
 
-        CATALOGO[chiave + '/' + versione] = voce;
-        if (!ha(visti, chiave)) { visti[chiave] = true; PRIMA[chiave] = voce; }
+        catalogo[chiave + '/' + versione] = voce;
+        if (!ha(visti, chiave)) { visti[chiave] = true; prima[chiave] = voce; }
         contati++;
       }
     }
@@ -160,14 +173,19 @@
     return contati;
   }
 
+  function assorbi(elenco, nostre) {
+    return assorbiIn(CATALOGO, PRIMA, elenco, nostre ? NOSTRE : null);
+  }
+
   function svuota() {
     let chiave;
     for (chiave in CATALOGO) { if (ha(CATALOGO, chiave)) { delete CATALOGO[chiave]; } }
     for (chiave in PRIMA) { if (ha(PRIMA, chiave)) { delete PRIMA[chiave]; } }
+    for (chiave in NOSTRE) { if (ha(NOSTRE, chiave)) { delete NOSTRE[chiave]; } }
   }
 
   const CHIAVE_RICORDO = 'sb-pollaio-badge';
-  const FORMATO_RICORDO = 1;
+  const FORMATO_RICORDO = 2;
   const RICORDO_FRESCO  = 1800000;
   const RICORDO_SCADUTO = 43200000;
   const TETTO_RICORDO = 400000;
@@ -191,12 +209,16 @@
         }
       }
 
+      const nostre = [];
+      for (chiave in NOSTRE) { if (ha(NOSTRE, chiave)) { nostre.push(chiave); } }
+
       const testo = JSON.stringify({
         v: FORMATO_RICORDO,
         ts: Date.now(),
         firma: firma,
         catalogo: CATALOGO,
-        prima: indice
+        prima: indice,
+        nostre: nostre
       });
 
       if (testo.length > TETTO_RICORDO) { return; }
@@ -243,6 +265,9 @@
       if (ha(CATALOGO, pezzi[1])) { PRIMA[pezzi[0]] = CATALOGO[pezzi[1]]; }
     }
 
+    const nostre = Array.isArray(dato.nostre) ? dato.nostre : [];
+    for (let n = 0; n < nostre.length; n++) { NOSTRE[String(nostre[n])] = true; }
+
     return eta < RICORDO_FRESCO ? 'fresco' : 'stanco';
   }
 
@@ -258,8 +283,8 @@
       chiedi(GLOBALI),
       indirizzoCanale ? chiedi(indirizzoCanale) : Promise.resolve(null)
     ]).then(function (risposte) {
-      let quanti = assorbi(risposte[0]);
-      quanti += assorbi(risposte[1]);
+      let quanti = assorbi(risposte[0], false);
+      quanti += assorbi(risposte[1], true);
       pronto = true;
       if (!quanti) {
         console.warn('[pollaio] badge: catalogo vuoto, restano i disegni di scorta');
@@ -303,30 +328,63 @@
     return inCorso;
   }
 
-  function trova(chiave, versione) {
-    const esatto = CATALOGO[chiave + '/' + versione];
-    if (esatto) {
-      return {
-        chiave: chiave, versione: versione, titolo: esatto.titolo,
-        url: esatto.url, url2: esatto.url2
-      };
+  // Apre il banco di un canale ospite senza andare in rete. Da solo basta a
+  // cambiare le regole di `trova`: da qui in poi quel canale non eredita più i
+  // distintivi del nostro. Lo usa la modalità prova, dove i canali sono finti
+  // e non c'è niente da scaricare.
+  function ospite(idCanale) {
+    const id = String(idCanale === undefined || idCanale === null ? '' : idCanale).trim();
+    if (!SOLO_CIFRE.test(id)) { return ''; }
+
+    if (!ha(OSPITI, id)) { OSPITI[id] = { catalogo: {}, prima: {} }; }
+    return id;
+  }
+
+  function caricaOspite(idCanale) {
+    const id = ospite(idCanale);
+    if (!id) { return Promise.resolve(0); }
+    if (ha(ospitiInCorso, id)) { return ospitiInCorso[id]; }
+
+    const banco = OSPITI[id];
+
+    ospitiInCorso[id] = chiedi(DI_CANALE + '?id=' + encodeURIComponent(id))
+      .then(function (dati) {
+        return assorbiIn(banco.catalogo, banco.prima, dati, null);
+      });
+
+    return ospitiInCorso[id];
+  }
+
+  function vestita(chiave, versione, voce) {
+    return {
+      chiave: chiave, versione: versione, titolo: voce.titolo,
+      url: voce.url, url2: voce.url2
+    };
+  }
+
+  function trova(chiave, versione, stanza) {
+    const banco = (stanza && ha(OSPITI, stanza)) ? OSPITI[stanza] : null;
+
+    if (banco) {
+      const suo = banco.catalogo[chiave + '/' + versione];
+      if (suo) { return vestita(chiave, versione, suo); }
     }
 
-    if (ha(RIPIEGO, chiave)) {
-      const disegnato = RIPIEGO[chiave];
-      return {
-        chiave: chiave, versione: versione, titolo: disegnato.titolo,
-        url: disegnato.url, url2: disegnato.url2
-      };
+    // Un distintivo che è del nostro canale non racconta niente di chi scrive
+    // da un altro: meglio il disegno di scorta che il badge sbagliato.
+    if (!banco || !ha(NOSTRE, chiave)) {
+      const esatto = CATALOGO[chiave + '/' + versione];
+      if (esatto) { return vestita(chiave, versione, esatto); }
     }
 
-    if (ha(PRIMA, chiave)) {
+    if (ha(RIPIEGO, chiave)) { return vestita(chiave, versione, RIPIEGO[chiave]); }
 
-      const altra = PRIMA[chiave];
-      return {
-        chiave: chiave, versione: versione, titolo: altra.titolo,
-        url: altra.url, url2: altra.url2
-      };
+    if (banco && ha(banco.prima, chiave)) {
+      return vestita(chiave, versione, banco.prima[chiave]);
+    }
+
+    if (!banco || !ha(NOSTRE, chiave)) {
+      if (ha(PRIMA, chiave)) { return vestita(chiave, versione, PRIMA[chiave]); }
     }
 
     return null;
@@ -336,7 +394,7 @@
     return ha(PESO, chiave) ? PESO[chiave] : PESO_RESTO;
   }
 
-  function leggi(tagBadges) {
+  function leggi(tagBadges, stanza) {
     const grezzo = frase(tagBadges, '');
     if (!grezzo) { return []; }
 
@@ -352,7 +410,7 @@
       const versione = (taglio === -1 ? '1' : voce.slice(taglio + 1)).trim();
       if (!chiave) { continue; }
 
-      const badge = trova(chiave, versione);
+      const badge = trova(chiave, versione, stanza);
       if (!badge) { continue; }
 
       raccolta.push({ badge: badge, peso: peso(chiave), indice: raccolta.length });
@@ -384,9 +442,12 @@
     return dentro;
   }
 
-  function ruoli(tagBadges, tag) {
+  // `soloBadge` serve ai messaggi di una live congiunta: i tag `mod`, `vip` e
+  // `subscriber` raccontano la stanza in cui il messaggio è arrivato, non
+  // quella in cui è stato scritto. Lì comandano soltanto i `source-badges`.
+  function ruoli(tagBadges, tag, soloBadge) {
     const dentro = insieme(tagBadges);
-    const t = tag || {};
+    const t = soloBadge ? {} : (tag || {});
 
     return {
       capo:     ha(dentro, 'broadcaster'),
@@ -402,6 +463,8 @@
 
   window.Badge = {
     carica: carica,
+    ospite: ospite,
+    caricaOspite: caricaOspite,
     leggi: leggi,
     ruoli: ruoli,
     pronto: function () { return pronto; }

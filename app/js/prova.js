@@ -30,6 +30,13 @@
     'youtube', 'youtube', 'kick', 'tiktok'
   ];
 
+  // La live congiunta finta: due canali oltre al nostro, quanti ne bastano a
+  // vedere se la targhetta, le pastiglie e i colori reggono (§17).
+  const STORMO = [
+    { id: '901234567', nick: 'nottambula',    nome: 'Nottambula',    tinta: '#22e0ff' },
+    { id: '445566778', nick: 'gorgonzola_tv', nome: 'Gorgonzola_TV', tinta: '#ffc65c' }
+  ];
+
   const PIANI = ['1000', '1000', '1000', '2000', '3000', 'Prime'];
   const MESI_RIABBONAMENTO = [3, 6, 8, 11, 14, 19, 24, 27, 36];
   const DURATE_PAUSA = [60, 300, 600, 1800];
@@ -359,10 +366,10 @@
 
   const SEGNI = /(https?:\/\/[^\s]+|www\.[^\s]+|@[A-Za-z0-9_]{2,25})/g;
 
-  function pezziDi(testo, tags, bits) {
+  function pezziDi(testo, tags, bits, stanza) {
     if (!testo) { return []; }
 
-    const veri = chiedi(window.Emote, 'pezzi', [[testo, (tags && tags.emotes) || '', bits || 0], [testo, tags]], function (esito) {
+    const veri = chiedi(window.Emote, 'pezzi', [[testo, (tags && tags.emotes) || '', bits || 0, stanza || ''], [testo, tags]], function (esito) {
       return Array.isArray(esito) && esito.length > 0 && !!esito[0] && typeof esito[0].tipo === 'string';
     });
     return veri || pezziSemplici(testo);
@@ -437,10 +444,10 @@
     return tags;
   }
 
-  function badgeDi(tags) {
+  function badgeDi(tags, stanza) {
     if (!tags.badges) { return []; }
 
-    const veri = chiedi(window.Badge, 'leggi', [[tags.badges, tags['badge-info']], [tags]], function (esito) {
+    const veri = chiedi(window.Badge, 'leggi', [[tags.badges, stanza || ''], [tags]], function (esito) {
       return Array.isArray(esito) && esito.length > 0 && !!esito[0] && typeof esito[0].chiave === 'string';
     });
     return veri || [];
@@ -464,12 +471,59 @@
       (opz.tag && opz.tag['msg-id']));
   }
 
+  // La faccia di un canale finto: disegnata qui, perché in modalità prova non
+  // si va in rete a prendere l'avatar di gente che non esiste.
+  function faccia(tinta, lettera) {
+    const svg =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">' +
+      '<rect width="48" height="48" rx="24" fill="' + tinta + '"/>' +
+      '<text x="24" y="33" font-family="sans-serif" font-size="26" font-weight="700"' +
+      ' text-anchor="middle" fill="#12121a">' + lettera + '</text>' +
+      '</svg>';
+    return 'data:image/svg+xml,' + encodeURIComponent(svg);
+  }
+
+  function stormo() {
+    const fuori = [{
+      id: idCanale, nick: canale, nome: canale, pfp: '', ospite: false, host: true
+    }];
+
+    for (let i = 0; i < STORMO.length; i++) {
+      fuori.push({
+        id: STORMO[i].id,
+        nick: STORMO[i].nick,
+        nome: STORMO[i].nome,
+        pfp: faccia(STORMO[i].tinta, STORMO[i].nome.charAt(0)),
+        ospite: true,
+        host: false
+      });
+    }
+    return fuori;
+  }
+
+  // Da quale canale scrive questa persona. Deciso dal nick e non a caso: chi
+  // arriva da un'altra stanza ci arriva sempre, come in una sessione vera.
+  function stanzaDi(piattaforma, persona) {
+    if (piattaforma !== 'twitch') { return null; }
+
+    const nick = String((persona && persona.nick) || '');
+    let somma = 0;
+    for (let i = 0; i < nick.length; i++) { somma += nick.charCodeAt(i) * 3; }
+
+    const passo = somma % 5;
+    if (passo >= STORMO.length) { return null; }
+    return STORMO[passo];
+  }
+
   function costruisci(persona, testo, opzioni) {
     const opz = opzioni || {};
     const tags = opz.tags || tagFinti(persona, opz.tag);
     const piattaforma = quiSiParlaTwitch(opz)
       ? 'twitch'
       : (opz.piattaforma || piattaformaDi(persona));
+
+    const altrove = stanzaDi(piattaforma, persona);
+    const stanza = piattaforma === 'twitch' ? ((altrove && altrove.id) || idCanale) : '';
 
     const messaggio = {
       id: tags.id,
@@ -480,18 +534,21 @@
       nome: persona.nome,
       colore: coloreDi(persona),
 
-      badge: piattaforma === 'twitch' ? badgeDi(tags) : [],
+      badge: piattaforma === 'twitch' ? badgeDi(tags, stanza) : [],
       ruoli: copiaRuoli(persona.ruoli),
-      pezzi: pezziDi(testo, tags, opz.bits || 0),
+      pezzi: pezziDi(testo, tags, opz.bits || 0, stanza),
       bits: opz.bits || 0,
       risposta: opz.risposta || null,
-      primo: !!opz.primo,
-      ritorno: !!opz.ritorno,
+      primo: !altrove && !!opz.primo,
+      ritorno: !altrove && !!opz.ritorno,
       rilievo: null,
       evento: opz.evento || null,
       cancellato: false,
 
       piattaforma: piattaforma,
+
+      stanza: stanza,
+      mirrorato: !!altrove,
 
       msgId: tags['msg-id'] || ''
     };
@@ -912,6 +969,8 @@
     },
 
     ferma: ferma,
+
+    stormo: stormo,
 
     attiva: function () { return acceso; }
   };

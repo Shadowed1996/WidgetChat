@@ -31,6 +31,12 @@
   --piattaforma-kick:    #53fc18;
   --piattaforma-tiktok:  #25f4ee;
 
+  /* Le live congiunte: la tinta della targhetta la decide l'id del canale,
+     qui si fissa solo quanto sia carica e quanto scura, così che sei schede
+     diverse restino tutte leggibili sul bianco del testo. */
+  --stormo-carica: 58%;
+  --stormo-buio:   42%;
+
   --raggio:       14px;
   --raggio-s:      8px;
   --raggio-pill: 999px;

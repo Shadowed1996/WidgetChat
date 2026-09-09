@@ -99,6 +99,42 @@
     return pulite;
   }
 
+  let compagni = [];
+
+  function rifaiMenzioni() {
+    let nomi = nomiDelCanale(canale);
+    const visto = { };
+    let i;
+
+    for (i = 0; i < nomi.length; i++) { visto['.' + nomi[i]] = true; }
+
+    for (i = 0; i < compagni.length; i++) {
+      const suoi = nomiDelCanale(compagni[i]);
+      for (let j = 0; j < suoi.length; j++) {
+        if (visto['.' + suoi[j]]) { continue; }
+        visto['.' + suoi[j]] = true;
+        nomi = nomi.concat(suoi[j]);
+      }
+    }
+
+    reMenzione = espressione(nomi, true);
+  }
+
+  // In una live congiunta chi nomina l'altro streamer sta parlando di questa
+  // diretta quanto chi nomina noi: la menzione vale per tutti i canali uniti.
+  function stormo(canali) {
+    const elenco = Array.isArray(canali) ? canali : [];
+    const nomi = [];
+
+    for (let i = 0; i < elenco.length; i++) {
+      const nick = nickPulito(elenco[i] && elenco[i].nick);
+      if (nick && nick !== canale) { nomi.push(nick); }
+    }
+
+    compagni = nomi;
+    rifaiMenzioni();
+  }
+
   function imposta(opzioni) {
     const o = (opzioni && typeof opzioni === 'object') ? opzioni : {};
 
@@ -107,7 +143,7 @@
     menzioniAccese = interruttore(o.menzioni, true);
     primoAcceso = interruttore(o.primo, true);
 
-    reMenzione = espressione(nomiDelCanale(canale), true);
+    rifaiMenzioni();
     reParole = espressione(parole, false);
   }
 
@@ -266,6 +302,7 @@
 
   window.Rilievo = {
     imposta: imposta,
+    stormo: stormo,
     valuta: valuta,
     REGOLE: REGOLE
   };

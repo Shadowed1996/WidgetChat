@@ -37,11 +37,12 @@ Non si importa un file, non si dipende da niente che stia là fuori.
    di sola lettura anche quando un account c'è, e il messaggio appena mandato
    torna indietro di lì come quello di chiunque altro.
 
-   **Gli scopi: da uno a quindici.** Qui c'era scritto «un solo scopo
+   **Gli scopi: da uno a sedici.** Qui c'era scritto «un solo scopo
    (`user:write:chat`)», e non è più vero: la costante `SCOPI` di
-   `app/js/conto.js` oggi ne chiede quindici, perché accanto al campo per
+   `app/js/conto.js` oggi ne chiede sedici, perché accanto al campo per
    scrivere sono nati i ventisette comandi di Twitch, il menù che si apre
-   cliccando un nome, e l'elenco di chi c'è in chat (§19).
+   cliccando un nome, l'elenco di chi c'è in chat (§19) e le live congiunte
+   (§17).
 
    **La regola che sopravvive non è il numero: è che si chiede solo ciò che
    serve a una funzione che c'è davvero.** Ogni permesso di questo elenco è
@@ -71,6 +72,12 @@ Non si importa un file, non si dipende da niente che stia là fuori.
    - `channel:manage:moderators` — `/mod`, `/unmod`, e i moderatori dentro
      l'elenco di chi c'è
    - `channel:manage:vips` — `/vip`, `/unvip`, e i VIP nello stesso elenco
+   - `user:read:chat` — le tre iscrizioni EventSub delle live congiunte (§17):
+     sapere chi partecipa prima che scriva, e sapere quando la sessione
+     finisce. **Non serve a leggere la chat**, che resta anonima: i messaggi
+     continuano ad arrivare tutti dall'IRC di `justinfan`. È il solo scopo
+     dell'elenco che, se manca, non spegne una funzione ma la lascia zoppa —
+     la live congiunta si riconosce comunque dai tag dei messaggi
 
    **Il costo si paga una volta, e va detto perché è il prezzo della
    decisione**: chi aveva già collegato l'account quando lo scopo era uno solo
@@ -233,6 +240,7 @@ chat/
    │  ├─ rilievo.js       window.Rilievo       — cosa merita di essere evidenziato
    │  ├─ eventi.js        window.Eventi        — abbonamenti, raid, bits, moderazione
    │  ├─ treno.js         window.Treno         — l'Hype Train (vedi §15)
+   │  ├─ stormo.js        window.Stormo        — le live congiunte: chi sono gli altri canali (§17)
    │  ├─ resa.js          window.Resa          — dal messaggio al DOM
    │  ├─ conto.js         window.Conto         — l'account Twitch: gettone, permessi, e il tramite verso Helix (§18)
    │  ├─ comandi.js       window.Comandi       — i ventisette comandi di Twitch, uno per endpoint (§19)
@@ -260,6 +268,7 @@ viene prima di chi lo consuma.
 <script src="js/rilievo.js"></script>
 <script src="js/eventi.js"></script>
 <script src="js/treno.js"></script>
+<script src="js/stormo.js"></script>
 <script src="js/resa.js"></script>
 <script src="js/conto.js"></script>
 <script src="js/comandi.js"></script>
@@ -319,9 +328,34 @@ Tutti i moduli parlano questa lingua. Nessuno ne inventa un'altra.
   rilievo:   null,    // lo scrive Rilievo — {livello, motivo, etichetta} | null
   evento:    null,    // lo scrive Eventi — vedi §11 | null
   cancellato:false,   // messo a true da CLEARMSG/CLEARCHAT
-  piattaforma: 'twitch'  // da quale chat arriva: 'twitch'|'youtube'|'kick'|'tiktok' (§17)
+  piattaforma: 'twitch', // da quale chat arriva: 'twitch'|'youtube'|'kick'|'tiktok' (§17)
+  stanza:    '',      // id numerico del canale Twitch in cui è stato SCRITTO (§17)
+  mirrorato: false    // true se `stanza` non è il nostro canale
 }
 ```
+
+### `stanza` e `mirrorato` — le live congiunte
+
+`piattaforma` dice **da quale chat** arriva un messaggio. Non basta più: nelle
+live congiunte di Twitch (§17) i canali sono fino a sei e la piattaforma è la
+stessa per tutti, quindi serve un secondo campo che dica **da quale stanza**.
+
+- `stanza` è l'id numerico del canale in cui il messaggio è stato scritto. Su
+  Twitch è sempre valorizzato — quando non c'è nessuna sessione in corso vale
+  l'id del nostro canale. Su Kick e YouTube è `''`: quelle chat non hanno
+  niente di simile, e un id finto sarebbe peggio di un campo vuoto.
+- `mirrorato` è vero soltanto quando `stanza` **non** è il nostro canale, cioè
+  quando il messaggio ci è arrivato di rimbalzo da un altro streamer.
+
+La regola che ne discende, e che vale ovunque: **su un messaggio mirrorato i
+tag della nostra stanza non raccontano più chi scrive.** `badges`, `mod`, `vip`
+e `subscriber` descrivono la stanza di arrivo; quelli buoni sono i `source-*`
+(§8). Chi legge il messaggio deve usare `stanza` per scegliere il catalogo dei
+badge e delle emote, e `mirrorato` per sapere se fidarsi dei tag semplici.
+
+`primo` e `ritorno` restano sempre falsi sui messaggi mirrorati: Twitch non
+valorizza `first-msg` e `returning-chatter` sulle copie, e un «primo messaggio»
+inventato accenderebbe un rilievo per una cosa che non è successa.
 
 ### I pezzi (il corpo, già analizzato)
 
@@ -417,12 +451,22 @@ leggendo il titolo che scoprirlo in fondo alla tabella.
 | cheermote | `https://d3aqoihi2n8ty8.cloudfront.net/actions/cheer/dark/animated/<livello>/2.gif` | livelli: 1, 100, 1000, 5000, 10000, 100000 |
 | badge globali | `https://api.ivr.fi/v2/twitch/badges/global` | l'endpoint storico `badges.twitch.tv` è morto |
 | badge di canale | `https://api.ivr.fi/v2/twitch/badges/channel?login=<canale>` | |
+| badge di un canale ospite | `https://api.ivr.fi/v2/twitch/badges/channel?id=<id>` | live congiunte (§17): dell'altro canale si conosce solo l'id |
+| anagrafica di un canale ospite | `https://api.ivr.fi/v2/twitch/user?id=<id>` | live congiunte: nome e faccia da mettere sulla targhetta. Stesso host dei badge |
 | 7TV globali | `https://7tv.io/v3/emote-sets/global` | |
-| 7TV del canale | `https://7tv.io/v3/users/twitch/<id>` | slayer_beard ce le ha |
+| 7TV del canale | `https://7tv.io/v3/users/twitch/<id>` | slayer_beard ce le ha. Lo stesso indirizzo serve i canali ospiti |
 | BTTV globali | `https://api.betterttv.net/3/cached/emotes/global` | |
-| BTTV del canale | `https://api.betterttv.net/3/cached/users/twitch/<id>` | oggi risponde con le liste vuote: è normale |
+| BTTV del canale | `https://api.betterttv.net/3/cached/users/twitch/<id>` | oggi risponde con le liste vuote: è normale. Lo stesso indirizzo serve i canali ospiti |
 | FFZ globali | `https://api.frankerfacez.com/v1/set/global` | |
 | FFZ del canale | `https://api.frankerfacez.com/v1/room/<canale>` | oggi risponde **404**: è normale, si tace |
+| FFZ di un canale ospite | `https://api.frankerfacez.com/v1/room/id/<id>` | la stessa stanza, indicizzata per id invece che per nome |
+
+**Le live congiunte non hanno spostato la riga di §1.3.** Le quattro righe qui
+sopra che dicono «ospite» non chiedono niente a nessuno: partono tutte dall'id
+numerico che il tag `source-room-id` regala dentro il messaggio, e sono gli
+stessi host che il pollaio interroga già per il proprio canale. Chi non collega
+l'account vede una live congiunta esattamente come chi l'ha collegato — badge,
+emote, faccia e nome dell'altro streamer compresi.
 
 I quattro del **collegamento**, su `id.twitch.tv`. Li tocca soltanto
 `js/conto.js`, e in chat non fanno niente: prendono un gettone e lo tengono
@@ -464,6 +508,13 @@ controlla prima di chiamare**, non dopo aver preso un 403 (§19).
 | chi c'è in chat | `GET /chat/chatters` | `gente.js`, e **solo a pannello aperto** — `moderator:read:chatters` |
 | i moderatori e i VIP del canale | `GET /moderation/moderators`, `GET /channels/vips` | `gente.js`, e solo sul proprio canale: servono a dividere la lista in scomparti. Sono gli stessi due indirizzi di sopra, letti invece che scritti |
 | le tue emote native | `GET /chat/emotes/user?user_id=<tuo>&broadcaster_id=<canale>` | `barra.js`, per il suggeritore — `user:read:emotes`. Risponde con le emote che **quell'utente** può usare **in quel canale** |
+| iscrizione a EventSub | `POST /eventsub/subscriptions` | `stormo.js`, tre volte: `channel.shared_chat.begin`, `.update`, `.end` — `user:read:chat`. Serve a sapere **in anticipo** chi partecipa a una live congiunta e **quando finisce**: i messaggi continuano ad arrivare dall'IRC anonimo, questo non li tocca |
+
+E una presa in più, che non è né Helix né IRC:
+
+| cosa | indirizzo | note |
+|---|---|---|
+| EventSub | `wss://eventsub.wss.twitch.tv/ws?keepalive_timeout_seconds=30` | la apre `stormo.js` **solo** con un account collegato che porti `user:read:chat`. La socket in sé non si autentica: il gettone viaggia nel `POST` di iscrizione qui sopra, che ha dieci secondi di tempo dal `session_welcome`. Senza account non si apre affatto, e la sessione si scopre dai tag dei messaggi (§17) |
 
 Le righe sono sedici e gli indirizzi quindici, perché due compaiono due volte:
 `/moderation/moderators` e `/channels/vips` si scrivono per dare e togliere un
@@ -574,6 +625,37 @@ Comandi da gestire: `PING` (→ `PONG :tmi.twitch.tv`), `PRIVMSG`, `USERNOTICE`,
 
 Il `/me` è un `PRIVMSG` il cui corpo è `\x01ACTION ...\x01`: va riconosciuto e
 diventa `tipo: 'azione'`.
+
+### I tag `source-*` — le live congiunte
+
+Quando il canale entra in una live congiunta (§17), Twitch **duplica da sé**
+nella nostra stanza i `PRIVMSG` e gli `USERNOTICE` degli altri canali. Non c'è
+niente da fare per riceverli: arrivano sul `JOIN` che c'è già. Quello che
+cambia sono i tag.
+
+| tag | cosa dice |
+|---|---|
+| `source-room-id` | l'id del canale **da cui** il messaggio è partito |
+| `source-id` | l'id del messaggio nella stanza di partenza |
+| `source-badges` | i distintivi di chi scrive **nel suo canale**, stesso formato di `badges` |
+| `source-badge-info` | i metadati di quei distintivi, es. i mesi di abbonamento |
+| `source-msg-id` | su `USERNOTICE`: il tipo di avviso nella stanza di partenza |
+| `source-only` | il messaggio è stato mandato solo al canale di partenza |
+
+Due regole, e non ce ne sono altre:
+
+1. **I tag `source-*` ci sono → la stanza è in una live congiunta.** Non
+   servono API per accorgersene.
+2. **`source-room-id` uguale a `room-id` → il messaggio è nato qui.** Diverso →
+   è la copia di un messaggio scritto altrove, e allora comandano i `source-*`
+   (§5).
+
+Non si deduplica niente: si entra in una stanza sola, e ogni messaggio ci
+arriva una volta. La deduplica su `source-id` servirebbe a chi fa `JOIN` su più
+canali della stessa sessione, che non è questo caso.
+
+Le emote native non hanno bisogno di niente: il tag `emotes` dà gli id, e il
+CDN di Twitch non sa nemmeno da quale canale arrivi la richiesta.
 
 ## 9. Il colore del nick
 
@@ -952,6 +1034,55 @@ guarda: ridisegnarli in viola butterebbe via l'unica cosa che rende una
 targhetta più veloce di una parola. L'eccezione è stretta: quattro
 riempimenti, mai testo, mai bordi di qualcos'altro.
 
+### Le live congiunte — più canali dentro la stessa piattaforma
+
+Twitch chiama **Stream Together** l'invitare altri streamer nella propria
+diretta, e **Shared Chat** la chat che ne esce: fino a sei canali che diventano
+uno, con la moderazione valida per tutta la sessione. Il pollaio la riceve
+gratis — i messaggi degli altri arrivano nella nostra stanza, duplicati da
+Twitch, coi tag `source-*` di §8 — e li riconosce da quei tag soli, senza
+account e senza API.
+
+**Qui la regola delle quattro tinte non basta, e cede.** Due canali Twitch
+hanno lo stesso `data-fonte`: un riempimento viola sopra entrambi non
+distinguerebbe niente, che è esattamente il difetto contro cui la regola era
+stata scritta. Quindi la targhetta di una live congiunta **ha del testo**: la
+faccia del canale, presa dalla sua anagrafica (§7), e il suo nome. La tinta la
+ricava `resa.js` dall'id, girando la ruota dei colori, con carica e luminosità
+fissate in `tokens.css` (`--stormo-carica`, `--stormo-buio`) perché sei schede
+diverse restino tutte leggibili. Nessun esadecimale nuovo, e §1.5 tiene.
+
+**La targhetta di canale la prende solo chi arriva da un'altra stanza.** Le
+righe di casa restano nude, come in una chat qualunque: sono la maggioranza,
+sono già identificate dal fatto di non avere niente sopra, e riempirle di
+«Twitch» rifarebbe lo spreco di prima. Se invece è collegata anche Kick o
+YouTube, le righe di casa tornano ad avere la loro targhetta di piattaforma —
+lì la distinzione serve davvero, ed è la stessa regola di sempre.
+
+**Le pastiglie dei filtri seguono i canali** (§18): durante una sessione ne
+compare una per ogni canale unito, `data-filtro="canale:<id>"`, e spariscono da
+sole quando la sessione finisce. Un filtro rimasto senza canale torna a
+«Tutto». Come per le piattaforme, compaiono soltanto quando i canali sono più
+d'uno.
+
+**Chi sa cosa, e quando:**
+
+| | come lo si sa | quando |
+|---|---|---|
+| che c'è una sessione | i tag `source-*` di un messaggio | al primo messaggio che arriva da un altro canale |
+| chi sono gli altri canali | `channel.shared_chat.begin` / `.update` su EventSub | **prima** che scrivano, ma solo con l'account collegato |
+| quando la sessione finisce | `channel.shared_chat.end` | idem |
+
+Il modo passivo non è un ripiego: è la strada principale, e regge da sola tutto
+quello che si vede in chat. EventSub aggiunge le due cose che i messaggi non
+possono dire — chi c'è prima che parli, e quando si smette — e `stormo.js` si
+disinnesca da sé se l'account non c'è o se il gettone non porta
+`user:read:chat` (§1.9).
+
+**In modalità prova la live congiunta c'è sempre**: due canali finti oltre al
+nostro, con la faccia disegnata sul posto e i badge che ripiegano, perché una
+sessione vera capita quando capita e un overlay si sistema prima.
+
 ### Cosa si può collegare davvero
 
 I vincoli §1.1 e §1.2 (zero dipendenze, tutto da `file://`) e la lettura
@@ -1036,11 +1167,19 @@ collegate sono più d'una**: è la regola della targhetta di §17, e per lo stes
 motivo — con la sola Twitch, «Tutto» e «Twitch» sarebbero lo stesso bottone
 scritto due volte.
 
+Durante una live congiunta (§17) se ne aggiunge una **per ogni canale unito**,
+il nostro compreso, con `data-filtro="canale:<id>"`: è l'unico modo di isolare
+la chat di un solo streamer quando la piattaforma è la stessa per tutti. Le
+crea `barra.js` quando `Stormo` annuncia la sessione, le toglie quando finisce,
+e un filtro rimasto senza canale torna a `Tutto` da sé. Vale la stessa regola
+di sopra: compaiono solo quando i canali sono più d'uno.
+
 Come è fatto, e conta perché è la parte che gira a ogni messaggio: ogni riga
-porta `data-piattaforma` e, se è un evento o ha dei bits, `data-evento`; la
-radice porta `data-filtro`; le righe che non combaciano prendono `.is-fuori`,
-che è `display: none`. **Cambiare filtro non rifà il DOM**: rimette una classe
-su righe che ci sono già.
+porta `data-piattaforma`, `data-stanza` quando il messaggio viene da Twitch, e
+`data-evento` se è un evento o ha dei bits; la radice porta `data-filtro`; le
+righe che non combaciano prendono `.is-fuori`, che è `display: none`.
+**Cambiare filtro non rifà il DOM**: rimette una classe su righe che ci sono
+già.
 
 `Eventi` prende le schede di `tipo: 'evento'` — abbonamenti, raid, annunci — e
 ogni messaggio con `bits > 0`. Le righe di moderazione **non** sono eventi: un

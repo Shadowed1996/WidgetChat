@@ -85,28 +85,43 @@
     };
   }
 
-  function pezziDi(corpo, tag, bits) {
+  function pezziDi(corpo, tag, bits, stanza) {
     if (!conf.emote || !window.Emote) {
       return corpo ? [{ tipo: 'testo', testo: corpo }] : [];
     }
     try {
-      return window.Emote.pezzi(corpo, tag.emotes || '', bits);
+      return window.Emote.pezzi(corpo, tag.emotes || '', bits, stanza);
     } catch (err) {
       console.warn('[pollaio] le emote non si sono lasciate leggere:', err);
       return corpo ? [{ tipo: 'testo', testo: corpo }] : [];
     }
   }
 
-  function distintiviDi(tag) {
+  // In una live congiunta Twitch duplica nella nostra stanza i messaggi degli
+  // altri canali, e ci mette accanto i tag `source-*`: sono quelli che
+  // raccontano dove il messaggio è stato scritto davvero (§17).
+  function stanzaDi(tag) {
+    var dove = String(tag['source-room-id'] || '').trim();
+    return /^[0-9]{1,12}$/.test(dove) ? dove : String(conf.id || '');
+  }
+
+  function distintiviDaAltrove(tag, stanza) {
+    if (stanza === String(conf.id || '')) { return tag.badges || ''; }
+    return tag['source-badges'] || '';
+  }
+
+  function distintiviDi(tag, stanza) {
     if (!conf.badge || !window.Badge) { return []; }
-    try { return window.Badge.leggi(tag.badges || ''); }
+    try { return window.Badge.leggi(distintiviDaAltrove(tag, stanza), stanza); }
     catch (err) { return []; }
   }
 
-  function ruoliDi(tag, nick) {
+  function ruoliDi(tag, nick, stanza) {
     var ruoli = { capo: false, mod: false, vip: false, abbonato: false, artista: false, staff: false, bot: false };
+    var altrove = stanza !== undefined && stanza !== String(conf.id || '');
+
     if (window.Badge) {
-      try { ruoli = window.Badge.ruoli(tag.badges || '', tag); }
+      try { ruoli = window.Badge.ruoli(distintiviDaAltrove(tag, stanza), tag, altrove); }
       catch (err) {  }
     }
     ruoli.bot = eBot(nick);
@@ -117,6 +132,47 @@
     if (!window.Rilievo) { return null; }
     try { return window.Rilievo.valuta(messaggio); }
     catch (err) { return null; }
+  }
+
+  // Il primo messaggio che arriva da un canale mai visto apre la sua scheda:
+  // è così che una live congiunta si riconosce anche senza account collegato.
+  function segnalaStormo(stanza) {
+    if (!window.Stormo) { return; }
+    try { window.Stormo.osserva(stanza); }
+    catch (err) {  }
+  }
+
+  // `finto` è la modalità prova: i canali non esistono, quindi si aprono i
+  // banchi e ci si ferma lì. Aprirli conta lo stesso, perché è quello che
+  // toglie all'ospite i badge e le emote del nostro canale (§17).
+  function vestiOspite(voce, finto) {
+    if (!voce || !voce.ospite) { return; }
+
+    if (window.Badge && conf.badge) {
+      try {
+        if (finto) { window.Badge.ospite(voce.id); }
+        else { window.Badge.caricaOspite(voce.id); }
+      } catch (err) {  }
+    }
+    if (window.Emote && conf.emote) {
+      try {
+        if (finto) { window.Emote.ospite(voce.id); }
+        else {
+          window.Emote.caricaOspite(voce.id, {
+            sette: conf.sette, bttv: conf.bttv, ffz: conf.ffz
+          });
+        }
+      } catch (err) {  }
+    }
+  }
+
+  function suStormo(canali, finto) {
+    var i;
+    for (i = 0; i < canali.length; i++) { vestiOspite(canali[i], finto); }
+
+    if (window.Resa && window.Resa.stormo) { window.Resa.stormo(canali); }
+    if (window.Barra && window.Barra.stormo) { window.Barra.stormo(canali); }
+    if (window.Rilievo && window.Rilievo.stormo) { window.Rilievo.stormo(canali); }
   }
 
   function daPrivmsg(m) {
@@ -132,6 +188,10 @@
     if (conf.comandi && corpo.charAt(0) === '!') { return null; }
 
     var bits = parseInt(tag.bits, 10) || 0;
+    var stanza = stanzaDi(tag);
+    var altrove = stanza !== String(conf.id || '');
+
+    if (altrove) { segnalaStormo(stanza); }
 
     var messaggio = {
       id:        tag.id || '',
@@ -141,18 +201,21 @@
       nick:      nick,
       nome:      ripulisci(tag['display-name'] || nick, MAX_NOME),
       colore:    tag.color || '',
-      badge:     distintiviDi(tag),
-      ruoli:     ruoliDi(tag, nick),
-      pezzi:     pezziDi(corpo, tag, bits),
+      badge:     distintiviDi(tag, stanza),
+      ruoli:     ruoliDi(tag, nick, stanza),
+      pezzi:     pezziDi(corpo, tag, bits, stanza),
       bits:      bits,
       risposta:  reply(tag),
-      primo:     conf.primo && tag['first-msg'] === '1',
-      ritorno:   tag['returning-chatter'] === '1',
+      primo:     !altrove && conf.primo && tag['first-msg'] === '1',
+      ritorno:   !altrove && tag['returning-chatter'] === '1',
       rilievo:   null,
       evento:    null,
       cancellato: false,
 
       piattaforma: 'twitch',
+
+      stanza:    stanza,
+      mirrorato: altrove,
 
       msgId:     tag['msg-id'] || ''
     };
@@ -191,8 +254,25 @@
 
     if (bloccoGiaVisto(tag)) { return null; }
 
+    var stanza = stanzaDi(tag);
+    var altrove = stanza !== String(conf.id || '');
+
+    if (altrove) { segnalaStormo(stanza); }
+
+    // Nella copia che arriva da un'altra stanza il tipo dell'avviso sta in
+    // `source-msg-id`: `msg-id` racconta solo che è un messaggio di rimbalzo.
+    var letto = tag;
+    if (tag['source-msg-id']) {
+      letto = {};
+      var chiave;
+      for (chiave in tag) {
+        if (Object.prototype.hasOwnProperty.call(tag, chiave)) { letto[chiave] = tag[chiave]; }
+      }
+      letto['msg-id'] = tag['source-msg-id'];
+    }
+
     var evento;
-    try { evento = window.Eventi.leggi(tag, m.testo || ''); }
+    try { evento = window.Eventi.leggi(letto, m.testo || ''); }
     catch (err) { return null; }
     if (!evento) { return null; }
 
@@ -208,9 +288,9 @@
       nick:      nick,
       nome:      ripulisci(tag['display-name'] || nick, MAX_NOME),
       colore:    tag.color || '',
-      badge:     distintiviDi(tag),
-      ruoli:     ruoliDi(tag, nick),
-      pezzi:     allegato ? pezziDi(allegato, tag, bits) : [],
+      badge:     distintiviDi(tag, stanza),
+      ruoli:     ruoliDi(tag, nick, stanza),
+      pezzi:     allegato ? pezziDi(allegato, tag, bits, stanza) : [],
       bits:      bits,
       risposta:  null,
       primo:     false,
@@ -219,7 +299,9 @@
       evento:    evento,
       cancellato: false,
       piattaforma: 'twitch',
-      msgId:     tag['msg-id'] || ''
+      stanza:    stanza,
+      mirrorato: altrove,
+      msgId:     letto['msg-id'] || ''
     };
 
     messaggio.rilievo = giudica(messaggio);
@@ -318,6 +400,8 @@
       evento:    null,
       cancellato: false,
       piattaforma: 'kick',
+      stanza:    '',
+      mirrorato: false,
       msgId:     ''
     };
 
@@ -370,6 +454,8 @@
       evento:    null,
       cancellato: false,
       piattaforma: 'youtube',
+      stanza:    '',
+      mirrorato: false,
       msgId:     ''
     };
 
@@ -463,6 +549,11 @@
       cancellato: false,
 
       piattaforma: 'twitch',
+
+      // La moderazione di una live congiunta vale per tutta la sessione:
+      // la riga è di casa anche quando il ban è partito da un altro canale.
+      stanza: String(conf.id || ''),
+      mirrorato: false,
       msgId: ''
     });
   }
@@ -566,6 +657,10 @@
       });
     }
 
+    if (window.Stormo && !conf.prova) {
+      window.Stormo.avvia({ id: conf.id, canale: conf.canale, su: suStormo });
+    }
+
     if (window.Badge && conf.badge) {
       window.Badge.carica(conf.canale, conf.id);
     }
@@ -583,6 +678,8 @@
           if (!msg.rilievo) { msg.rilievo = giudica(msg); }
           window.Resa.aggiungi(msg);
         } });
+
+        suStormo(window.Prova.stormo(), true);
       }
 
       if (conf.treno) { trenoFinto(); }

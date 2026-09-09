@@ -240,6 +240,34 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
   --inchiostro-fonte: var(--fondo);
 }
 
+/* Le live congiunte. Viene dopo le quattro piattaforme apposta: due canali
+   Twitch hanno lo stesso `data-fonte`, e qui la tinta la rifà l'id. */
+.pollaio__fonte.is-canale {
+  --tinta-fonte: hsl(var(--giro) var(--stormo-carica) var(--stormo-buio));
+  --inchiostro-fonte: var(--testo);
+
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+
+  padding-block: 0.1em;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.pollaio__pfp {
+  flex: none;
+  inline-size: 1.45em;
+  block-size: 1.45em;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.pollaio__fonte-nome {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
 .pollaio__testa {
   display: inline;
   margin: 0;

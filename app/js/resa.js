@@ -64,6 +64,12 @@
 
   var FILTRI = ['tutto', 'twitch', 'kick', 'youtube', 'eventi'];
 
+  // Nelle live congiunte i canali sono più d'uno dentro la stessa piattaforma:
+  // il filtro li chiama per id, che è l'unica cosa che il messaggio porta.
+  var FILTRO_CANALE = /^canale:[0-9]{1,12}$/;
+
+  var stormoDati = Object.create(null);
+
   var SOSPESI_MAX = 200;
 
   var MEMORIA_FILTRO = 6;
@@ -351,16 +357,58 @@
     tiktok: 'TikTok'
   };
 
-  function disegnaFonte(messaggio) {
-    if (!conf.multi) { return null; }
-
-    var chiave = String(messaggio.piattaforma || '').toLowerCase();
-
+  function targhettaPiattaforma(chiave) {
     if (!Object.prototype.hasOwnProperty.call(NOMI_FONTE, chiave)) { return null; }
 
     var targhetta = crea('p', 'pollaio__fonte', NOMI_FONTE[chiave]);
     targhetta.setAttribute('data-fonte', chiave);
     return targhetta;
+  }
+
+  // In una live congiunta «Twitch» sopra ogni riga non distingue più niente:
+  // dei canali uniti si mette la faccia e il nome, e una tinta ricavata
+  // dall'id perché due schede vicine non si somiglino (§17).
+  function targhettaCanale(stanza) {
+    var voce = stormoDati[stanza] || null;
+
+    var targhetta = crea('p', 'pollaio__fonte');
+    targhetta.classList.add('is-canale');
+    targhetta.setAttribute('data-fonte', 'twitch');
+    targhetta.setAttribute('data-canale', stanza);
+    targhetta.style.setProperty('--giro', (impronta(String(stanza)) % 360) + 'deg');
+
+    if (voce && voce.pfp) {
+      var faccia = immagine('pollaio__pfp', voce.pfp, '', '');
+      if (faccia) { targhetta.appendChild(faccia); }
+    }
+
+    var come = (voce && (voce.nome || voce.nick)) || '';
+    targhetta.appendChild(crea('span', 'pollaio__fonte-nome',
+      come ? ripulisci(come, MAX_NOME) : 'altro canale'));
+
+    return targhetta;
+  }
+
+  function ospite(stanza) {
+    return !!(stanza && stormoDati[stanza] && stormoDati[stanza].ospite);
+  }
+
+  // La targhetta di canale vale per sé: in una live congiunta di sola Twitch
+  // le righe di casa restano nude, e la scheda la prende soltanto chi arriva
+  // da un'altra stanza. «Twitch» sopra le nostre non distinguerebbe niente,
+  // che è la ragione per cui §17 la fa comparire solo quando serve.
+  function fonteDi(mirrorato, stanza, piattaforma) {
+    if (mirrorato && ospite(stanza)) { return targhettaCanale(stanza); }
+    if (!conf.multi) { return null; }
+    return targhettaPiattaforma(piattaforma);
+  }
+
+  function disegnaFonte(messaggio) {
+    return fonteDi(
+      messaggio.mirrorato,
+      String(messaggio.stanza || ''),
+      String(messaggio.piattaforma || '').toLowerCase()
+    );
   }
 
   function disegnaTesta(messaggio, tintaNome) {
@@ -443,6 +491,7 @@
     riga.setAttribute('data-rilievo', messaggio.rilievo ? messaggio.rilievo.livello : 0);
     if (messaggio.id) { riga.setAttribute('data-id', messaggio.id); }
     if (messaggio.nick) { riga.setAttribute('data-nick', messaggio.nick); }
+    if (messaggio.stanza) { riga.setAttribute('data-stanza', String(messaggio.stanza)); }
 
     if (ruoli.capo) { riga.classList.add('is-capo'); }
     if (ruoli.mod)  { riga.classList.add('is-mod'); }
@@ -485,6 +534,9 @@
   function combacia(riga) {
     if (filtro === 'tutto') { return true; }
     if (filtro === 'eventi') { return riga.hasAttribute('data-evento'); }
+    if (FILTRO_CANALE.test(filtro)) {
+      return riga.getAttribute('data-stanza') === filtro.slice(7);
+    }
     return riga.getAttribute('data-piattaforma') === filtro;
   }
 
@@ -707,7 +759,7 @@
 
   function metti(nome) {
     var scelto = String(nome || 'tutto').toLowerCase();
-    if (FILTRI.indexOf(scelto) === -1) { scelto = 'tutto'; }
+    if (FILTRI.indexOf(scelto) === -1 && !FILTRO_CANALE.test(scelto)) { scelto = 'tutto'; }
     if (scelto === filtro) { return filtro; }
 
     filtro = scelto;
@@ -719,6 +771,40 @@
     pota();
     alBordo();
     return filtro;
+  }
+
+  // La faccia e il nome di un canale arrivano dalla rete, quindi dopo la sua
+  // prima riga. Rifare la targhetta di quelle già appese costa il giro di un
+  // elenco che al massimo è lungo `max`, e non tocca il resto della riga.
+  function vestiFonte(riga) {
+    if (riga.classList.contains('pollaio__evento')) { return; }
+    if (riga.classList.contains('pollaio__moderazione')) { return; }
+
+    var vecchia = riga.querySelector('.pollaio__fonte');
+    if (vecchia && vecchia.parentNode === riga) { riga.removeChild(vecchia); }
+
+    var stanza = riga.getAttribute('data-stanza') || '';
+    var nuova = fonteDi(true, stanza, riga.getAttribute('data-piattaforma') || 'twitch');
+
+    if (nuova) { riga.insertBefore(nuova, riga.firstChild); }
+  }
+
+  function stormo(canali) {
+    var elenco = Array.isArray(canali) ? canali : [];
+    var i;
+
+    stormoDati = Object.create(null);
+
+    for (i = 0; i < elenco.length; i++) {
+      var voce = elenco[i];
+      if (!voce || !voce.id) { continue; }
+      stormoDati[String(voce.id)] = voce;
+    }
+
+    for (i = 0; i < righe.length; i++) { vestiFonte(righe[i]); }
+
+    // Il filtro di un canale che se n'è andato non ha più righe da mostrare.
+    if (FILTRO_CANALE.test(filtro) && !stormoDati[filtro.slice(7)]) { metti('tutto'); }
   }
 
   function pausa(si) {
@@ -1009,6 +1095,8 @@
     FILTRI: FILTRI,
     filtro: metti,
     qualeFiltro: function () { return filtro; },
+
+    stormo: stormo,
 
     pausa: pausa,
     inPausa: function () { return sospeso; },

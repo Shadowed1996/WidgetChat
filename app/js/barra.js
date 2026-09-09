@@ -808,6 +808,12 @@
               nodi.invito && nodi.invitoBtn && nodi.eco);
   }
 
+  function aggancia(bottone) {
+    bottone.addEventListener('click', function () {
+      scegli(bottone.getAttribute('data-filtro'));
+    });
+  }
+
   function preparaFiltri() {
     var i;
 
@@ -818,12 +824,49 @@
         nodi.filtri[i].hidden = conf.piattaforme.indexOf(quale) === -1;
       }
 
-      (function (bottone) {
-        bottone.addEventListener('click', function () {
-          scegli(bottone.getAttribute('data-filtro'));
-        });
-      }(nodi.filtri[i]));
+      aggancia(nodi.filtri[i]);
     }
+  }
+
+  // Le pastiglie dei canali di una live congiunta. Valgono la stessa regola
+  // delle altre (§17): compaiono soltanto quando i canali sono più d'uno, e
+  // spariscono da sole quando la sessione finisce.
+  function stormo(canali) {
+    if (!acceso || !nodi.filtri.length) { return; }
+
+    var elenco = Array.isArray(canali) ? canali : [];
+    var fila = nodi.filtri[0].parentNode;
+    if (!fila) { return; }
+
+    var vecchie = fila.querySelectorAll('.pollaio__filtro[data-canale]');
+    var i;
+    for (i = 0; i < vecchie.length; i++) { fila.removeChild(vecchie[i]); }
+
+    var ospiti = 0;
+    for (i = 0; i < elenco.length; i++) { if (elenco[i] && elenco[i].ospite) { ospiti++; } }
+
+    if (ospiti > 0) {
+      var dopo = fila.querySelector('.pollaio__filtro[data-filtro="eventi"]');
+
+      for (i = 0; i < elenco.length; i++) {
+        var voce = elenco[i];
+        if (!voce || !voce.id) { continue; }
+
+        var bottone = document.createElement('button');
+        bottone.className = 'pollaio__filtro';
+        bottone.type = 'button';
+        bottone.setAttribute('data-filtro', 'canale:' + voce.id);
+        bottone.setAttribute('data-canale', voce.id);
+        bottone.setAttribute('aria-pressed', 'false');
+        bottone.textContent = voce.nome || voce.nick || voce.id;
+
+        aggancia(bottone);
+        fila.insertBefore(bottone, dopo);
+      }
+    }
+
+    nodi.filtri = nodi.barra.querySelectorAll('.pollaio__filtro');
+    vestiFiltri(window.Resa.qualeFiltro());
   }
 
   function monta(radice, opzioni) {
@@ -901,6 +944,7 @@
 
   window.Barra = {
     monta: monta,
+    stormo: stormo,
     accesa: function () { return acceso; },
     vestiConto: vestiConto
   };
