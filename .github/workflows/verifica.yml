@@ -126,7 +126,11 @@ jobs:
           for pagina in app/*.html; do
             while IFS= read -r rif; do
               [ -z "$rif" ] && continue
-              case "$rif" in http*|data:*|\#*) continue ;; esac
+              # Tutto ciò che ha uno schema davanti non è un file di questo
+              # repository: http, data, about:blank, mailto. I percorsi
+              # relativi, che sono quelli da controllare, i due punti non li
+              # hanno mai.
+              case "$rif" in *:*|\#*) continue ;; esac
               if [ ! -f "app/$rif" ]; then
                 echo "- \`$pagina\` richiama \`$rif\`, che non c'è" >> "$GITHUB_STEP_SUMMARY"
                 persi=$((persi + 1))
