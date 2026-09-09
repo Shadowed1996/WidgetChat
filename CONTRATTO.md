@@ -2002,20 +2002,57 @@ quel canale.** Su un canale altrui Twitch risponde **403, e quel 403 non è un
 guasto**: è la risposta giusta a una domanda che non avevi il diritto di fare.
 Quindi non diventa un errore, diventa una frase dentro l'elenco — «Chi c'è in
 chat lo vedono soltanto lo streamer e i suoi moderatori, e qui non lo sei: ti
-resta il conto degli spettatori». Per lo stesso motivo i moderatori e i VIP del
-canale si chiedono **solo se il canale è il tuo** (l'`utenteId` del conto è
-uguale al `canaleId`); se non lo è non si chiedono affatto, la lista non si
-divide, e lo dice: «Questo canale non è il tuo, quindi non so chi è moderatore e
-chi è VIP: li trovi tutti fra gli utenti».
+resta il conto degli spettatori».
 
-**Un permesso che manca e un canale che non è il tuo sono due cose diverse, e il
-pollaio le dice diverse.** Confonderle avrebbe fatto sembrare rotta la
-situazione più normale che ci sia: guardare la chat di qualcun altro.
+**Non sono lo stesso limite, e vanno detti diversi.** Verificato sulla
+documentazione Twitch, alla lettera:
 
-Gli scomparti sono quattro — **Streamer**, **Moderatori**, **VIP**, **Utenti** —
-ordinati per nome dentro ciascuno, e ognuno porta il suo numero nel titolo. Lo
-streamer è sempre il primo e c'è anche quando non ha ancora scritto: è il suo
-canale. Ogni nome è cliccabile e apre il menù di qui sopra.
+- `chat/chatters` — «The ID of the broadcaster **or one of the broadcaster's
+  moderators**». Un moderatore del canale la legge, e con `moderator_id`
+  uguale all'utente del gettone la richiesta è quella giusta. **La lista di chi
+  c'è funziona anche con un bot moderatore collegato**, e non è mai stata
+  rifiutata dal codice: il gate su `padrone` non la tocca.
+- `moderation/moderators` e `channels/vips` — «This ID must match the user ID in
+  the access token». Solo il broadcaster, senza eccezioni. Non c'è un endpoint
+  alternativo, non c'è EventSub, non c'è una strada IRC. Essere moderatore del
+  canale non basta: **si può leggere chi c'è, ma non chi comanda.**
+
+Il gate `if (!padrone) { r.guaioRuoli = ALTRUI; }` è quindi **giusto**, e
+toglierlo produrrebbe solo 401 a ripetizione.
+
+**Ma i ruoli non si chiedono soltanto: si guardano passare.** I badge
+`moderator/1`, `vip/1` e `broadcaster/1` viaggiano attaccati a ogni messaggio,
+sono veri, e valgono anche su un canale altrui. `pollaio.js` li calcola già per
+disegnare la riga; adesso li passa anche a `Gente.visto(nick, ruoli)`, che li
+mette da parte, e `dividi` li usa come terza fonte accanto ai due elenchi di
+Helix. Copertura parziale — solo chi ha scritto — ma è la differenza fra «non so
+niente» e «questi li so».
+
+Tre regole in quel ricordo, e sono tutte e tre per non dire il falso: si segna
+**solo in salita** (un badge che c'era e adesso non c'è vuol dire che il
+messaggio arriva da un'altra stanza, non che il ruolo è stato tolto); **non si
+segnano i messaggi rispecchiati** da una live congiunta, che parlano di
+un'altra stanza; e il ricordo **si azzera cambiando canale**.
+
+**Un permesso che manca, un canale che non è il tuo e un guasto sono tre cose
+diverse.** Prima le ultime due si confondevano: `scusa()` trasformava
+*qualunque* fallimento dei chatters in «qui non sei moderatore» — anche un 429,
+un 500, la rete che cade — e a un moderatore vero il pollaio rispondeva una cosa
+falsa, mandandolo a cercare il problema dove non era. Adesso `Conto.verso`
+consegna anche lo **stato HTTP** (quarto argomento di `su`), e `NON_MOD` si dice
+**solo sul 403**, che è alla lettera l'unico caso in cui Twitch sta dicendo
+quello. Chi non guarda quel quarto argomento continua a funzionare come prima.
+
+Gli scomparti sono **cinque** — **Streamer**, **Moderatori**, **VIP**, **Bot**,
+**Utenti** — ordinati per nome dentro ciascuno, e ognuno porta il suo numero nel
+titolo. Lo streamer è sempre il primo e c'è anche quando non ha ancora scritto:
+è il suo canale. Ogni nome è cliccabile e apre il menù di qui sopra.
+
+**I bot non sono un dato di Twitch**: `chat/chatters` restituisce nomi e basta,
+e il distintivo da bot non esce da nessuna API. Sono quelli scritti nella
+manopola `bot`, che il pollaio usava già per la pulizia della chat e che adesso
+serve anche qui. Vengono prima dei ruoli: un bot moderatore è un bot, ed è
+quello che uno vuole vedere guardando l'elenco.
 
 `Gente` **non parte senza un account collegato**, e non è una scorciatoia: senza
 gettone `Conto.verso` non ha niente da mettere in `Authorization`, e sia

@@ -480,6 +480,7 @@
     { chiave: 'streamer', titolo: 'Streamer' },
     { chiave: 'moderatori', titolo: 'Moderatori' },
     { chiave: 'vip', titolo: 'VIP' },
+    { chiave: 'bot', titolo: 'Bot' },
     { chiave: 'utenti', titolo: 'Utenti' }
   ];
 
@@ -572,6 +573,8 @@
       window.Gente.avvia({
         canale: conf.canale,
         canaleId: id,
+        bot: (window.Impostazioni && window.Impostazioni.valori)
+          ? window.Impostazioni.valori.bot : '',
         visibile: function () { return !nodi.lista.hidden; },
         su: vestiGente
       });

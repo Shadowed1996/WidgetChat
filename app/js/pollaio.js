@@ -128,6 +128,21 @@
     return ruoli;
   }
 
+  // I badge di un messaggio dicono il ruolo di chi lo ha scritto, e lo dicono
+  // anche su un canale che non è il tuo — dove Helix non lo direbbe mai, perché
+  // l'elenco dei moderatori Twitch lo dà solo al suo streamer. Qui si mette da
+  // parte, e il pannello «chi c'è» ci divide gli scomparti.
+  //
+  // Solo quelli di casa: un badge che arriva da un'altra stanza di una live
+  // congiunta parla di quell'altra stanza, non di questa.
+  function segnaRuoli(nick, ruoli, altrove) {
+    if (altrove || !nick || !ruoli) { return; }
+    if (!window.Gente || !window.Gente.visto) { return; }
+
+    try { window.Gente.visto(nick, ruoli); }
+    catch (err) {  }
+  }
+
   function giudica(messaggio) {
     if (!window.Rilievo) { return null; }
     try { return window.Rilievo.valuta(messaggio); }
@@ -219,6 +234,8 @@
 
       msgId:     tag['msg-id'] || ''
     };
+
+    segnaRuoli(nick, messaggio.ruoli, altrove);
 
     messaggio.rilievo = giudica(messaggio);
     return messaggio;

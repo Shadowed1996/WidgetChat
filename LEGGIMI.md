@@ -881,14 +881,24 @@ chiedo all'API e senza collegamento non ho niente con cui chiederli.
 
 Tre cose da dire con onestà, perché sono limiti veri e non guasti:
 
-- **Chi c'è in chat, Twitch lo fa vedere solo allo streamer e ai suoi
-  moderatori.** Su un canale dove non sei né l'uno né l'altro quella lista non
-  arriva: resta il conto degli spettatori, e il pannello scrive per esteso
-  perché. Non è il pollaio che non ce la fa.
-- **Moderatori e VIP li so dividere solo sul tuo canale.** Altrove Twitch non mi
-  lascia chiedere chi sono, quindi ci sono tutti ma stanno tutti fra gli utenti.
-  Anche questo il pannello lo dice, invece di lasciartelo indovinare da uno
-  scomparto vuoto.
+- **Chi c'è in chat lo vedono lo streamer e i suoi moderatori.** Se il tuo
+  account è moderatore del canale — anche un bot moderatore — la lista arriva.
+  Se non sei né l'uno né l'altro non arriva, resta il conto degli spettatori, e
+  il pannello scrive per esteso perché. Non è il pollaio che non ce la fa.
+- **L'elenco completo di moderatori e VIP Twitch lo dà solo al suo streamer.**
+  Non c'è una strada alternativa: nessun altro endpoint, nessun EventSub,
+  niente dall'IRC. Essere moderatore non basta — si può leggere *chi c'è*, ma
+  non *chi comanda*.
+
+  Quello che si può fare, e che dalla 1.2.9 il pollaio fa, è **riconoscere
+  chi ha scritto**: il badge da moderatore o da VIP viaggia attaccato al
+  messaggio, quindi chi parla finisce nel suo scomparto anche su un canale
+  altrui. Chi non ha ancora aperto bocca resta fra gli utenti. È una copertura
+  parziale e il pannello lo dice, invece di far finta di sapere tutto.
+- **I bot hanno il loro scomparto**, e vengono prima dei ruoli: un bot
+  moderatore è un bot, che è quello che vuoi vedere guardando l'elenco. Twitch
+  non ha nessun modo di dirmi chi è un bot, quindi sono quelli che scrivi tu
+  nella manopola **Bot** — la stessa che usi per tenerli fuori dalla chat.
 - **Il ritmo è educato**: il contatore ogni minuto, la lista ogni due, e **la
   lista la chiedo soltanto a pannello aperto**. Un widget acceso otto ore non ha
   nessun motivo di farsi mandare mille nomi da Twitch per tenerli in un pannello

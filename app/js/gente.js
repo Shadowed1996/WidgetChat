@@ -49,11 +49,11 @@
 
   var NON_MOD = 'Chi c’è in chat lo vedono soltanto lo streamer e i suoi moderatori, e qui non lo sei: ti resta il conto degli spettatori.';
 
-  var ALTRUI = 'Questo canale non è il tuo, quindi non so chi è moderatore e chi è VIP: li trovi tutti fra gli utenti.';
+  var ALTRUI = 'Questo canale non è il tuo: l’elenco completo dei moderatori e dei VIP Twitch lo dice soltanto al suo streamer. Qui riconosco quelli che hanno scritto — il badge viaggia col messaggio — e gli altri stanno fra gli utenti finché non parlano.';
 
   var STORTO = 'Twitch ha risposto in un modo che non capisco.';
 
-  var conf = { canale: '', canaleId: '', su: null, visibile: null };
+  var conf = { canale: '', canaleId: '', bot: [], su: null, visibile: null };
 
   var acceso = false;
   var inVolo = false;
@@ -72,7 +72,7 @@
   var spettatori = null;
   var nomeStreamer = '';
   var inChat = 0;
-  var scomparti = { moderatori: [], vip: [], utenti: [] };
+  var scomparti = { moderatori: [], vip: [], bot: [], utenti: [] };
   var quando = 0;
   var guaioSpettatori = '';
   var guaioLista = '';
@@ -189,6 +189,7 @@
       streamer: scompartoStreamer(),
       moderatori: copia(scomparti.moderatori),
       vip: copia(scomparti.vip),
+      bot: copia(scomparti.bot),
       utenti: copia(scomparti.utenti),
       quando: quando,
       guaio: uniti([guaioSpettatori, guaioLista])
@@ -198,7 +199,7 @@
   function firma(s) {
     return s.spettatori + '|' + s.inChat + '|' + s.guaio + '|' +
       nomi(s.streamer) + '|' + nomi(s.moderatori) + '|' +
-      nomi(s.vip) + '|' + nomi(s.utenti);
+      nomi(s.vip) + '|' + nomi(s.bot) + '|' + nomi(s.utenti);
   }
 
   function avvisa(stato) {
@@ -228,11 +229,11 @@
       if (!c) { su(SENZA_TWITCH); return; }
 
       c.verso('GET', percorso + (dopo ? '&after=' + encodeURIComponent(dopo) : ''), null,
-        function (guaio, dati, scollegato) {
-          if (guaio) { su(guaio, null, 0, scollegato === true); return; }
+        function (guaio, dati, scollegato, stato) {
+          if (guaio) { su(guaio, null, 0, scollegato === true, stato); return; }
 
           var voci = dati && dati.data;
-          if (!elenco(voci)) { su(STORTO, null, 0, false); return; }
+          if (!elenco(voci)) { su(STORTO, null, 0, false, stato); return; }
 
           var i;
           var chi;
@@ -255,15 +256,43 @@
     passo('');
   }
 
+  // Quello che si e' visto passare in chat. I badge `moderator/1`, `vip/1` e
+  // `broadcaster/1` viaggiano attaccati a ogni messaggio e sono veri: dicono il
+  // ruolo di chi ha parlato, e lo dicono anche su un canale che non e' il tuo,
+  // dove Helix non te lo direbbe mai. Copertura parziale — solo chi ha scritto —
+  // ma e' la differenza fra «non so niente» e «questi li so».
+  var dettiDaiBadge = Object.create(null);
+
+  function visto(nick, ruoli) {
+    var chiave = String(nick || '').toLowerCase();
+    if (!chiave || !ruoli) { return; }
+
+    var suo = dettiDaiBadge[chiave] || (dettiDaiBadge[chiave] = { mod: false, vip: false, bot: false });
+
+    // Solo in salita: un badge che c'era e adesso non c'e' vuol dire che il
+    // messaggio arriva da un'altra stanza, non che il ruolo e' stato tolto.
+    if (ruoli.mod) { suo.mod = true; }
+    if (ruoli.vip) { suo.vip = true; }
+    if (ruoli.bot) { suo.bot = true; }
+  }
+
+  function eBot(nick) {
+    var chiave = String(nick || '').toLowerCase();
+    if (conf.bot.indexOf(chiave) !== -1) { return true; }
+    return !!(dettiDaiBadge[chiave] && dettiDaiBadge[chiave].bot);
+  }
+
   function dividi(gente, mod, vip) {
     var dentroMod = insieme(mod);
     var dentroVip = insieme(vip);
     var visti = Object.create(null);
     var moderatori = [];
     var vipi = [];
+    var bot = [];
     var utenti = [];
     var i;
     var chi;
+    var detto;
 
     for (i = 0; i < gente.length; i++) {
       chi = gente[i];
@@ -271,16 +300,24 @@
       visti[chi.nick] = true;
 
       if (chi.nick === conf.canale) { nomeStreamer = chi.nome || nomeStreamer; continue; }
-      if (dentroMod[chi.nick]) { moderatori.push(chi); continue; }
-      if (dentroVip[chi.nick]) { vipi.push(chi); continue; }
+
+      // I bot prima dei ruoli: un bot moderatore e' un bot, ed e' quello che
+      // uno vuole vedere quando guarda l'elenco.
+      if (eBot(chi.nick)) { bot.push(chi); continue; }
+
+      detto = dettiDaiBadge[chi.nick];
+
+      if (dentroMod[chi.nick] || (detto && detto.mod)) { moderatori.push(chi); continue; }
+      if (dentroVip[chi.nick] || (detto && detto.vip)) { vipi.push(chi); continue; }
       utenti.push(chi);
     }
 
     moderatori.sort(perNome);
     vipi.sort(perNome);
+    bot.sort(perNome);
     utenti.sort(perNome);
 
-    scomparti = { moderatori: moderatori, vip: vipi, utenti: utenti };
+    scomparti = { moderatori: moderatori, vip: vipi, bot: bot, utenti: utenti };
   }
 
   function scusa(r, padrone) {
@@ -288,6 +325,13 @@
     if (r.scollegato) { return r.guaioChatters; }
     if (r.guaioChatters === SENZA_CHATTERS || r.guaioChatters === SENZA_ME) { return r.guaioChatters; }
     if (padrone || r.spettatori === null) { return r.guaioChatters; }
+
+    // NON_MOD solo sul 403, che e' l'unico stato in cui Twitch sta davvero
+    // dicendo «non sei un suo moderatore». Prima ci finiva dentro qualunque
+    // guasto — un 429, un 500, la rete che cade — e a un moderatore vero il
+    // pollaio rispondeva «qui non lo sei», che e' falso e manda a cercare la
+    // cosa sbagliata.
+    if (r.statoChatters !== 403) { return r.guaioChatters; }
     return NON_MOD;
   }
 
@@ -336,6 +380,7 @@
       lista: null,
       totale: 0,
       guaioChatters: '',
+      statoChatters: 0,
       scollegato: false,
       mod: null,
       vip: null,
@@ -384,10 +429,11 @@
         sfoglia(CHATTERS + encodeURIComponent(conf.canaleId) +
           '&moderator_id=' + encodeURIComponent(mio) +
           '&first=' + PER_PAGINA, TETTO_PAGINE,
-          function (guaio, gente, totale, scollegato) {
+          function (guaio, gente, totale, scollegato, stato) {
             if (guaio) {
               r.guaioChatters = guaio;
               r.scollegato = scollegato;
+              r.statoChatters = stato;
               meno();
               return;
             }
@@ -500,7 +546,10 @@
     spettatori = null;
     nomeStreamer = '';
     inChat = 0;
-    scomparti = { moderatori: [], vip: [], utenti: [] };
+    scomparti = { moderatori: [], vip: [], bot: [], utenti: [] };
+
+    // Cambiando canale i badge visti valgono per l’altro, non per questo.
+    dettiDaiBadge = Object.create(null);
     quando = 0;
     guaioSpettatori = '';
     guaioLista = '';
@@ -516,6 +565,22 @@
     timer = setTimeout(function () { timer = null; consegna(); }, 0);
   }
 
+  // I bot non sono un dato di Twitch: `chat/chatters` restituisce nomi e basta,
+  // e il distintivo da bot non esce da nessuna API. Sono quelli che l'utente ha
+  // scritto nella sua manopola, piu' quelli che la chat ha fatto riconoscere.
+  function nomiDiBot(dato) {
+    var fuori = [];
+    var pezzi = Array.isArray(dato) ? dato : String(dato || '').split(',');
+    var i;
+    var nome;
+
+    for (i = 0; i < pezzi.length; i++) {
+      nome = String(pezzi[i] || '').trim().toLowerCase();
+      if (nome && MODELLO_CANALE.test(nome) && fuori.indexOf(nome) === -1) { fuori.push(nome); }
+    }
+    return fuori;
+  }
+
   function avvia(contesto) {
     ferma();
     azzera();
@@ -527,6 +592,7 @@
     conf = {
       canale: MODELLO_CANALE.test(canale) ? canale : '',
       canaleId: MODELLO_ID.test(canaleId) ? canaleId : '',
+      bot: nomiDiBot(o.bot),
       su: (typeof o.su === 'function') ? o.su : null,
       visibile: (typeof o.visibile === 'function') ? o.visibile : null
     };
@@ -563,6 +629,7 @@
     avvia: avvia,
     ferma: ferma,
     aggiorna: aggiorna,
+    visto: visto,
     stato: function () { return ultimo || foto(); }
   };
 }());

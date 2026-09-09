@@ -452,7 +452,7 @@
     if (canali[pulito]) { su(null, canali[pulito]); return; }
 
     pronto(function (guaio, c) {
-      if (guaio) { su(guaio, null, true); return; }
+      if (guaio) { su(guaio, null, true, 0); return; }
 
       chiama(UTENTI + '?login=' + encodeURIComponent(pulito), {
         method: 'GET',
@@ -543,21 +543,26 @@
       opzioni.body = JSON.stringify(corpo);
     }
 
+    // `su(guaio, dati, scollegato, stato)`. Il quarto argomento e' lo stato HTTP
+    // vero, e serve a chi deve distinguere un «no» da un «non ce l'ho fatta»:
+    // un 403 su `chat/chatters` vuol dire davvero «non sei moderatore», un 429 o
+    // un 500 vogliono dire tutt'altro, e finora da fuori si vedevano uguali.
+    // Chi non lo guarda continua a funzionare come prima.
     chiama(HELIX + percorso, opzioni, function (guaio, esito) {
-      if (guaio) { su(guaio); return; }
+      if (guaio) { su(guaio, null, false, 0); return; }
 
       if (esito.stato === 401) {
         var detto = String((esito.dati && esito.dati.message) || '');
 
         if (/scope/i.test(detto)) {
           su('A Twitch manca un permesso per questa cosa: ' + detto +
-             '. Si rimedia con «Connetti account», che li richiede tutti.');
+             '. Si rimedia con «Connetti account», che li richiede tutti.', null, false, 401);
           return;
         }
 
         if (riprova) {
           rinnova(function (guaioDue, nuovo) {
-            if (guaioDue) { su(guaioDue, null, true); return; }
+            if (guaioDue) { su(guaioDue, null, true, 401); return; }
             bussa(nuovo, metodo, percorso, corpo, false, su);
           });
           return;
@@ -565,30 +570,30 @@
 
         su(detto
           ? 'Twitch non l’ha accettata: ' + detto
-          : 'Twitch non mi riconosce più: si rifà con «Connetti account».', null, !detto);
+          : 'Twitch non mi riconosce più: si rifà con «Connetti account».', null, !detto, 401);
         return;
       }
 
       if (esito.stato === 403) {
-        su(guaioDi(esito, 'Twitch dice di no: per questa cosa servono i permessi di moderatore sul canale.'));
+        su(guaioDi(esito, 'Twitch dice di no: per questa cosa servono i permessi di moderatore sul canale.'), null, false, 403);
         return;
       }
       if (esito.stato === 429) {
-        su('Sto andando troppo forte per Twitch. Aspetto qualche secondo e riprovo.');
+        su('Sto andando troppo forte per Twitch. Aspetto qualche secondo e riprovo.', null, false, 429);
         return;
       }
       if (esito.stato < 200 || esito.stato > 299) {
-        su(guaioDi(esito, 'Twitch ha risposto ' + esito.stato + '.'));
+        su(guaioDi(esito, 'Twitch ha risposto ' + esito.stato + '.'), null, false, esito.stato);
         return;
       }
 
-      su(null, esito.dati);
+      su(null, esito.dati, false, esito.stato);
     });
   }
 
   function verso(metodo, percorso, corpo, su) {
     pronto(function (guaio, c) {
-      if (guaio) { su(guaio, null, true); return; }
+      if (guaio) { su(guaio, null, true, 0); return; }
       bussa(c, metodo, percorso, corpo, true, su);
     });
   }
