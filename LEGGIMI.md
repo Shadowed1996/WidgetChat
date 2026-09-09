@@ -1225,7 +1225,7 @@ login. Il pollaio adesso te lo dice la prima volta che apri il suggeritore.
 Il rimedio è **Riconnetti account** nella regia, un clic.
 
 Se invece ne vedi solo una parte — le prime e non le altre — era un difetto
-sistemato nella 1.2.1: Twitch le consegna a pagine e ne veniva letta solo la
+sistemato nella 1.2.2: Twitch le consegna a pagine e ne veniva letta solo la
 prima, quindi chi ne ha tante ne perdeva la maggioranza. Adesso si leggono tutte.
 
 **Il testo non si legge sopra al gioco.**
