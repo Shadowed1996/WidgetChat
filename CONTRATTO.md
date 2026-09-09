@@ -1077,6 +1077,30 @@ risponde. Se non risponde nessuno l'indirizzo resta vuoto, e la regia scrive il
 è la strada buona: un indirizzo che cambia da un avvio all'altro smetterebbe di
 valere in OBS senza dire perché. Per questo `porta=` sta nel `.ini`.
 
+
+**Due pollai aperti insieme usano un server solo.** Prima il secondo ne apriva
+uno suo sulla porta successiva, e da lì in poi l'indirizzo incollato in OBS
+puntava a un server che poteva chiudersi per primo — **senza dire niente**,
+perché una sorgente browser che non carica resta trasparente, e trasparente è
+esattamente come deve stare un overlay senza messaggi. Il difetto si presentava
+come «OBS non prende più le modifiche», che è la descrizione di tutt'altro
+guasto.
+
+Contava poco finché l'indirizzo portava la coda: si ricopiava e amen. Da quando
+si incolla **una volta sola** (§14) una porta che balla lo rompe in silenzio, e
+la stabilità dell'indirizzo diventa un requisito, non una comodità.
+
+Quindi `Accendi` prima chiede: **su questa porta risponde già un pollaio?**
+`NostroSu` fa una `HEAD` e cerca `Server: pollaio` nella risposta — la firma che
+ogni risposta porta apposta. Se c'è, non si apre niente e si usa quello: i file
+da servire sono gli stessi, un server basta. Se invece la porta è occupata da
+**qualcun altro** si slitta come prima, e lo si scrive nel registro di diagnosi,
+perché è l'unico caso in cui l'indirizzo cambia davvero e uno deve poterlo
+scoprire senza indovinare.
+
+Per lo stesso motivo `CercaInCasa` — quella che usa la regia — chiede `NostroSu`
+e non un generico «qualcuno risponde»: mandare la regia a dare a OBS l'indirizzo
+di un servizio che non è il nostro sarebbe peggio che non darne nessuno.
 **L'ip è quello della scheda col gateway**, non il primo dell'elenco: fra schede
 virtuali, VPN e Hyper-V il primo è quasi sempre quello sbagliato, e un ip
 sbagliato qui non si riconosce guardandolo — si scopre in OBS, con una sorgente
@@ -1130,6 +1154,35 @@ ogni modifica è un indirizzo che qualcuno deve ricordarsi di aggiornare, e prim
 o poi non lo fa — e allora guarda una configurazione vecchia convinto di
 guardare la sua. Meglio un indirizzo stabile e un gesto in più (`Salva`) che un
 indirizzo esatto che invecchia in silenzio.
+
+
+### `Salva` e OBS si aggiorna da sé — `/sorgente`
+
+Restava un gesto di troppo: premi Salva, la finestra si rifà subito, e in OBS
+devi ricaricare la sorgente a mano. E chi se lo dimentica guarda una
+configurazione vecchia convinto di guardare la sua — lo stesso guasto che il
+rimando aveva già tolto una volta, tornato da un'altra porta.
+
+In OBS non c'è nessuno che prema «ricarica»: **la pagina se lo deve dire da
+sé.** Il server espone `/sorgente`, che risponde con la coda salvata e basta —
+una presa, non un file, quindi va riconosciuta prima che il percorso venga
+risolto sul disco. La pagina la chiede ogni quattro secondi e, se è cambiata, si
+ricarica sopra la nuova.
+
+**Due guardie, e sono tutte e due sulla stessa idea: non si cambia sotto i piedi
+a chi ha scelto.**
+
+- Si segue solo se la coda che la pagina sta usando **è** quella del server, e
+  lo si controlla una volta sola, all'inizio. Chi in OBS ha incollato un
+  indirizzo con la sua coda comanda lui, e non gli si tocca niente: la sua coda
+  non combacerà mai con quella salvata, e il giro non parte.
+- Si segue solo dove il server c'è davvero (`http:`) e **fuori** dalla finestra
+  di `Pollaio.exe` (`finestra=1`), dove ci pensa già il launcher con
+  `WM_PARAMETRI` — due meccanismi sulla stessa finestra si darebbero fastidio.
+
+Il costo è una richiesta ogni quattro secondi verso sé stessi, in rete locale:
+nulla, e nessuna dipendenza. Il guadagno è che la catena si chiude — giri una
+manopola, premi Salva, e la sorgente in OBS si rifà da sola.
 
 **Il bottone applica a caldo.** `misura` lo faceva da sempre — scrive il `.ini`
 *e* dice alla finestra sorella di rifarsi — e `parametri` era l'unico comando

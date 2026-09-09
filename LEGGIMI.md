@@ -121,19 +121,19 @@ Sorgente → + → Browser
   ☑ Aggiorna il browser quando la scena diventa attiva
 ```
 
-**L'indirizzo si incolla una volta sola.** Non porta le impostazioni con sé, e
-non deve: quelle le scrive **Salva** nel launcher, e l'indirizzo se le prende da
-lì. Giri una manopola, premi Salva, ricarichi la sorgente in OBS — l'indirizzo
-resta quello di sempre. La finestra di `Pollaio.exe`, invece, si rifà subito
-senza ricaricare niente.
+**L'indirizzo si incolla una volta sola, e poi non ci pensi più.** Non porta le
+impostazioni con sé, e non deve: quelle le scrive **Salva** nel launcher.
 
-È il motivo per cui il **Copia** dà un indirizzo corto e non una riga lunga con
-il `?`: con la coda attaccata dovresti reincollarlo in OBS ogni volta che cambi
-qualcosa, e prima o poi te ne dimenticheresti — ritrovandoti a guardare una
-configurazione vecchia convinto di guardare la tua.
+Da lì in poi funziona così: giri una manopola, premi **Salva**, e succedono due
+cose da sole. La finestra di `Pollaio.exe` si rifà subito. E **anche la sorgente
+in OBS si aggiorna da sé**, entro pochi secondi, senza che tu la ricarichi: la
+pagina chiede al server se la configurazione è cambiata, e quando lo è si
+ricarica sopra la nuova.
 
-Se in OBS hai ancora una riga vecchia col `?`, comanda quella e le impostazioni
-nuove non le vede: sostituiscila con quella corta, e poi non ci pensi più.
+Vale solo se in OBS hai incollato l'indirizzo corto. Se ci hai messo una riga
+lunga col `?` e la coda attaccata, comanda quella e non te la tocca nessuno —
+che è giusto, ma vuol dire che le modifiche non le vedrai: sostituiscila con
+quella corta e sei a posto per sempre.
 
 Il fondo trasparente è il caso che rende evidente perché servono due code: nella
 finestra vera «trasparente» vuol dire bianco, e su bianco il testo chiaro
@@ -1167,6 +1167,18 @@ riga qui sopra.
 ---
 
 ## Se qualcosa non va
+
+
+**La sorgente in OBS ha smesso di prendere le modifiche.**
+Prima di tutto guarda la **porta**: nella regia, l'indirizzo sotto il riquadro è
+quello vero di adesso. Se non è lo stesso che hai in OBS, incolla quello nuovo.
+Capitava aprendo due `Pollaio.exe` insieme — il secondo apriva un server suo
+sulla porta successiva — e dalla 1.2.15 non succede più: se sulla porta risponde
+già un pollaio, il secondo usa quello invece di aprirne un altro.
+
+Se la porta è giusta e le modifiche non arrivano lo stesso, controlla di aver
+premuto **Salva** dopo aver girato la manopola: l'indirizzo corto prende la
+configurazione da lì, non dalle manopole aperte sullo schermo.
 
 **Non si vedono i box dei messaggi, e resta tutto trasparente.**
 In OBS non c'è console e non c'è modo di guardarci dentro, quindi si guarda da

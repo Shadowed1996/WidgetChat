@@ -622,6 +622,57 @@
     timerTrenoFinto = setTimeout(trenoFinto, voce.attesa);
   }
 
+  // In una sorgente browser di OBS non c’è nessuno che prema «ricarica»: la
+  // pagina se lo deve dire da sé. Il server sa qual è la coda salvata da Salva;
+  // se cambia, e se questa pagina la stava seguendo, ci si ricarica sopra. Da
+  // fuori si vede così: premi Salva nella regia, e dopo un attimo anche OBS è
+  // aggiornato, senza toccare niente.
+  var RITMO_CODA = 4000;
+
+  var codaSeguita = null;
+
+  function codaDiAdesso() {
+    return String(location.search || '').replace(/^\?/, '');
+  }
+
+  function chiediLaCoda(su) {
+    try {
+      var richiesta = new XMLHttpRequest();
+      richiesta.open('GET', '/sorgente', true);
+      richiesta.timeout = 3000;
+
+      richiesta.onload = function () {
+        if (richiesta.status === 200) { su(String(richiesta.responseText || '')); }
+      };
+
+      richiesta.send();
+    } catch (err) {  }
+  }
+
+  function seguiLaCoda() {
+    // Solo dove il server c’è davvero: da `file://` non c’è niente da chiedere,
+    // e nella finestra di Pollaio.exe ci pensa già il launcher a ricaricare.
+    if (location.protocol !== 'http:') { return; }
+    if (conf.finestra) { return; }
+
+    chiediLaCoda(function (dal_server) {
+      // Solo se questa pagina stava già seguendo quella coda. Chi ha incollato
+      // in OBS un indirizzo con la sua coda comanda lui, e non gli si cambia
+      // sotto i piedi quello che ha scelto.
+      if (dal_server !== codaDiAdesso()) { return; }
+
+      codaSeguita = dal_server;
+      setInterval(function () {
+        chiediLaCoda(function (nuova) {
+          if (nuova === codaSeguita) { return; }
+
+          codaSeguita = nuova;
+          location.replace('pollaio.html' + (nuova ? '?' + nuova : ''));
+        });
+      }, RITMO_CODA);
+    });
+  }
+
   function avvia() {
     if (partito) { return; }
     partito = true;
@@ -731,6 +782,8 @@
         }
       });
     }
+
+    seguiLaCoda();
 
     if (!window.Irc) { return; }
     window.Irc.suStato(suStato);

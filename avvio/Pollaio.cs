@@ -185,7 +185,7 @@ internal static class Programma
 
     public static string Installato = "";
 
-    public const string VERSIONE = "1.2.14";
+    public const string VERSIONE = "1.2.15";
 }
 
 internal sealed class Preferenze
@@ -2103,14 +2103,70 @@ internal sealed class Servente
         cartella = cartellaDaServire;
     }
 
+    // Sulla porta risponde un pollaio, o qualcun altro? La domanda conta: se e'
+    // un pollaio si riusa, se e' un altro programma ci si sposta. Ogni risposta
+    // porta `Server: pollaio`, ed e' l'unica cosa che serve a riconoscerlo.
+    private const string FIRMA = "Server: pollaio";
+
+    public static bool NostroSu(int porta)
+    {
+        try
+        {
+            using (TcpClient c = new TcpClient())
+            {
+                IAsyncResult a = c.BeginConnect(IPAddress.Loopback, porta, null, null);
+                if (!a.AsyncWaitHandle.WaitOne(200)) { return false; }
+                c.EndConnect(a);
+
+                c.ReceiveTimeout = 700;
+                c.SendTimeout = 700;
+
+                string aCapo = new string(new char[] { (char)13, (char)10 });
+                byte[] chiesta = Encoding.UTF8.GetBytes(
+                    "HEAD /pollaio.html HTTP/1.1" + aCapo +
+                    "Host: 127.0.0.1" + aCapo +
+                    "Connection: close" + aCapo + aCapo);
+
+                using (NetworkStream f = c.GetStream())
+                {
+                    f.Write(chiesta, 0, chiesta.Length);
+                    f.Flush();
+
+                    byte[] mucchio = new byte[1024];
+                    int letti = f.Read(mucchio, 0, mucchio.Length);
+                    if (letti <= 0) { return false; }
+
+                    string detto = Encoding.UTF8.GetString(mucchio, 0, letti);
+                    return detto.IndexOf(FIRMA, StringComparison.OrdinalIgnoreCase) >= 0;
+                }
+            }
+        }
+        catch { return false; }
+    }
+
     public bool Accendi(int portaVoluta)
     {
         int prima = portaVoluta > 0 && portaVoluta < 65536 ? portaVoluta : PORTA_PREDEFINITA;
 
-        // Se la porta e' occupata non ci si arrende, ma non se ne sceglie una a
-        // caso: si prova la successiva, poche volte. Una porta che balla a ogni
-        // avvio sarebbe peggio del problema, perche' l'indirizzo scritto in OBS
-        // smetterebbe di valere da un giorno all'altro senza dire perche'.
+        // Se sulla porta voluta risponde gia' un pollaio, quello si usa e basta.
+        // E' il caso di due Pollaio.exe aperti insieme: prima il secondo apriva
+        // un server suo sulla porta successiva, e da li' in poi l'indirizzo
+        // incollato in OBS puntava a un server che poteva chiudersi per primo -
+        // senza dire niente, perche' una sorgente browser che non carica resta
+        // trasparente. Servono gli stessi file, quindi un server solo basta.
+        if (NostroSu(prima))
+        {
+            numero = prima;
+            indirizzo = "http://" + IpDiCasa() + ":" + prima;
+
+            Diagnosi.Scrivi("servente: sulla " + prima + " risponde gia' un pollaio, uso quello");
+            return true;
+        }
+
+        // Se invece e' occupata da qualcun altro non ci si arrende, ma non se ne
+        // sceglie una a caso: si prova la successiva, poche volte. Una porta che
+        // balla a ogni avvio e' peggio del problema, perche' l'indirizzo scritto
+        // in OBS smette di valere da un giorno all'altro senza dire perche'.
         for (int i = 0; i < QUANTE_PORTE; i++)
         {
             int prova = prima + i;
@@ -2129,6 +2185,11 @@ internal sealed class Servente
                 guardia = new Thread(Ciclo);
                 guardia.IsBackground = true;
                 guardia.Start();
+
+                if (prova != prima)
+                {
+                    Diagnosi.Scrivi("servente: la " + prima + " era occupata da qualcun altro");
+                }
 
                 Diagnosi.Scrivi("servente acceso su " + indirizzo);
                 return true;
@@ -2153,30 +2214,20 @@ internal sealed class Servente
     {
         int prima = porta > 0 && porta < 65536 ? porta : PORTA_PREDEFINITA;
 
+        // `NostroSu` e non un semplice «qualcuno risponde»: su quelle porte puo'
+        // esserci qualunque altro programma, e mandare la regia a dare a OBS
+        // l'indirizzo di un servizio che non e' il nostro sarebbe peggio che non
+        // darne nessuno.
         for (int i = 0; i < QUANTE_PORTE; i++)
         {
             int prova = prima + i;
             if (prova > 65535) break;
-            if (Risponde(prova)) return "http://" + IpDiCasa() + ":" + prova;
+            if (NostroSu(prova)) return "http://" + IpDiCasa() + ":" + prova;
         }
 
         return "";
     }
 
-    private static bool Risponde(int porta)
-    {
-        try
-        {
-            using (TcpClient c = new TcpClient())
-            {
-                IAsyncResult a = c.BeginConnect(IPAddress.Loopback, porta, null, null);
-                if (!a.AsyncWaitHandle.WaitOne(120)) return false;
-                c.EndConnect(a);
-                return true;
-            }
-        }
-        catch { return false; }
-    }
     public void Spegni()
     {
         acceso = false;
@@ -2226,6 +2277,19 @@ internal sealed class Servente
                     Rispondi(flusso, 405, "qui si legge soltanto", false);
                     return;
                 }
+
+                // La presa a cui la pagina chiede «la configurazione è cambiata?».
+                // In una sorgente browser di OBS non c'è nessuno che prema
+                // ricarica: la pagina se lo deve dire da sé, e questo è l'unico
+                // modo per farlo senza chiedere niente a OBS.
+                if (Coda(pezzi[1]))
+                {
+                    Manda(flusso, 200, "OK", "text/plain; charset=utf-8",
+                          Encoding.UTF8.GetBytes(Programma.SorgenteDelLauncher),
+                          metodo == "HEAD");
+                    return;
+                }
+
 
                 // Chi chiede l'indirizzo nudo — cioe' chi in OBS ha incollato
                 // `http://ip:porta/pollaio.html` e basta — non ha una
@@ -2292,6 +2356,21 @@ internal sealed class Servente
     }
 
 
+    // `/sorgente` non è un file e non finisce in `TIPI`: è una presa, e va
+    // riconosciuta prima che il percorso venga risolto sul disco.
+    private static bool Coda(string chiesto)
+    {
+        string via = chiesto == null ? "" : chiesto;
+
+        int taglio = via.IndexOf('?');
+        if (taglio >= 0) { via = via.Substring(0, taglio); }
+
+        taglio = via.IndexOf('#');
+        if (taglio >= 0) { via = via.Substring(0, taglio); }
+
+        return via == "/sorgente";
+    }
+
     private static bool Nuda(string chiesto)
     {
         string via = chiesto == null ? "" : chiesto;
@@ -2312,6 +2391,7 @@ internal sealed class Servente
         t.Append("Location: ").Append(dove).Append(aCapo);
         t.Append("Content-Length: 0").Append(aCapo);
         t.Append("Cache-Control: no-store").Append(aCapo);
+        t.Append(FIRMA).Append(aCapo);
         t.Append("Connection: close").Append(aCapo).Append(aCapo);
 
         byte[] testa = Encoding.UTF8.GetBytes(t.ToString());
@@ -2393,6 +2473,7 @@ internal sealed class Servente
         // cosi' ricaricare la sorgente in OBS rilegge davvero tutto invece di
         // far credere che una correzione non sia arrivata.
         t.Append("Cache-Control: no-store").Append(aCapo);
+        t.Append(FIRMA).Append(aCapo);
         t.Append("Connection: close").Append(aCapo).Append(aCapo);
 
         byte[] testa = Encoding.UTF8.GetBytes(t.ToString());
