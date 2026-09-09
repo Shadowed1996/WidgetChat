@@ -23,6 +23,18 @@
     <span class="pollaio__spia-testo">Apro il pollaio…</span>
   </div>
 
+  <div class="pollaio__gente" hidden>
+    <button class="pollaio__gente-bottone" type="button"
+            aria-expanded="false" aria-controls="elenco-gente">
+      <span class="pollaio__gente-conta">—</span>
+    </button>
+  </div>
+
+  <div class="pollaio__lista" id="elenco-gente" hidden>
+    <p class="pollaio__lista-eco" role="status"></p>
+    <div class="pollaio__lista-scomparti"></div>
+  </div>
+
   <div class="pollaio__treno" data-fase="niente" hidden>
     <p class="pollaio__treno-testa">
       <span class="pollaio__treno-titolo">Hype Train</span>
@@ -91,6 +103,8 @@
 <script src="js/treno.js"></script>
 <script src="js/resa.js"></script>
 <script src="js/conto.js"></script>
+<script src="js/comandi.js"></script>
+<script src="js/gente.js"></script>
 <script src="js/barra.js"></script>
 <script src="js/prova.js"></script>
 <script src="js/menu.js"></script>

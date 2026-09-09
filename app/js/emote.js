@@ -615,6 +615,34 @@
 
   const SUGGERITE = 8;
 
+  const PESO_MIE = 400;
+
+  const mie = Object.create(null);
+
+  function aggiungiTwitch(voci) {
+    if (!Array.isArray(voci)) { return 0; }
+
+    let messe = 0;
+    for (let i = 0; i < voci.length; i++) {
+      const voce = voci[i] || {};
+      const nome = String(voce.name || '');
+      const id = String(voce.id || '');
+      if (!nome || !ID_EMOTE.test(id)) { continue; }
+
+      mie[nome] = {
+        nome: nome,
+        url: CDN_TWITCH + id + '/default/dark/2.0',
+        url2: CDN_TWITCH + id + '/default/dark/3.0',
+        fonte: 'twitch',
+        animata: false,
+        sovrapposta: false,
+        peso: PESO_MIE
+      };
+      messe++;
+    }
+    return messe;
+  }
+
   function cerca(prefisso, tetto) {
     const chiave = String(prefisso || '').toLowerCase();
     if (!chiave) { return []; }
@@ -622,12 +650,25 @@
     const quante = tetto > 0 ? tetto : SUGGERITE;
     const inizia = [];
     const dentro = [];
-    const nomi = Object.keys(catalogo);
+
+    const banco = Object.create(null);
+    let fonte;
+    let nome;
+
+    for (fonte of [catalogo, mie]) {
+      for (nome in fonte) {
+        if (Object.prototype.hasOwnProperty.call(fonte, nome)) {
+          if (!banco[nome] || banco[nome].peso < fonte[nome].peso) { banco[nome] = fonte[nome]; }
+        }
+      }
+    }
+
+    const nomi = Object.keys(banco);
 
     for (let i = 0; i < nomi.length; i++) {
       const dove = nomi[i].toLowerCase().indexOf(chiave);
-      if (dove === 0) { inizia.push(catalogo[nomi[i]]); }
-      else if (dove > 0) { dentro.push(catalogo[nomi[i]]); }
+      if (dove === 0) { inizia.push(banco[nomi[i]]); }
+      else if (dove > 0) { dentro.push(banco[nomi[i]]); }
     }
 
     function primaLeNostre(a, b) {
@@ -647,6 +688,8 @@
     pezzi: pezzi,
     pezziKick: pezziKick,
     cerca: cerca,
+    aggiungiTwitch: aggiungiTwitch,
+    quanteMie: function () { return Object.keys(mie).length; },
     pronto: function () { return fontiOk > 0; },
     quante: function () { return quantita; }
   };

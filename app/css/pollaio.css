@@ -1018,6 +1018,105 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
   background-color: var(--linea-forte);
 }
 
+.pollaio__gente {
+  flex: none;
+  display: flex;
+  justify-content: center;
+}
+
+.pollaio__gente-bottone {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--passo) * 0.5);
+
+  padding: 0.28em 0.8em;
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio-pill);
+  background-color: var(--velo);
+  color: var(--testo-medio);
+
+  font-family: var(--font-mono);
+  font-size: 0.62em;
+  line-height: 1.4;
+  letter-spacing: var(--spazio-etichetta);
+  text-transform: uppercase;
+  cursor: pointer;
+
+  transition:
+    border-color var(--durata) var(--curva),
+    color var(--durata) var(--curva);
+}
+
+.pollaio__gente-bottone:hover,
+.pollaio__gente-bottone[aria-expanded="true"] {
+  border-color: var(--linea-viva);
+  color: var(--testo);
+}
+
+.pollaio__lista {
+  position: absolute;
+  inset-block-start: calc(var(--passo) * 4);
+  inset-inline: var(--passo);
+  z-index: var(--z-menu);
+
+  max-block-size: 70%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+
+  padding: var(--passo-2);
+  border: 1px solid var(--linea-forte);
+  border-radius: var(--raggio);
+  background-color: var(--fondo);
+  box-shadow: var(--ombra);
+}
+
+.pollaio__lista-eco {
+  margin: 0;
+  color: var(--testo-tenue);
+  font-family: var(--font-mono);
+  font-size: 0.62em;
+  line-height: 1.6;
+}
+
+.pollaio__lista-eco:empty { display: none; }
+
+.pollaio__lista-scomparto {
+  margin-block-start: var(--passo-2);
+}
+
+.pollaio__lista-scomparto:first-child { margin-block-start: 0; }
+
+.pollaio__lista-titolo {
+  margin: 0 0 calc(var(--passo) * 0.5);
+
+  color: var(--tinta-scomparto, var(--testo-tenue));
+  font-family: var(--font-mono);
+  font-size: 0.6em;
+  letter-spacing: var(--spazio-etichetta);
+  text-transform: uppercase;
+}
+
+.pollaio__lista-scomparto[data-chi="streamer"]   { --tinta-scomparto: var(--magenta); }
+.pollaio__lista-scomparto[data-chi="moderatori"] { --tinta-scomparto: var(--ok); }
+.pollaio__lista-scomparto[data-chi="vip"]        { --tinta-scomparto: var(--viola-chiaro); }
+
+.pollaio__lista-nomi {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(var(--passo) * 0.4) calc(var(--passo) * 0.7);
+
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pollaio__lista-nome {
+  color: var(--testo-medio);
+  font-size: 0.72em;
+  line-height: 1.5;
+}
+
 .pollaio__barra {
   flex: none;
   display: flex;
@@ -1043,7 +1142,8 @@ html[data-finestra] .pollaio .pollaio__pausa,
 html[data-finestra] .pollaio .pollaio__attesa,
 html[data-finestra] .pollaio .pollaio__scrivi-manda,
 html[data-finestra] .pollaio .pollaio__invito-btn,
-html[data-finestra] .pollaio .pollaio__suggerito {
+html[data-finestra] .pollaio .pollaio__suggerito,
+html[data-finestra] .pollaio .pollaio__gente-bottone {
   cursor: pointer;
 }
 
@@ -1201,12 +1301,14 @@ html[data-finestra] .pollaio .pollaio__scrivi-campo {
   gap: 2px;
 
   margin: 0;
-  padding: 4px;
-  max-block-size: 14em;
+  padding: calc(var(--passo) * 0.4);
+  max-block-size: 12em;
   overflow-y: auto;
   overscroll-behavior: contain;
   list-style: none;
+
   scrollbar-width: thin;
+  scrollbar-color: var(--linea-forte) transparent;
 
   border: 1px solid var(--linea-forte);
   border-radius: var(--raggio-s);
@@ -1214,15 +1316,24 @@ html[data-finestra] .pollaio .pollaio__scrivi-campo {
   box-shadow: var(--ombra);
 }
 
+.pollaio__suggeriti::-webkit-scrollbar {
+  inline-size: 6px;
+}
+
+.pollaio__suggeriti::-webkit-scrollbar-thumb {
+  border-radius: var(--raggio-pill);
+  background-color: var(--linea-forte);
+}
+
 .pollaio__suggerito {
   display: flex;
   align-items: center;
-  gap: calc(var(--passo) * 0.6);
+  gap: calc(var(--passo) * 0.7);
 
-  padding: 0.25em 0.5em;
+  padding: 0.3em 0.55em;
   border-radius: 5px;
   color: var(--testo-medio);
-  font-size: 0.74em;
+  font-size: 0.78em;
   cursor: pointer;
 }
 
@@ -1233,8 +1344,10 @@ html[data-finestra] .pollaio .pollaio__scrivi-campo {
 
 .pollaio__suggerito-img {
   flex: none;
-  block-size: 1.8em;
+  block-size: 2.4em;
   inline-size: auto;
+  max-inline-size: 3.4em;
+  object-fit: contain;
 }
 
 .pollaio__suggerito-nome {

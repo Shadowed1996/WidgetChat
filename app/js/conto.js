@@ -9,7 +9,26 @@
 
   var LIMITE = 500;
 
-  var SCOPI = 'user:write:chat';
+  var SCOPO_SCRIVERE = 'user:write:chat';
+
+  var SCOPI_COMANDI = [
+    'moderator:read:chatters',
+    'moderator:manage:banned_users',
+    'moderator:manage:chat_messages',
+    'moderator:manage:chat_settings',
+    'moderator:manage:announcements',
+    'moderator:manage:shoutouts',
+    'channel:manage:raids',
+    'channel:manage:polls',
+    'channel:manage:predictions',
+    'channel:manage:broadcast',
+    'channel:manage:moderators',
+    'channel:manage:vips',
+    'user:read:emotes',
+    'user:manage:whispers'
+  ];
+
+  var SCOPI = [SCOPO_SCRIVERE].concat(SCOPI_COMANDI).join(' ');
 
   var DISPOSITIVO = 'https://id.twitch.tv/oauth2/device';
   var GETTONE     = 'https://id.twitch.tv/oauth2/token';
@@ -68,8 +87,29 @@
       nick:     String(dato.nick || ''),
       nome:     String(dato.nome || dato.nick || ''),
       utenteId: String(dato.utenteId || ''),
+      scopi:    Array.isArray(dato.scopi) ? dato.scopi.map(String) : [],
       scade:    isFinite(dato.scade) ? Number(dato.scade) : 0
     };
+  }
+
+  function puo(scopo) {
+    var c = leggi();
+    if (!c || !c.scopi.length) { return false; }
+    return c.scopi.indexOf(String(scopo)) !== -1;
+  }
+
+  function mancano() {
+    var c = leggi();
+    if (!c) { return SCOPI.split(' '); }
+
+    var fuori = [];
+    var tutti = SCOPI.split(' ');
+    var i;
+
+    for (i = 0; i < tutti.length; i++) {
+      if (c.scopi.indexOf(tutti[i]) === -1) { fuori.push(tutti[i]); }
+    }
+    return fuori;
   }
 
   function leggi() {
@@ -350,6 +390,7 @@
         nick: String(chiave.login || ''),
         nome: String(chiave.login || ''),
         utenteId: String(chiave.user_id || ''),
+        scopi: Array.isArray(chiave.scopes) ? chiave.scopes : [],
         scade: Date.now() + dura
       });
 
@@ -485,6 +526,61 @@
     });
   }
 
+  var HELIX = 'https://api.twitch.tv/helix';
+
+  function bussa(c, metodo, percorso, corpo, riprova, su) {
+    var opzioni = {
+      method: metodo,
+      headers: {
+        Authorization: 'Bearer ' + c.gettone,
+        'Client-Id': c.cliente
+      }
+    };
+
+    if (corpo) {
+      opzioni.headers['Content-Type'] = 'application/json';
+      opzioni.body = JSON.stringify(corpo);
+    }
+
+    chiama(HELIX + percorso, opzioni, function (guaio, esito) {
+      if (guaio) { su(guaio); return; }
+
+      if (esito.stato === 401 && riprova) {
+        rinnova(function (guaioDue, nuovo) {
+          if (guaioDue) { su(guaioDue, null, true); return; }
+          bussa(nuovo, metodo, percorso, corpo, false, su);
+        });
+        return;
+      }
+
+      if (esito.stato === 401) {
+        su('Twitch non mi riconosce più: si rifà con «Connetti account».', null, true);
+        return;
+      }
+      if (esito.stato === 403) {
+        su('Twitch dice di no: per questa cosa servono i permessi di moderatore sul canale.');
+        return;
+      }
+      if (esito.stato === 429) {
+        su('Sto andando troppo forte per Twitch. Aspetto qualche secondo e riprovo.');
+        return;
+      }
+      if (esito.stato < 200 || esito.stato > 299) {
+        su(guaioDi(esito, 'Twitch ha risposto ' + esito.stato + '.'));
+        return;
+      }
+
+      su(null, esito.dati);
+    });
+  }
+
+  function verso(metodo, percorso, corpo, su) {
+    pronto(function (guaio, c) {
+      if (guaio) { su(guaio, null, true); return; }
+      bussa(c, metodo, percorso, corpo, true, su);
+    });
+  }
+
   function manda(opzioni, su) {
     var o = opzioni || {};
     var testo = ripulisci(o.testo);
@@ -524,6 +620,9 @@
     rileggi: rileggi,
     chi: chi,
     cliente: cliente,
+    puo: puo,
+    mancano: mancano,
+    verso: verso,
     ricorda: ricorda,
     collegato: collegato,
     scaduto: scaduto,

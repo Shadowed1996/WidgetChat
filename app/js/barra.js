@@ -327,6 +327,127 @@
     return false;
   }
 
+  var SCOMPARTI = [
+    { chiave: 'streamer', titolo: 'Streamer' },
+    { chiave: 'moderatori', titolo: 'Moderatori' },
+    { chiave: 'vip', titolo: 'VIP' },
+    { chiave: 'utenti', titolo: 'Utenti' }
+  ];
+
+  function scriviConta(stato) {
+    var pezzi = [];
+
+    if (stato.inChat > 0) { pezzi.push(stato.inChat + ' in chat'); }
+    if (stato.spettatori > 0) { pezzi.push(stato.spettatori + ' guardano'); }
+    else if (stato.spettatori === -1) { pezzi.push('canale spento'); }
+
+    nodi.genteConta.textContent = pezzi.length ? pezzi.join(' · ') : 'Chi c’è';
+  }
+
+  function disegnaLista(stato) {
+    nodi.listaScomparti.textContent = '';
+    nodi.listaEco.textContent = stato.guaio || '';
+
+    var i;
+    for (i = 0; i < SCOMPARTI.length; i++) {
+      var quale = SCOMPARTI[i];
+      var gente = stato[quale.chiave] || [];
+      if (!gente.length) { continue; }
+
+      var scomparto = document.createElement('div');
+      scomparto.className = 'pollaio__lista-scomparto';
+      scomparto.setAttribute('data-chi', quale.chiave);
+
+      var titolo = document.createElement('p');
+      titolo.className = 'pollaio__lista-titolo';
+      titolo.textContent = quale.titolo + ' · ' + gente.length;
+      scomparto.appendChild(titolo);
+
+      var nomi = document.createElement('ul');
+      nomi.className = 'pollaio__lista-nomi';
+
+      var k;
+      for (k = 0; k < gente.length; k++) {
+        var voce = document.createElement('li');
+        voce.className = 'pollaio__lista-nome';
+        voce.textContent = gente[k].nome || gente[k].nick;
+        nomi.appendChild(voce);
+      }
+
+      scomparto.appendChild(nomi);
+      nodi.listaScomparti.appendChild(scomparto);
+    }
+
+    if (!nodi.listaScomparti.children.length && !nodi.listaEco.textContent) {
+      nodi.listaEco.textContent = 'Non c’è ancora nessuno da mostrare.';
+    }
+  }
+
+  var ultimaGente = null;
+  var genteAvviata = false;
+
+  function avviaGente() {
+    if (genteAvviata || conf.prova) { return; }
+    if (!window.Conto.collegato()) { return; }
+
+    genteAvviata = true;
+
+    window.Conto.canale(conf.canale, function (guaio, id) {
+      if (guaio || !id) { genteAvviata = false; return; }
+
+      canaleId = id;
+      prendiLeMie(id);
+
+      if (!window.Gente || !window.Gente.avvia) { return; }
+
+      window.Gente.avvia({
+        canale: conf.canale,
+        canaleId: id,
+        visibile: function () { return !nodi.lista.hidden; },
+        su: vestiGente
+      });
+    });
+  }
+
+  function prendiLeMie(id) {
+    if (!window.Emote || !window.Emote.aggiungiTwitch) { return; }
+    if (!window.Conto.puo('user:read:emotes')) { return; }
+
+    var chi = window.Conto.chi();
+    if (!chi || !chi.utenteId) { return; }
+
+    window.Conto.verso('GET',
+      '/chat/emotes/user?user_id=' + encodeURIComponent(chi.utenteId) +
+      '&broadcaster_id=' + encodeURIComponent(id),
+      null,
+      function (guaio, dati) {
+        if (guaio || !dati) { return; }
+        window.Emote.aggiungiTwitch(dati.data);
+      });
+  }
+
+  function vestiGente(stato) {
+    if (!nodi.gente || !stato) { return; }
+
+    ultimaGente = stato;
+    nodi.gente.hidden = false;
+    scriviConta(stato);
+
+    if (!nodi.lista.hidden) { disegnaLista(stato); }
+  }
+
+  function alternaLista() {
+    var apri = nodi.lista.hidden;
+
+    nodi.lista.hidden = !apri;
+    nodi.genteBottone.setAttribute('aria-expanded', apri ? 'true' : 'false');
+
+    if (!apri) { return; }
+
+    disegnaLista(ultimaGente || { guaio: 'Sto chiedendo a Twitch chi c’è.' });
+    if (window.Gente && window.Gente.aggiorna) { window.Gente.aggiorna(); }
+  }
+
   function vestiConto() {
     if (!conf.scrivi) {
       nodi.scrivi.hidden = true;
@@ -342,12 +463,45 @@
 
     if (dentro) {
       nodi.campo.placeholder = 'Scrivi come ' + chi.nome;
+      avviaGente();
       cresci();
       vestiManda();
       return;
     }
 
     vestiInvito();
+  }
+
+  var canaleId = '';
+
+  function svuotaCampo() {
+    nodi.campo.value = '';
+    cresci();
+    vestiResta();
+    vestiManda();
+    nodi.campo.focus();
+  }
+
+  function esegui(testo) {
+    if (!canaleId) {
+      eco('Non so ancora l’id del canale: un attimo e riprova.', true);
+      return;
+    }
+
+    inVolo = true;
+    vestiManda();
+    eco('Lo chiedo a Twitch.');
+
+    window.Comandi.esegui(testo, { canale: conf.canale, canaleId: canaleId },
+      function (guaio, detto) {
+        inVolo = false;
+        vestiManda();
+
+        if (guaio) { eco(guaio, true); return; }
+
+        svuotaCampo();
+        eco(detto || 'Fatto.');
+      });
   }
 
   function manda() {
@@ -362,9 +516,11 @@
     }
 
     if (testo.charAt(0) === '/') {
-      eco('Questo non lo mando: Twitch i comandi da questa strada non li esegue, ' +
-          'li scrive. «' + testo.split(' ')[0] + '» finirebbe in chat in chiaro, ' +
-          'davanti a tutti. I comandi per adesso si danno dalla chat di Twitch.', true);
+      if (window.Comandi && window.Comandi.e(testo)) { esegui(testo); return; }
+
+      eco('Questo comando non lo conosco, e non lo mando: Twitch da questa strada ' +
+          'i comandi non li esegue, li scrive, e «' + testo.split(' ')[0] + '» ' +
+          'finirebbe in chat in chiaro davanti a tutti.', true);
       return;
     }
 
@@ -467,6 +623,13 @@
     nodi.scrivi = nodi.barra.querySelector('.pollaio__scrivi');
     nodi.campo = nodi.barra.querySelector('.pollaio__scrivi-campo');
     nodi.suggeriti = nodi.barra.querySelector('.pollaio__suggeriti');
+
+    nodi.gente = radice.querySelector('.pollaio__gente');
+    nodi.genteBottone = radice.querySelector('.pollaio__gente-bottone');
+    nodi.genteConta = radice.querySelector('.pollaio__gente-conta');
+    nodi.lista = radice.querySelector('.pollaio__lista');
+    nodi.listaEco = radice.querySelector('.pollaio__lista-eco');
+    nodi.listaScomparti = radice.querySelector('.pollaio__lista-scomparti');
     nodi.manda = nodi.barra.querySelector('.pollaio__scrivi-manda');
     nodi.resta = nodi.barra.querySelector('.pollaio__scrivi-resta');
 
@@ -525,6 +688,8 @@
     vestiPausa();
 
     nodi.pausa.addEventListener('click', alterna);
+
+    if (nodi.genteBottone) { nodi.genteBottone.addEventListener('click', alternaLista); }
     nodi.attesa.addEventListener('click', alterna);
 
     window.Resa.suAttesa(vestiAttesa);
