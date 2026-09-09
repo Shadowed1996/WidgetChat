@@ -764,6 +764,15 @@ Regole di misura:
   `overflow-wrap: anywhere` sul corpo, `min-inline-size: 0` su ogni figlio flex.
 - Le emote sono alte `1.6em` e allineate al testo con `vertical-align: middle`.
 - Un messaggio con `svanisci` attivo esce con una dissolvenza di 400ms.
+- **Le righe di moderazione non fanno il glitch.** `.pollaio__moderazione` — «la
+  chat è stata svuotata», «un messaggio è stato cancellato» — entra con la
+  scivolata anche quando l'effetto scelto è `glitch`, e non prende le righe di
+  scansione. Il motivo non è estetico: il glitch simula un disturbo video, e su
+  una riga di chat racconta qualcosa, mentre su un avviso di servizio racconta
+  la cosa sbagliata — che l'avviso è rotto, proprio nel momento in cui sta
+  dicendo che è successo qualcosa. La regola sta **dopo** quella del glitch e ha
+  la sua stessa specificità: vince per ordine, ed è l'unico modo di scavalcarla
+  senza gonfiare il selettore.
 
 Accessibilità, anche se è un overlay (la pagina si apre anche in un browser):
 - focus visibile `2px solid var(--ciano)` con `outline-offset: 3px`, con una

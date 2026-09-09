@@ -911,6 +911,23 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
   100% { opacity: 0;    translate: 0   0; }
 }
 
+/* Il glitch è un disturbo video, e su una riga di chat racconta qualcosa. Su un
+   avviso di servizio racconta la cosa sbagliata: «LA CHAT È STATA SVUOTATA» che
+   si strappa, si scolora e si riempie di righe di scansione si legge come un
+   guasto del widget, proprio nel momento in cui il widget sta dicendo che è
+   successo qualcosa. Le righe di moderazione entrano come le altre, con la
+   scivolata: si muovono, ma non fingono di rompersi.
+
+   Sta dopo la regola del glitch e ha la sua stessa specificità: vince perché
+   viene dopo, ed è l'unico modo di scavalcarla senza gonfiare il selettore. */
+.pollaio[data-effetto="glitch"] .pollaio__moderazione.is-nuovo {
+  animation: entra-scivola var(--t-scivola) var(--curva) both;
+}
+
+.pollaio[data-effetto="glitch"] .pollaio__moderazione.is-nuovo::after {
+  content: none;
+}
+
 .pollaio[data-effetto="matrix"] .pollaio__riga.is-nuovo {
   animation: entra-matrix var(--t-matrix) var(--curva) both;
 }
