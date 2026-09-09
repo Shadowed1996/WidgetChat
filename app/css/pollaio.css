@@ -129,6 +129,38 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
   line-height: 1.8;
 }
 
+/* Il vetro si sfoca solo se dietro c’è qualcosa da sfocare.
+
+   `backdrop-filter` sfoca il backdrop, cioè quello che la pagina ha già dipinto
+   sotto l’elemento. Con `fondo=trasparente` — il predefinito, e l’unico che ha
+   senso in una sorgente browser — la pagina non dipinge niente, il gioco lo
+   compone OBS dopo, e dentro la pagina nessuna riga sta sopra a un’altra: sotto
+   una riga non c’è nulla. Il filtro non rende un pixel e in cambio chiede una
+   superficie composita per messaggio.
+
+   Perciò la porta è su `fondo` e non su OBS. La condizione che conta non è «in
+   che programma sto» ma «la pagina dipinge qualcosa dietro», che è vera o falsa
+   allo stesso modo in OBS, in Streamlabs, in un browser e nell’anteprima della
+   regia. `window.obsstudio` resta buono per decidere il comportamento — la barra
+   non serve dove non c’è un mouse — non per decidere il disegno.
+
+   Il predefinito è `none` apposta, ed è il verso giusto in cui sbagliare: prima
+   che `vestiRadice` scriva `data-fondo`, e ovunque quell’attributo non arrivi,
+   non si sfoca. Si accende ciò che è dichiarato, non si spegne ciò che si
+   riconosce. E deve valere `none` per davvero: un `blur(0px)` sarebbe pur sempre
+   un backdrop-filter attivo, con la sua superficie composita. */
+.pollaio {
+  --vetro:      none;
+  --vetro-vivo: none;
+}
+
+body[data-fondo="scuro"]   .pollaio,
+body[data-fondo="verde"]   .pollaio,
+body[data-fondo="magenta"] .pollaio {
+  --vetro:      blur(var(--sfocatura));
+  --vetro-vivo: blur(var(--sfocatura)) saturate(130%);
+}
+
 .pollaio[data-tema="notte"] .pollaio__riga {
   border: 1px solid var(--linea);
 
@@ -140,8 +172,8 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
 
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .pollaio[data-tema="notte"] .pollaio__riga {
-    -webkit-backdrop-filter: blur(var(--sfocatura)) saturate(130%);
-            backdrop-filter: blur(var(--sfocatura)) saturate(130%);
+    -webkit-backdrop-filter: var(--vetro-vivo);
+            backdrop-filter: var(--vetro-vivo);
   }
 }
 
@@ -177,8 +209,8 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
 
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .pollaio[data-tema="insegna"] .pollaio__riga {
-    -webkit-backdrop-filter: blur(var(--sfocatura));
-            backdrop-filter: blur(var(--sfocatura));
+    -webkit-backdrop-filter: var(--vetro);
+            backdrop-filter: var(--vetro);
   }
 }
 
@@ -426,16 +458,39 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
   white-space: nowrap;
 }
 
+/* La tinta del ruolo si AGGIUNGE alla lastra, non la sostituisce.
+   Prima era `background-color`, con la stessa specificità della regola del tema
+   e più in basso nel foglio: vinceva lei, e la lastra spariva. In una finestra
+   scura non si vedeva — dietro c'era comunque del nero — ma in una sorgente
+   browser di OBS, dove dietro non c'è niente, il 6% di tinta è nulla: i
+   messaggi dello streamer, dei moderatori e dei VIP restavano testo che
+   galleggia sul gioco, senza riquadro. Ed erano proprio quelli che uno produce
+   provando l'overlay nella sua chat.
+
+   Con `background-image` la tinta sta su un altro livello: la lastra del tema
+   resta sotto, in tutti e tre i temi, senza dover ripetere la regola per
+   ciascuno. E se `color-mix` non c'è — succede sulla CEF vecchia di OBS, che è
+   ferma a Chromium 103 — si perde la tinta e resta la lastra, che è il verso
+   giusto in cui degradare. */
 .pollaio__riga.is-capo[data-rilievo="0"] {
-  background-color: color-mix(in srgb, var(--live) 7%, transparent);
+  background-image: linear-gradient(
+    color-mix(in srgb, var(--live) 9%, transparent),
+    color-mix(in srgb, var(--live) 9%, transparent)
+  );
 }
 
 .pollaio__riga.is-mod[data-rilievo="0"] {
-  background-color: color-mix(in srgb, var(--ok) 6%, transparent);
+  background-image: linear-gradient(
+    color-mix(in srgb, var(--ok) 8%, transparent),
+    color-mix(in srgb, var(--ok) 8%, transparent)
+  );
 }
 
 .pollaio__riga.is-vip[data-rilievo="0"] {
-  background-color: color-mix(in srgb, var(--magenta) 6%, transparent);
+  background-image: linear-gradient(
+    color-mix(in srgb, var(--magenta) 8%, transparent),
+    color-mix(in srgb, var(--magenta) 8%, transparent)
+  );
 }
 
 .pollaio__risposta {
@@ -494,13 +549,26 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
 .pollaio__evento[data-tinta="ok"]      { --tinta-evento: var(--ok); }
 .pollaio__evento[data-tinta="allerta"] { --tinta-evento: var(--allerta); }
 
+/* Ogni dichiarazione con `color-mix` ha davanti la sua gemella con un token
+   puro. Non è pignoleria: la CEF dentro OBS è ferma a Chromium 103 fino alla
+   versione 30, e `color-mix` vuole la 111 — lì la seconda riga è invalida e
+   viene buttata, e senza la prima la scheda resterebbe senza fondo e senza
+   bordo su una pagina trasparente, cioè testo che galleggia sul gioco. Il
+   bordo è spezzato apposta: in forma breve un colore invalido si porta via
+   anche spessore e stile. */
 .pollaio__evento {
   --tinta-evento: var(--viola-chiaro);
 
   margin: calc(var(--passo) * 0.4) calc(var(--passo) * 0.25);
   padding: var(--passo) calc(var(--passo) * 1.25);
-  border: 1px solid color-mix(in srgb, var(--tinta-evento) 50%, transparent);
+
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--tinta-evento);
+  border-color: color-mix(in srgb, var(--tinta-evento) 50%, transparent);
   border-radius: var(--raggio);
+
+  background-color: var(--pannello-2);
   background-color: color-mix(in srgb, var(--tinta-evento) 12%, var(--pannello-2));
   background-image: linear-gradient(
     145deg,
@@ -511,6 +579,19 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
     0 0 22px -6px color-mix(in srgb, var(--tinta-evento) 55%, transparent),
     var(--ombra-morbida);
   text-align: center;
+}
+
+/* Una scheda evento È anche una `.pollaio__riga`, e la regola del tema ha la
+   stessa specificità stando più in alto nel foglio: vinceva lei, e il raid o
+   l’abbonamento uscivano grigi come un messaggio qualunque, con solo un filo di
+   colore sul bordo. Qui si sale di un gradino — `[data-tema]` c’è sempre, sta
+   scritto nell’HTML e lo riscrive `vestiRadice` — e la tinta torna a vincere. */
+.pollaio[data-tema] .pollaio__evento {
+  border-color: var(--tinta-evento);
+  border-color: color-mix(in srgb, var(--tinta-evento) 50%, transparent);
+
+  background-color: var(--pannello-2);
+  background-color: color-mix(in srgb, var(--tinta-evento) 12%, var(--pannello-2));
 }
 
 .pollaio[data-tema="notte"] .pollaio__evento {
@@ -583,8 +664,14 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
   flex: none;
   box-sizing: border-box;
   padding: calc(var(--passo) * 0.7) var(--passo);
-  border: 1px solid color-mix(in srgb, var(--treno) 55%, transparent);
+
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--treno);
+  border-color: color-mix(in srgb, var(--treno) 55%, transparent);
   border-radius: var(--raggio);
+
+  background-color: var(--pannello);
   background-color: color-mix(in srgb, var(--treno) 16%, var(--pannello));
   background-image: linear-gradient(
     150deg,
@@ -596,8 +683,8 @@ html[data-finestra] .pollaio:has(.pollaio__elenco:empty)::before {
 
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .pollaio__treno {
-    -webkit-backdrop-filter: blur(var(--sfocatura));
-            backdrop-filter: blur(var(--sfocatura));
+    -webkit-backdrop-filter: var(--vetro);
+            backdrop-filter: var(--vetro);
   }
 }
 

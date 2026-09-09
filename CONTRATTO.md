@@ -220,6 +220,10 @@ chat/
    ├─ pollaio.html   ← l'overlay. È QUESTA la sorgente browser di OBS.
    ├─ regia.html     ← il configuratore: anteprima dal vivo e indirizzo da copiare
    ├─ prove.html     ← il banco di prova (§16)
+   ├─ prova-obs.html ← l'autodiagnosi da mettere in OBS (§12). È volutamente
+   │                   autonoma: non carica nessun foglio del progetto, perché
+   │                   se il difetto fosse in `pollaio.css` una pagina che lo
+   │                   carica sarebbe cieca proprio quando serve
    ├─ css/
    │  ├─ tokens.css     ← la palette. L'UNICO file con esadecimali.
    │  ├─ pollaio.css    ← l'overlay
@@ -746,6 +750,68 @@ Tre temi, stesso markup: cambia solo l'attributo `data-tema` sulla radice.
 Il fondo della pagina è **sempre trasparente** (`background: transparent` su `html`
 e `body`): lo sfondo lo mette il tema sui singoli messaggi, mai la pagina. In OBS
 un fondo opaco coprirebbe il gameplay.
+
+
+### Quello che si vede in una sorgente browser, e le tre trappole della trasparenza
+
+Un utente ha segnalato: «su OBS non si vedono i box messaggi e rimane sempre
+trasparente». Non era una regressione — il blocco che disegna la lastra non si
+tocca dalla 1.0.2 — ed erano **tre difetti diversi**, tutti della stessa
+famiglia: **codice che regge solo perché dietro c'è qualcosa.** In una sorgente
+browser dietro non c'è niente, e quello che nel browser di sviluppo sembrava
+giusto lì sparisce.
+
+**Uno — la tinta del ruolo sostituiva la lastra invece di aggiungersi.**
+`.pollaio__riga.is-capo/.is-mod/.is-vip[data-rilievo="0"]` metteva un
+`background-color` al 6-9% con la **stessa specificità** della regola del tema e
+più in basso nel foglio: vinceva lei. In una finestra scura non si notava —
+dietro c'era comunque del nero — ma su una pagina trasparente il 6% è nulla, e i
+messaggi dello streamer, dei moderatori e dei VIP erano testo che galleggia sul
+gioco. Erano esattamente quelli che uno produce provando l'overlay nella propria
+chat, il che spiega perché la segnalazione arrivi da chi prova e non da chi
+guarda. Adesso la tinta sta su `background-image`, cioè su un altro livello: la
+lastra resta sotto, in tutti e tre i temi, senza ripetere la regola per ciascuno.
+
+**Due — `color-mix` non esiste su OBS fino alla 30.** La CEF dentro OBS è ferma
+a Chromium 103 fino a quella versione, e `color-mix` vuole la 111: lì ogni
+dichiarazione che la usa è invalida e viene buttata. Le righe di chat
+sopravvivevano (`--pannello` è un rgba piatto), ma la scheda di un raid e la
+fascia dell'hype train perdevano fondo **e** bordo, perché il bordo era in forma
+breve e un colore invalido si porta via anche spessore e stile.
+
+Da qui la regola: **ogni `color-mix` che porta un fondo o un bordo ha davanti la
+sua gemella con un token puro**, e i bordi si scrivono spezzati
+(`border-width`/`border-style`/`border-color`). Non è una deroga a §1.5 — il
+ripiego è un token, non un esadecimale nuovo — è il modo di far degradare la
+tinta senza far sparire l'elemento.
+
+**Tre — la scheda evento perdeva la sua tinta.** Una scheda è anche una
+`.pollaio__riga`, e la regola del tema aveva la stessa specificità stando più in
+alto: un raid usciva grigio come un messaggio qualunque. Si sale di un gradino
+con `.pollaio[data-tema] .pollaio__evento`, che c'è sempre.
+
+### Il vetro si sfoca solo se dietro c'è qualcosa
+
+`backdrop-filter` sfoca **il backdrop**, cioè quello che la pagina ha già
+dipinto sotto l'elemento. Con `fondo=trasparente` — il predefinito, e l'unico
+che ha senso in una sorgente browser — la pagina non dipinge niente, il gioco lo
+compone OBS **dopo**, e dentro la pagina nessuna riga sta sopra a un'altra: il
+backdrop di una riga è vuoto. Il filtro non rende un pixel e in cambio chiede
+una superficie composita per messaggio.
+
+Perciò la sfocatura è legata a `fondo` e **non** a OBS: `--vetro` e
+`--vetro-vivo` valgono `none` di partenza e diventano `blur(var(--sfocatura))`
+solo sotto `body[data-fondo="scuro"|"verde"|"magenta"]`. **Non si guarda
+`window.obsstudio`**: quel riconoscimento vale solo dentro OBS, mentre la
+condizione che conta non è «in che programma sto» ma «la pagina dipinge qualcosa
+dietro» — che è vera o falsa allo stesso modo in Streamlabs, in vMix, in un
+browser e nell'anteprima della regia. `inObs()` resta buono per decidere il
+**comportamento** — la barra non serve dove non c'è un mouse — mai per decidere
+il **disegno**.
+
+Il predefinito è `none` apposta: dove l'attributo non arriva non si sfoca,
+invece del contrario. E deve valere `none` per davvero — un `blur(0px)` sarebbe
+pur sempre un backdrop-filter attivo, con la sua superficie composita.
 
 Regole di misura:
 - I messaggi entrano dal basso e spingono in su (con `verso=su`). L'animazione di

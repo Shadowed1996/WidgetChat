@@ -1,0 +1,199 @@
+<!doctype html>
+
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Prova OBS — il pollaio</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="img/favicon.png" type="image/png">
+
+<style>
+:root {
+  --testo: white;                --tenue: rgba(255, 255, 255, 0.74);
+  --carta: rgba(0, 0, 0, 0.88);  --bordo: rgba(255, 255, 255, 0.55);
+  --anello: 0 0 0 1px rgba(0, 0, 0, 0.95), 0 8px 24px rgba(0, 0, 0, 0.6);
+  --contorno: 0 1px 2px rgba(0, 0, 0, 0.95), 0 -1px 2px rgba(0, 0, 0, 0.95),
+              1px 0 2px rgba(0, 0, 0, 0.95), -1px 0 2px rgba(0, 0, 0, 0.95);
+  --si: springgreen;  --no: tomato;  --boh: gold;
+}
+html, body { margin: 0; padding: 0; background: transparent; }
+* { box-sizing: border-box; }
+.diagnosi {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  align-content: start; gap: 12px; padding: 14px;
+  color: var(--testo); font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px; line-height: 1.45;
+}
+.diagnosi__testa, .diagnosi__prove { grid-column: 1 / -1; }
+.diagnosi__testa, .diagnosi__scheda, .diagnosi__didascalia {
+  border: 2px solid var(--bordo); border-radius: 10px;
+  background-color: var(--carta); box-shadow: var(--anello);
+  padding-block: 10px; padding-inline: 14px;
+}
+.diagnosi__titolo { margin-block: 0 4px; font-size: 1.5rem; text-shadow: var(--contorno); }
+.diagnosi__guida  { margin-block: 0 6px; color: var(--tenue); }
+.diagnosi__voce { margin-block: 0 6px; color: var(--tenue); font-size: 1rem; letter-spacing: 0.18em; text-transform: uppercase; }
+.diagnosi__dato { margin-block: 0 6px; font-size: 0.95rem; white-space: pre-line; overflow-wrap: anywhere; font-family: ui-monospace, Consolas, monospace; }
+.diagnosi__nota { margin-block: 0 6px; }
+.diagnosi__nota[data-esito="si"]  { color: var(--si); }
+.diagnosi__nota[data-esito="no"]  { color: var(--no); }
+.diagnosi__nota[data-esito="boh"] { color: var(--boh); }
+.diagnosi__prove { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.diagnosi__prova { display: grid; gap: 8px; margin: 0; }
+.diagnosi__prove .diagnosi__voce { grid-column: 1 / -1; margin-block: 6px 0; color: var(--testo); text-shadow: var(--contorno); }
+.diagnosi__vetro {
+  display: grid; place-items: center; block-size: 120px;
+  border: 2px solid var(--bordo); border-radius: 10px;
+  font-size: 3rem; font-weight: 700; text-shadow: var(--contorno);
+}
+.diagnosi__vetro--filtro {
+  background-color: rgba(255, 255, 255, 0.06);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+          backdrop-filter: blur(10px) saturate(150%);
+}
+.diagnosi__vetro--pieno { background-color: rgba(0, 0, 0, 0.82); }
+.diagnosi__vetro--fusione { background-color: rgba(255, 255, 255, 0.5); color: black; mix-blend-mode: screen; text-shadow: none; }
+.diagnosi__didascalia   { font-size: 0.9rem; }
+.diagnosi__didascalia b { display: block; }
+@media (max-width: 760px) { .diagnosi__prove { grid-template-columns: 1fr; } }
+</style>
+</head>
+
+<body class="diagnosi">
+
+<header class="diagnosi__testa">
+  <h1 class="diagnosi__titolo">Cosa sta facendo davvero questo browser</h1>
+  <p class="diagnosi__guida">
+    Mettila in OBS al posto dell’overlay, guardala dieci secondi, fai una foto allo
+    schermo. La risposta vera sono i tre riquadri del punto 4: quello che sparisce è
+    il colpevole.
+  </p>
+  <p class="diagnosi__nota" id="vivo" data-esito="no">
+    Se questa riga resta rossa il JavaScript non è partito — ed è già una risposta.
+  </p>
+</header>
+
+<section class="diagnosi__scheda">
+  <h2 class="diagnosi__voce">1 · L’indirizzo arrivato</h2>
+  <p class="diagnosi__dato" id="indirizzo"></p>
+  <p class="diagnosi__nota" id="coda"></p>
+</section>
+<section class="diagnosi__scheda">
+  <h2 class="diagnosi__voce">2 · Siamo dentro OBS?</h2>
+  <p class="diagnosi__nota" id="obs"></p>
+  <p class="diagnosi__dato" id="ambiente"></p>
+</section>
+<section class="diagnosi__scheda">
+  <h2 class="diagnosi__voce">3 · Le impostazioni in vigore</h2>
+  <p class="diagnosi__dato" id="impostazioni"></p>
+  <p class="diagnosi__nota" id="sfondo"></p>
+</section>
+
+<div class="diagnosi__prove">
+  <h2 class="diagnosi__voce">4 · La prova che conta</h2>
+  <figure class="diagnosi__prova">
+    <div class="diagnosi__vetro diagnosi__vetro--filtro">A</div>
+    <figcaption class="diagnosi__didascalia"><b>A · con backdrop-filter</b>
+      È il vetro dei temi «notte» e «insegna». Se questo riquadro è sparito, o è un
+      rettangolo nero pieno, il colpevole è il vetro.</figcaption>
+  </figure>
+  <figure class="diagnosi__prova">
+    <div class="diagnosi__vetro diagnosi__vetro--pieno">B</div>
+    <figcaption class="diagnosi__didascalia"><b>B · fondo pieno, nessun filtro</b>
+      Solo un nero con trasparenza. Questo si deve vedere sempre: se manca anche
+      questo, il guasto non è nel vetro ed è più a monte.</figcaption>
+  </figure>
+  <figure class="diagnosi__prova">
+    <div class="diagnosi__vetro diagnosi__vetro--fusione">C</div>
+    <figcaption class="diagnosi__didascalia"><b>C · mix-blend-mode: screen</b>
+      La fusione col fondo. In una sorgente browser il fondo è il vuoto: qui si vede
+      cosa ne fa questo browser.</figcaption>
+  </figure>
+</div>
+
+<section class="diagnosi__scheda">
+  <h2 class="diagnosi__voce">5 · Cosa dichiara di supportare</h2>
+  <p class="diagnosi__dato" id="sostegni"></p>
+</section>
+<section class="diagnosi__scheda">
+  <h2 class="diagnosi__voce">6 · Il movimento</h2>
+  <p class="diagnosi__nota" id="movimento"></p>
+</section>
+
+<script>
+(function () {
+  'use strict';
+
+  const CODA = [['tema', 'notte'], ['fondo', 'trasparente'], ['effetto', 'scivola'], ['movimento', 'auto']];
+
+  function scrivi(id, testo, esito) {
+    const dove = document.getElementById(id);
+    if (!dove) { return; }
+    dove.textContent = testo;
+    if (esito) { dove.setAttribute('data-esito', esito); }
+  }
+
+  function dallaCoda(chiave) {
+    const pezzi = String(location.search || '').replace(/^\?/, '').split('&');
+    let i, taglio;
+    for (i = 0; i < pezzi.length; i += 1) {
+      taglio = pezzi[i].indexOf('=');
+      if (taglio > 0 && pezzi[i].slice(0, taglio) === chiave) {
+        try { return decodeURIComponent(pezzi[i].slice(taglio + 1)); }
+        catch (e) { return pezzi[i].slice(taglio + 1); }
+      }
+    }
+    return null;
+  }
+
+  function sostiene(regola) {
+    if (!window.CSS || typeof window.CSS.supports !== 'function') { return 'non so dirlo'; }
+    try { return window.CSS.supports(regola) ? 'sì' : 'NO'; } catch (e) { return 'non so dirlo'; }
+  }
+
+  const coda = String(location.search || '');
+  const obs = window.obsstudio;
+  const righe = [];
+  let i, valore, sfondo, fermo;
+
+  scrivi('indirizzo', String(location.href || 'non lo so'));
+  scrivi('coda', coda ? 'La coda c’è, e comanda lei.'
+    : 'NON C’È NESSUNA CODA dopo il nome del file: valgono tutte le impostazioni predefinite.',
+    coda ? 'si' : 'no');
+  scrivi('obs', obs ? 'Sì: gira dentro una Sorgente Browser di OBS.'
+    : 'No: window.obsstudio non c’è. O non è OBS, o è una finestra normale.', obs ? 'si' : 'boh');
+  scrivi('ambiente', 'plugin browser: ' + (obs && obs.pluginVersion ? obs.pluginVersion : 'non dichiarato')
+    + '\n' + (navigator && navigator.userAgent ? navigator.userAgent : 'user agent sconosciuto'));
+
+  for (i = 0; i < CODA.length; i += 1) {
+    valore = dallaCoda(CODA[i][0]);
+    righe.push(CODA[i][0] + ' = ' + (valore === null ? CODA[i][1] + '   (predefinito)' : valore));
+  }
+  scrivi('impostazioni', righe.join('\n'));
+
+  try { sfondo = getComputedStyle(document.body).backgroundColor; } catch (e) { sfondo = ''; }
+  if (!sfondo || sfondo === 'transparent' || /^rgba\([^)]*,\s*0\s*\)$/.test(sfondo) || /\/\s*0\s*\)$/.test(sfondo)) {
+    scrivi('sfondo', 'Il fondo di questa pagina è trasparente: se in OBS vedi un rettangolo pieno, non lo mette la pagina.', 'si');
+  } else {
+    scrivi('sfondo', 'Il fondo di questa pagina è pieno: ' + sfondo, 'boh');
+  }
+
+  scrivi('sostegni',
+    'backdrop-filter: ' + sostiene('backdrop-filter: blur(1px)') + '\n' +
+    '-webkit-backdrop-filter: ' + sostiene('-webkit-backdrop-filter: blur(1px)') + '\n' +
+    'color-mix(): ' + sostiene('color: color-mix(in srgb, white 50%, black)') + '\n' +
+    ':has(): ' + sostiene('selector(:has(*))') + '\n' +
+    'mix-blend-mode: ' + sostiene('mix-blend-mode: screen'));
+
+  try { fermo = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { fermo = null; }
+  if (fermo === null) { scrivi('movimento', 'Non riesco a chiederlo a questo browser.', 'boh'); }
+  else if (fermo) { scrivi('movimento', 'Questo computer chiede di NON animare: con «movimento=auto» il pollaio sta fermo, ed è voluto. In OBS si mette «movimento=sempre».', 'boh'); }
+  else { scrivi('movimento', 'Questo computer non chiede di fermare le animazioni: l’effetto d’ingresso si deve vedere.', 'si'); }
+
+  scrivi('vivo', 'Tutto letto: quello che c’è scritto qui sotto è vero adesso.', 'si');
+}());
+</script>
+</body>
+</html>

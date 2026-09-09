@@ -1161,6 +1161,31 @@ riga qui sopra.
 
 ## Se qualcosa non va
 
+**Non si vedono i box dei messaggi, e resta tutto trasparente.**
+In OBS non c'è console e non c'è modo di guardarci dentro, quindi si guarda da
+fuori: nella sorgente browser metti **`app/prova-obs.html`** al posto di
+`pollaio.html`, aspetta dieci secondi e fai una foto allo schermo. La pagina
+scrive grande l'indirizzo che le è arrivato, se OBS c'è, quali impostazioni sono
+in vigore e cosa quel browser dichiara di supportare — poi disegna tre riquadri
+affiancati: **A** col `backdrop-filter`, **B** con un fondo pieno e nessun
+filtro, **C** col `mix-blend-mode`. **Quello che sparisce è il colpevole**: se
+sparisce solo A è il vetro dei temi «notte» e «insegna», se sparisce anche B il
+guasto è più a monte e non c'entra il vetro.
+
+Prima ancora, tre cose da guardare, in ordine:
+
+- **`tema=nudo` nella coda**: quel tema toglie i box per progetto — solo testo
+  con l'ombra. Non è un guasto.
+- **Che versione di OBS è.** Fino alla 30 OBS porta dentro un Chromium del 2022,
+  che non conosce `color-mix()`: dalla 1.2.11 il pollaio ha un ripiego per ogni
+  tinta, ma aggiornare OBS resta la cosa giusta.
+- **Se non si vede proprio niente**, aggiungi `?prova=1` in fondo all'indirizzo
+  e ricarica la sorgente: se compaiono messaggi finti la pagina arriva e
+  funziona, e il problema è il canale o la coda; se non compare nulla, la pagina
+  non arriva — quasi sempre perché l'indirizzo `http://192.168.…` è di **un'altra
+  rete**. Quell'indirizzo vale solo dentro casa tua: non si può passare a un
+  amico.
+
 **La chat resta vuota e in alto c'è scritto che riprova.**
 La rete non arriva, oppure una rete filtra le connessioni WebSocket. Il widget
 **non si arrende mai**: riprova all'infinito, aspettando sempre di più fino a un
@@ -1337,6 +1362,8 @@ chat/
 │  ├─ pollaio.html    l'overlay — è questo che punta OBS
 │  ├─ regia.html      il configuratore, con l'anteprima dal vivo
 │  ├─ prove.html      il banco di prova: doppio clic, dice verde o rosso
+│  ├─ prova-obs.html  da mettere in OBS quando non si vede niente: dice a schermo
+│  │                  cosa sta facendo quel browser
 │  ├─ css/
 │  │  ├─ tokens.css      la palette del canale. L'unico file con dei colori scritti
 │  │  ├─ pollaio.css     l'overlay
